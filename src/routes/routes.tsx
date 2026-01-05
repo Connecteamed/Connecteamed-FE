@@ -1,0 +1,10 @@
+import React from 'react';
+
+export const lazyRoutes = {
+  Home: React.lazy(() => import('../pages/Home/settingsCheck')),
+  Dashboard: React.lazy(() => import('../pages/DashBoard/Dashboard')),
+  MakeProject: React.lazy(() => import('../pages/MakeProject/MakeProject')),
+  SearchProject: React.lazy(() => import('../pages/SearchProject/SearchProject')),
+  TaskPage: React.lazy(() => import('../pages/Tasks/TaskPage')),
+  MyPage: React.lazy(() => import('../pages/MyPage/MyPage')),
+};

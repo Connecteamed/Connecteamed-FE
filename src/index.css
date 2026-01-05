@@ -1,0 +1,99 @@
+@import "tailwindcss";
+
+/* Tailwind v4: Custom Theme */
+@theme {
+  /* Primary Color */
+  --color-primary-100: #ffe6cc;
+  --color-primary-300: #ffb266;
+  --color-primary-500: #fe7318;
+  --color-primary-700: #cc4f00;
+  --color-primary-900: #732800;
+
+  /* Secondary Color */
+  --color-secondary-100: #d6e2ff;
+  --color-secondary-300: #a6beff;
+  --color-secondary-500: #0f62fe;
+  --color-secondary-700: #0043ce;
+  --color-secondary-900: #002d9c;
+
+  /* Neutral Gray Color */
+  --color-neutral-0: #ffffff;
+  --color-neutral-5: #f8f9fb;
+  --color-neutral-10: #f2f4f8;
+  --color-neutral-20: #edeff2;
+  --color-neutral-30: #e3e6eb;
+  --color-neutral-40: #dde1e6;
+  --color-neutral-50: #c8cdd5;
+  --color-neutral-60: #abb2bd;
+  --color-neutral-70: #878d96;
+  --color-neutral-80: #707070;
+  --color-neutral-90: #4a4a4a;
+  --color-neutral-100: #222222;
+
+  /* State Colors */
+  --color-error: #e5484d;
+  --color-warning: #f6a41a;
+  --color-success: #4caf50;
+}
+
+/* CSS Reset & Base Styles - @layer base 안에 넣어서 utilities보다 낮은 우선순위 */
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    margin: 0;
+    /* padding: 0 제거! Tailwind px-*, py-*와 충돌 */
+  }
+
+  html,
+  body,
+  #root {
+    width: 100%;
+    height: 100%;
+  }
+
+  body {
+    font-family: 'Pretendard', 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: #ffffff;
+    color: #222222;
+    line-height: 1.5;
+  }
+
+  button {
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-family: inherit;
+  }
+}
+
+/* Typography Classes */
+@layer components {
+  .heading1 { font-size: 42px; line-height: 1.5; letter-spacing: -0.02em; font-weight: 700; }
+  .heading2 { font-size: 32px; line-height: 1.5; letter-spacing: -0.02em; font-weight: 700; }
+  .heading3 { font-size: 24px; line-height: 1.5; letter-spacing: -0.02em; font-weight: 700; }
+  .heading4 { font-size: 20px; line-height: 1.5; letter-spacing: -0.02em; font-weight: 700; }
+  .heading5 { font-size: 18px; line-height: 1.5; letter-spacing: -0.02em; font-weight: 700; }
+
+  .subtitle-xxxl { font-size: 42px; line-height: 1.5; letter-spacing: -0.02em; font-weight: 500; }
+  .subtitle-xxl { font-size: 32px; line-height: 1.5; letter-spacing: -0.02em; font-weight: 500; }
+  .subtitle-xl { font-size: 24px; line-height: 1.5; letter-spacing: -0.02em; font-weight: 500; }
+  .subtitle-l { font-size: 18px; line-height: 1.5; letter-spacing: -0.02em; font-weight: 500; }
+  .subtitle-m { font-size: 16px; line-height: 1.5; letter-spacing: -0.02em; font-weight: 500; }
+  .subtitle-s { font-size: 14px; line-height: 1.5; letter-spacing: -0.02em; font-weight: 500; }
+  .subtitle-xs { font-size: 12px; line-height: 1.5; letter-spacing: -0.02em; font-weight: 500; }
+
+  .body-xl { font-size: 18px; line-height: 1.5; letter-spacing: -0.02em; font-weight: 400; }
+  .body-l { font-size: 16px; line-height: 1.5; letter-spacing: -0.02em; font-weight: 400; }
+  .body-m { font-size: 14px; line-height: 1.5; letter-spacing: -0.02em; font-weight: 400; }
+  .body-s { font-size: 12px; line-height: 1.5; letter-spacing: -0.02em; font-weight: 400; }
+  .body-xs { font-size: 10px; line-height: 1.5; letter-spacing: -0.02em; font-weight: 400; }
+
+  .button-xl { font-size: 24px; line-height: 1.5; letter-spacing: -0.02em; font-weight: 500; }
+  .button-l { font-size: 18px; line-height: 1.5; letter-spacing: -0.02em; font-weight: 500; }
+  .button-m { font-size: 16px; line-height: 1.5; letter-spacing: -0.02em; font-weight: 500; }
+  .button-s { font-size: 14px; line-height: 1.5; letter-spacing: -0.02em; font-weight: 500; }
+}
