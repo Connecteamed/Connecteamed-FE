@@ -2,9 +2,10 @@ import { useState, type FormEvent } from 'react';
 import Button from '@/components/Button';
 import Input from '@/components/Input';
 import iconError from '@/assets/icon-error.svg';
-// import iconLogin from '@/assets/icon-login.svg';
-// import iconPassword from '@/assets/icon-password.svg';
-// import iconEye from '@/assets/icon-eye.svg';
+import iconLogin from '@/assets/icon-login.svg';
+import iconPassword from '@/assets/icon-password.svg';
+import iconEye from '@/assets/icon-eye.svg';
+import iconOpenEye from '@/assets/icon-open-eye.svg';
 
 const LoginForm = () => {
   const [isError, setIsError] = useState(false);
@@ -28,20 +29,34 @@ const LoginForm = () => {
       <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
         <div className="flex flex-col gap-6">
           <div className="flex flex-col gap-2">
-            <Input
-              name="userId"
-              placeholder="아이디를 입력하세요"
-              className={`h-14 shadow-md  ${placeholderClass} ${isError ? '!border-error ring-1 ring-error' : ''}`}
-            />
+            <div className="relative flex items-center">
+              <img src={iconLogin} className="absolute z-10 w-6 h-6 left-3.5" />
+              <Input
+                name="userId"
+                placeholder="아이디를 입력하세요"
+                className={`h-14 w-full shadow-md pl-12 pr-12 ${placeholderClass} ${isError ? 'ring-1 ring-error' : ''}`}
+              />
+            </div>
           </div>
 
           <div className="flex flex-col gap-2">
-            <Input
-              name="password"
-              type={showPassword ? 'text' : 'password'}
-              placeholder="비밀번호를 입력하세요"
-              className={`h-14 shadow-md ${placeholderClass} ${isError ? '!border-error ring-1 ring-error' : ''}`}
-            />
+            <div className="relative flex items-center">
+              <img src={iconPassword} className="absolute z-10 w-6 h-6 left-3.5" />
+
+              <Input
+                name="password"
+                type={showPassword ? 'text' : 'password'}
+                placeholder="비밀번호를 입력하세요"
+                className={`h-14 w-full shadow-md pl-12 pr-12 ${placeholderClass} ${isError ? 'ring-1 ring-error' : ''}`}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute flex items-center justify-center right-4 focus:outline-none"
+              >
+                <img src={showPassword ? iconOpenEye : iconEye} className="w-6 h-6" />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -57,12 +72,12 @@ const LoginForm = () => {
           </div>
         )}
 
-        <Button type="submit" className="h-15 mt-4 text-[18px] font-semibold">
+        <Button type="submit" variant="secondary" className="h-15 mt-4 text-[18px] font-semibold">
           로그인
         </Button>
       </form>
 
-      <footer className="mt-10 text-center">
+      <footer className="mt-10">
         <p className="text-[16px] text-black">
           아직 계정이 없으신가요?
           <a className="ml-2 font-bold text-primary-500 hover:underline" href="/signup">
