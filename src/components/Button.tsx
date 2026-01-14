@@ -77,7 +77,7 @@ const Button = ({
         ${variantStyles[variant]}
         ${sizeStyles[size]}
         ${fullWidth ? 'w-full' : ''}
-        ${disabled ? 'bg-neutral-50 text-neutral-60 cursor-not-allowed hover:bg-neutral-50' : ''}
+        ${disabled ? 'bg-neutral-50! text-white! cursor-not-allowed hover:bg-neutral-50' : ''}
         ${className}
       `}
       {...props}
