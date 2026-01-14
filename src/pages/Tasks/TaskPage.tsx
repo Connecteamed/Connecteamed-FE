@@ -1,16 +1,7 @@
-/**
- * 
- * @author 곽도윤
- * 
- * @description
- * 팀 페이지입니다.
- * 하단 selectedTask에 따라 각 컴포넌트로 변경되도록 설정해두었고
- * 컴포넌트 작업 이후 연결 부탁드립니다.
- */
-
 import React from 'react';
 import bell from '@assets/icon-bell-black.svg';
 import setting from '@assets/icon-setting-outline.svg';
+import Calender from '@/components/calender';
 
 const team = {
   teamname: 'UMC 3팀',
@@ -29,6 +20,8 @@ const profile = {
 
 const TaskPage = () => {
   const [selectedTask, setSelectedTask] = React.useState<string | null>('1');
+  const [selectedDate, setSelectedDate] = React.useState<Date>(() => new Date());
+  const [isCalendarOpen, setIsCalendarOpen] = React.useState<boolean>(false);
 
   const tasks = [
     { id: '1', title: '업무 목록' },
@@ -95,7 +88,34 @@ const TaskPage = () => {
         <div>
           {/* 선택된 task에 따른 컴포넌트가 들어가는 부분 */}
           {/* 각 컴포넌트 퍼블리싱 하실 때 여기에 연결 해주세요!*/}
-          {selectedTask === '1' && (<div>업무 목록 컴포넌트</div>)}
+          {selectedTask === '1' && (
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center gap-4">
+                <button
+                  type="button"
+                  onClick={() => setIsCalendarOpen(true)}
+                  className="px-3 py-2 bg-orange-500 text-white rounded-md text-sm"
+                >
+                  날짜 선택
+                </button>
+                <span className="text-sm text-gray-600">
+                  선택된 날짜: {selectedDate.toLocaleDateString()}
+                </span>
+              </div>
+              {isCalendarOpen && (
+                <div className="relative">
+                  <Calender
+                    prev={selectedDate}
+                    next={(date) => {
+                      setSelectedDate(date);
+                      setIsCalendarOpen(false);
+                    }}
+                    onClose={() => setIsCalendarOpen(false)}
+                  />
+                </div>
+              )}
+            </div>
+          )}
           {selectedTask === '2' && <div>문서 컴포넌트</div>}
           {selectedTask === '3' && <div>회의록 컴포넌트</div>}
           {selectedTask === '4' && <div>완료한 업무 컴포넌트</div>}
