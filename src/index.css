@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 /* Tailwind v4: Custom Theme */
 @theme {
@@ -28,7 +28,7 @@
   --color-neutral-70: #878d96;
   --color-neutral-80: #707070;
   --color-neutral-90: #4a4a4a;
-  --color-neutral-100: #222222;
+  --color-neutral-100: #b05252ff;
 
   /* State Colors */
   --color-error: #e5484d;
@@ -54,7 +54,12 @@
   }
 
   body {
-    font-family: 'Pretendard', 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family:
+      'Pretendard',
+      'Roboto',
+      -apple-system,
+      BlinkMacSystemFont,
+      sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     background-color: #ffffff;
@@ -72,28 +77,133 @@
 
 /* Typography Classes */
 @layer components {
-  .heading1 { font-size: 42px; line-height: 1.5; letter-spacing: -0.02em; font-weight: 700; }
-  .heading2 { font-size: 32px; line-height: 1.5; letter-spacing: -0.02em; font-weight: 700; }
-  .heading3 { font-size: 24px; line-height: 1.5; letter-spacing: -0.02em; font-weight: 700; }
-  .heading4 { font-size: 20px; line-height: 1.5; letter-spacing: -0.02em; font-weight: 700; }
-  .heading5 { font-size: 18px; line-height: 1.5; letter-spacing: -0.02em; font-weight: 700; }
+  .heading1 {
+    font-size: 42px;
+    line-height: 1.5;
+    letter-spacing: -0.02em;
+    font-weight: 700;
+  }
+  .heading2 {
+    font-size: 32px;
+    line-height: 1.5;
+    letter-spacing: -0.02em;
+    font-weight: 700;
+  }
+  .heading3 {
+    font-size: 24px;
+    line-height: 1.5;
+    letter-spacing: -0.02em;
+    font-weight: 700;
+  }
+  .heading4 {
+    font-size: 20px;
+    line-height: 1.5;
+    letter-spacing: -0.02em;
+    font-weight: 700;
+  }
+  .heading5 {
+    font-size: 18px;
+    line-height: 1.5;
+    letter-spacing: -0.02em;
+    font-weight: 700;
+  }
 
-  .subtitle-xxxl { font-size: 42px; line-height: 1.5; letter-spacing: -0.02em; font-weight: 500; }
-  .subtitle-xxl { font-size: 32px; line-height: 1.5; letter-spacing: -0.02em; font-weight: 500; }
-  .subtitle-xl { font-size: 24px; line-height: 1.5; letter-spacing: -0.02em; font-weight: 500; }
-  .subtitle-l { font-size: 18px; line-height: 1.5; letter-spacing: -0.02em; font-weight: 500; }
-  .subtitle-m { font-size: 16px; line-height: 1.5; letter-spacing: -0.02em; font-weight: 500; }
-  .subtitle-s { font-size: 14px; line-height: 1.5; letter-spacing: -0.02em; font-weight: 500; }
-  .subtitle-xs { font-size: 12px; line-height: 1.5; letter-spacing: -0.02em; font-weight: 500; }
+  .subtitle-xxxl {
+    font-size: 42px;
+    line-height: 1.5;
+    letter-spacing: -0.02em;
+    font-weight: 500;
+  }
+  .subtitle-xxl {
+    font-size: 32px;
+    line-height: 1.5;
+    letter-spacing: -0.02em;
+    font-weight: 500;
+  }
+  .subtitle-xl {
+    font-size: 24px;
+    line-height: 1.5;
+    letter-spacing: -0.02em;
+    font-weight: 500;
+  }
+  .subtitle-l {
+    font-size: 18px;
+    line-height: 1.5;
+    letter-spacing: -0.02em;
+    font-weight: 500;
+  }
+  .subtitle-m {
+    font-size: 16px;
+    line-height: 1.5;
+    letter-spacing: -0.02em;
+    font-weight: 500;
+  }
+  .subtitle-s {
+    font-size: 14px;
+    line-height: 1.5;
+    letter-spacing: -0.02em;
+    font-weight: 500;
+  }
+  .subtitle-xs {
+    font-size: 12px;
+    line-height: 1.5;
+    letter-spacing: -0.02em;
+    font-weight: 500;
+  }
 
-  .body-xl { font-size: 18px; line-height: 1.5; letter-spacing: -0.02em; font-weight: 400; }
-  .body-l { font-size: 16px; line-height: 1.5; letter-spacing: -0.02em; font-weight: 400; }
-  .body-m { font-size: 14px; line-height: 1.5; letter-spacing: -0.02em; font-weight: 400; }
-  .body-s { font-size: 12px; line-height: 1.5; letter-spacing: -0.02em; font-weight: 400; }
-  .body-xs { font-size: 10px; line-height: 1.5; letter-spacing: -0.02em; font-weight: 400; }
+  .body-xl {
+    font-size: 18px;
+    line-height: 1.5;
+    letter-spacing: -0.02em;
+    font-weight: 400;
+  }
+  .body-l {
+    font-size: 16px;
+    line-height: 1.5;
+    letter-spacing: -0.02em;
+    font-weight: 400;
+  }
+  .body-m {
+    font-size: 14px;
+    line-height: 1.5;
+    letter-spacing: -0.02em;
+    font-weight: 400;
+  }
+  .body-s {
+    font-size: 12px;
+    line-height: 1.5;
+    letter-spacing: -0.02em;
+    font-weight: 400;
+  }
+  .body-xs {
+    font-size: 10px;
+    line-height: 1.5;
+    letter-spacing: -0.02em;
+    font-weight: 400;
+  }
 
-  .button-xl { font-size: 24px; line-height: 1.5; letter-spacing: -0.02em; font-weight: 500; }
-  .button-l { font-size: 18px; line-height: 1.5; letter-spacing: -0.02em; font-weight: 500; }
-  .button-m { font-size: 16px; line-height: 1.5; letter-spacing: -0.02em; font-weight: 500; }
-  .button-s { font-size: 14px; line-height: 1.5; letter-spacing: -0.02em; font-weight: 500; }
+  .button-xl {
+    font-size: 24px;
+    line-height: 1.5;
+    letter-spacing: -0.02em;
+    font-weight: 500;
+  }
+  .button-l {
+    font-size: 18px;
+    line-height: 1.5;
+    letter-spacing: -0.02em;
+    font-weight: 500;
+  }
+  .button-m {
+    font-size: 16px;
+    line-height: 1.5;
+    letter-spacing: -0.02em;
+    font-weight: 500;
+  }
+  .button-s {
+    font-size: 14px;
+    line-height: 1.5;
+    letter-spacing: -0.02em;
+    font-weight: 500;
+  }
 }
