@@ -12,11 +12,9 @@ import iconPeopleBlack from '@assets/icon-people-black.svg';
 import iconSearchBlack from '@assets/icon-search-black.svg';
 import iconSearchOrange from '@assets/icon-search-orange.svg';
 
-
-
 // TODO: 실제 팀 데이터로 교체
 const teamList = [
-  { id: '1', name: 'UMC 3팀' },
+  { id: '1', name: '00공모전' },
   { id: '2', name: '마케팅 원론 2조' },
 ];
 
@@ -30,9 +28,7 @@ const Sidebar = () => {
         {/* 로고 */}
         <div className="flex items-center gap-1">
           <img src={logoImg} alt="logo" className="w-11 h-11" />
-          <span className="text-primary-500 text-2xl font-medium">
-            Connecteamd
-          </span>
+          <span className="text-primary-500 text-2xl font-medium">Connecteamd</span>
         </div>
 
         {/* 메뉴 */}
@@ -91,9 +87,7 @@ const Sidebar = () => {
                   to={`/team/${team.id}`}
                   className={({ isActive }) =>
                     `h-10 px-11 py-1.5 flex items-center rounded-md transition-colors ${
-                      isActive
-                        ? 'bg-slate-100 text-primary-500'
-                        : 'text-black hover:bg-slate-50'
+                      isActive ? 'bg-slate-100 text-primary-500' : 'text-black hover:bg-slate-50'
                     }`
                   }
                 >
@@ -114,11 +108,7 @@ const Sidebar = () => {
           >
             {({ isActive }) => (
               <>
-                <img
-                  src={iconPeopleBlack}
-                  alt="create project"
-                  className="w-6 h-6"
-                />
+                <img src={iconPeopleBlack} alt="create project" className="w-6 h-6" />
                 <span
                   className={`text-base font-medium ${
                     isActive ? 'text-primary-500' : 'text-black'
@@ -170,15 +160,9 @@ const Sidebar = () => {
       >
         {({ isActive }) => (
           <>
-            <img
-              src={isActive ? iconMeOrange : iconMeBlack}
-              alt="mypage"
-              className="w-6 h-6"
-            />
+            <img src={isActive ? iconMeOrange : iconMeBlack} alt="mypage" className="w-6 h-6" />
             <span
-              className={`text-base font-medium ${
-                isActive ? 'text-primary-500' : 'text-black'
-              }`}
+              className={`text-base font-medium ${isActive ? 'text-primary-500' : 'text-black'}`}
             >
               마이페이지
             </span>
