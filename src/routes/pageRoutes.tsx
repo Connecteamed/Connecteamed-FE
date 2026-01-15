@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import { createBrowserRouter, type RouteObject } from 'react-router-dom';
 import { lazyRoutes } from './routes';
-import HomeLayout from '@/layouts/HomeLayout';
+// import HomeLayout from '@/layouts/HomeLayout';
 
 import SideBarLayout from '@/layouts/SideBarLayout';
 
@@ -9,17 +9,19 @@ import SideBarLayout from '@/layouts/SideBarLayout';
 export const authRoutes: RouteObject[] = [
   {
     path: '/login',
-    element: <HomeLayout />,
-    children: [
-      // TODO: 로그인 페이지 추가
-    ],
+    element: (
+      <Suspense fallback={null}>
+        <lazyRoutes.LoginPage />
+      </Suspense>
+    ),
   },
   {
     path: '/signup',
-    element: <HomeLayout />,
-    children: [
-      // TODO: 회원가입 페이지 추가
-    ],
+    element: (
+      <Suspense fallback={null}>
+        <lazyRoutes.SignupPage />
+      </Suspense>
+    ),
   },
 ];
 
