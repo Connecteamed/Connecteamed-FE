@@ -7,4 +7,5 @@ export const lazyRoutes = {
   SearchProject: React.lazy(() => import('../pages/SearchProject/SearchProject')),
   TaskPage: React.lazy(() => import('../pages/Tasks/TaskPage')),
   MyPage: React.lazy(() => import('../pages/MyPage/MyPage')),
+  Minutes: React.lazy(() => import('../pages/Minutes/Minutes')),
 };

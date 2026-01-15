@@ -29,10 +29,46 @@ export const publicRoutes: RouteObject[] = [
     path: '/',
     element: <SideBarLayout />,
     children: [
-      { index: true, element: <Suspense fallback={null}><lazyRoutes.Dashboard /></Suspense> },
-      { path: 'project/create', element: <Suspense fallback={null}><lazyRoutes.MakeProject /></Suspense> },
-      { path: 'project/search', element: <Suspense fallback={null}><lazyRoutes.SearchProject /></Suspense> },
-      { path: 'team/:teamId', element: <Suspense fallback={null}><lazyRoutes.TaskPage /></Suspense> },
+      {
+        index: true,
+        element: (
+          <Suspense fallback={null}>
+            <lazyRoutes.Dashboard />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'project/create',
+        element: (
+          <Suspense fallback={null}>
+            <lazyRoutes.MakeProject />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'project/search',
+        element: (
+          <Suspense fallback={null}>
+            <lazyRoutes.SearchProject />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'team/:teamId',
+        element: (
+          <Suspense fallback={null}>
+            <lazyRoutes.TaskPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'minutes',
+        element: (
+          <Suspense fallback={null}>
+            <lazyRoutes.Minutes />
+          </Suspense>
+        ),
+      },
     ],
   },
 ];
@@ -43,7 +79,14 @@ export const protectedRoutes: RouteObject[] = [
     path: '/mypage',
     element: <SideBarLayout />,
     children: [
-      { index: true, element: <Suspense fallback={null}><lazyRoutes.MyPage /></Suspense> },
+      {
+        index: true,
+        element: (
+          <Suspense fallback={null}>
+            <lazyRoutes.MyPage />
+          </Suspense>
+        ),
+      },
     ],
   },
 ];
