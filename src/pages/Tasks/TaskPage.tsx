@@ -33,8 +33,8 @@ const TaskPage = () => {
   ];
 
   return (
-    <div>
-      <div className="ml-[80px] mt-[50px] mr-[40px] flex justify-between">
+    <div className="w-full overflow-x-hidden min-h-screen flex flex-col">
+      <div className="ml-[40px] mt-[50px] mr-[40px] flex justify-between">
         <div className="w-[453px] h-[61px] text-black text-5xl font-bold">{team.teamname}</div>
         <div className="flex">
           <div className="inline-flex justify-start items-center gap-6">
@@ -55,7 +55,8 @@ const TaskPage = () => {
           </div>
         </div>
       </div>
-      <div className="w-full h-full bg-white rounded-2xl mt-[31px] mx-[40px] py-[43px] px-10">
+
+      <div className="mt-[31px] ml-[40px] mr-[40px] bg-white rounded-t-2xl rounded-b-none px-10 pt-[43px] pb-[43px] flex-1 flex flex-col">
         <div className="inline-flex flex-wrap justify-start items-start gap-7">
           {team.members.map((member, index) => (
             <div className="flex gap-[30px] items-center" key={index}>
@@ -75,6 +76,7 @@ const TaskPage = () => {
             </div>
           ))}
         </div>
+
         <div className="mt-[30px] gap-[42px] flex">
           {tasks.map((task) => (
             <div
@@ -86,7 +88,8 @@ const TaskPage = () => {
             </div>
           ))}
         </div>
-        <div>
+
+        <div className={selectedTask === '2' ? 'flex-1 min-h-0 flex flex-col' : ''}>
           {/* 선택된 task에 따른 컴포넌트가 들어가는 부분 */}
           {/* 각 컴포넌트 퍼블리싱 하실 때 여기에 연결 해주세요!*/}
           {selectedTask === '1' && (
@@ -117,11 +120,13 @@ const TaskPage = () => {
               )}
             </div>
           )}
+
           {selectedTask === '2' && (
-            <div>
+            <div className="flex-1 min-h-0 flex flex-col">
               <DocumentPage />
             </div>
           )}
+
           {selectedTask === '3' && <div>회의록 컴포넌트</div>}
           {selectedTask === '4' && <div>완료한 업무 컴포넌트</div>}
           {selectedTask === '5' && <div>AI 회고 컴포넌트</div>}
