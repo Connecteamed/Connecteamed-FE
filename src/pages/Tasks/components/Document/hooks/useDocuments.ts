@@ -28,6 +28,7 @@ export const useDocuments = () => {
       id: crypto.randomUUID(),
       name: getNameWithoutExt(file.name),
       ext: getExt(file.name),
+      // TODO: Auth 연동 후 실제 uploader 정보 적용 예정
       uploader: '팀원1',
       uploadedAt: formatDate(now),
       file,
@@ -43,6 +44,7 @@ export const useDocuments = () => {
       id: crypto.randomUUID(),
       name: title,
       ext: '텍스트',
+      // TODO: Auth 연동 후 실제 uploader 정보 적용 예정
       uploader: '팀원1',
       uploadedAt: formatDate(now),
       content,
@@ -64,13 +66,16 @@ export const useDocuments = () => {
     if (!doc.file) return;
 
     const url = URL.createObjectURL(doc.file);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = doc.file.name;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
+    try {
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = doc.file.name;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    } finally {
+      URL.revokeObjectURL(url);
+    }
   };
 
   return {

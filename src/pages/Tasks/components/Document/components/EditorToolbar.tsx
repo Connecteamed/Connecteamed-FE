@@ -60,6 +60,7 @@ const EditorToolbar = ({
   onAlignRight,
 }: Props) => {
   return (
+    // TODO: 문서 에디터 ToolBar 기능 연동 예정
     <div className="px-[14px] py-[9px] bg-gray-200 rounded-[10px] inline-flex items-center gap-[12px]">
       <div className="flex items-center gap-[12px]">
         <ToolbarBtn icon={iconBold} label="굵게" onClick={onBold} />
