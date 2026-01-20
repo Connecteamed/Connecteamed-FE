@@ -43,6 +43,11 @@ interface DropdownProps {
   closeOnBackdrop?: boolean;
   /** ESC 키 누르면 닫기 여부 (기본값: true) */
   closeOnEsc?: boolean;
+  /** 특정 좌표에 드롭다운을 붙이고 싶을 때 사용 */
+  anchorPosition?: {
+    top: number;
+    left: number;
+  };
 }
 
 const Dropdown = ({
@@ -51,6 +56,7 @@ const Dropdown = ({
   children,
   closeOnBackdrop = true,
   closeOnEsc = true,
+  anchorPosition,
 }: DropdownProps) => {
   // ESC 키로 닫기
   const handleKeyDown = useCallback(
@@ -87,14 +93,21 @@ const Dropdown = ({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center"
+      className={
+        anchorPosition ? 'fixed inset-0 z-50' : 'fixed inset-0 z-50 flex items-center justify-center'
+      }
       onClick={handleBackdropClick}
     >
-      {/* 
-        children 안에서 모달 내용을 자유롭게 구성하세요.
-        예: <div className="bg-white rounded-[20px] px-7 py-5">...</div>
-      */}
-      {children}
+      <div
+        className={anchorPosition ? 'absolute' : ''}
+        style={anchorPosition ? { top: anchorPosition.top, left: anchorPosition.left } : undefined}
+      >
+        {/* 
+          children 안에서 모달 내용을 자유롭게 구성하세요.
+          예: <div className="bg-white rounded-[20px] px-7 py-5">...</div>
+        */}
+        {children}
+      </div>
     </div>,
     document.body
   );

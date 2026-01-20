@@ -16,6 +16,9 @@ import Modal from '@/components/Modal';
 import selectedRoll from '@assets/icon-selectedRoll-orange.svg';
 import unselectedRoll from '@assets/icon-unSelectedRoll-orange.svg';
 import Dropdown from '@/components/Dropdown';
+import { useLocation } from 'react-router-dom';
+import Calender from '@/components/calender';
+import MeetingNote from './components/MeetingNote/MeetingNote';
 
 type Member = { name: string; roles: string[] };
 type RawMember = { name: string; roles: Array<string | null> };
@@ -45,6 +48,9 @@ const TaskPage = () => {
     initialTeam.members.map((m) => ({ ...m, roles: m.roles.filter((r): r is string => !!r) }))
   );
   const [settingDropdownIsOpen, setSettingDropdownIsOpen] = useState(false);
+  const location = useLocation();
+  const [selectedDate, setSelectedDate] = React.useState<Date>(() => new Date());
+  const [isCalendarOpen, setIsCalendarOpen] = React.useState<boolean>(false);
 
   const tasks = [
     { id: '1', title: '업무 목록' },
@@ -166,7 +172,11 @@ const TaskPage = () => {
             </div>
           )}
           {selectedTask === '2' && <div>문서 컴포넌트</div>}
-          {selectedTask === '3' && <div>회의록 컴포넌트</div>}
+          {selectedTask === '3' && (
+            <div>
+              <MeetingNote newMeeting={location.state?.newMeeting} />
+            </div>
+          )}
           {selectedTask === '4' && <div>완료한 업무 컴포넌트</div>}
           {selectedTask === '5' && <div>AI 회고 컴포넌트</div>}
         </div>
