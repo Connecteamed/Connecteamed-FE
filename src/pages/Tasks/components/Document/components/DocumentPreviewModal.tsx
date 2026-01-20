@@ -1,4 +1,5 @@
 import Modal from '@/components/Modal';
+import closeIcon from '@assets/icon-close.svg';
 
 type Props = {
   isOpen: boolean;
@@ -16,9 +17,12 @@ const DocumentPreviewModal = ({ isOpen, onClose }: Props) => {
           title="닫기"
           className="absolute right-6 top-6 w-8 h-8 flex items-center justify-center"
         >
-          <span className="text-2xl leading-none text-neutral-700">×</span>
+          <span className="text-2xl leading-none text-neutral-700">
+            <img src={closeIcon} alt="닫기" />
+          </span>
         </button>
 
+        {/* TODO: 문서 미리보기 기능 연동 예정 */}
         <div className="w-[530px] h-[632px] px-20 py-52 bg-slate-100 inline-flex flex-col justify-center items-center gap-2.5">
           <div className="text-center justify-center text-black text-xl font-bold font-['Roboto']">
             모달 내에
