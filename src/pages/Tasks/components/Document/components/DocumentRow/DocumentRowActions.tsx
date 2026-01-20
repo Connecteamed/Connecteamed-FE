@@ -29,7 +29,7 @@ const DocumentRowActions = ({ doc, onDelete, onDownload, onEditText }: Props) =>
           aria-label="다운로드"
           title="다운로드"
         >
-          <img src={downloadIcon} alt="다운로드" className="w-24 h-24" draggable={false} />
+          <img src={downloadIcon} alt="다운로드" className="w-6 h-6" draggable={false} />
         </button>
       )}
 

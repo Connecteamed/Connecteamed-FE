@@ -12,15 +12,18 @@ export const useTextEditorForm = ({ initialTitle = '', initialContent = '', onSa
   const [title, setTitle] = useState(initialTitle);
   const [content, setContent] = useState(initialContent);
 
+  const trimmedTitle = useMemo(() => title.trim(), [title]);
+  const trimmedContent = useMemo(() => content.trim(), [content]);
+
   const canSubmit = useMemo(
-    () => title.trim().length > 0 && content.trim().length > 0,
-    [title, content],
+    () => trimmedTitle.length > 0 && trimmedContent.length > 0,
+    [trimmedTitle, trimmedContent],
   );
 
   const submit = useCallback(() => {
     if (!canSubmit) return;
-    onSave({ title: title.trim(), content });
-  }, [canSubmit, onSave, title, content]);
+    onSave({ title: trimmedTitle, content: trimmedContent });
+  }, [canSubmit, onSave, trimmedTitle, trimmedContent]);
 
   return {
     title,

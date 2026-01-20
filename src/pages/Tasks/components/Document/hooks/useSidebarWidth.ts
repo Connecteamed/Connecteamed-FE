@@ -26,17 +26,17 @@ export const useSidebarWidth = ({
     update();
     window.addEventListener('resize', update);
 
-    const el = getSidebarEl();
-    let ro: ResizeObserver | null = null;
+    const observedEl = getSidebarEl();
 
-    if (el && 'ResizeObserver' in window) {
-      ro = new ResizeObserver(() => update());
-      ro.observe(el);
+    let resizeObserver: ResizeObserver | null = null;
+    if (observedEl && 'ResizeObserver' in window) {
+      resizeObserver = new ResizeObserver(() => update());
+      resizeObserver.observe(observedEl);
     }
 
     return () => {
       window.removeEventListener('resize', update);
-      if (ro && el) ro.unobserve(el);
+      resizeObserver?.disconnect();
     };
   }, [sidebarSelector, fallbackSidebarWidth]);
 

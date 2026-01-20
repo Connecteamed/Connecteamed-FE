@@ -8,7 +8,7 @@ const EmptyDocument = ({ onAdd }: Props) => {
   return (
     <section className="w-full flex-1 min-h-0 flex flex-col items-center justify-center translate-y-[-8px]">
       <div className="w-48 h-48 bg-orange-100 rounded-full flex items-center justify-center">
-        <img src={documentAddIcon} className="w-30 h-30" />
+        <img src={documentAddIcon} alt="문서 추가 아이콘" className="w-30 h-30" />
       </div>
 
       <p className="mt-6 text-2xl font-medium">아직 등록된 문서가 없어요</p>
