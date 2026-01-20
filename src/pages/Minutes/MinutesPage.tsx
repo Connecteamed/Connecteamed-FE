@@ -5,8 +5,9 @@ import { useNavigate } from 'react-router-dom';
 import Input from '@/components/Input';
 import Calender from '@/components/calender';
 
+import backIcon from '@/assets/icon-back-black.svg';
+
 import AttendeeSelector from './components/AttendeeSelector';
-import backIcon from '/src/assets/icon-back-black.svg';
 
 interface Agenda {
   title: string;
@@ -41,6 +42,7 @@ const MinutesPage = () => {
       title: title,
       members: selectedAttendees.join(', '),
       date: dateStr,
+      agendas: agendas,
     };
 
     // 저장이 성공했다고 가정하고, teamId '1'의 태스크 페이지로 이동하며 새 회의록 데이터 전달

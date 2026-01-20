@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
-import checkIcon from '/src/assets/icon-check-white.svg';
+import checkIcon from '@/assets/icon-check-white.svg';
 
 // 팀원 더미 데이터
 const DUMMY_MEMBERS = [
@@ -18,6 +18,9 @@ interface AttendeeSelectorProps {
 const AttendeeSelector = ({ selectedAttendees, onSelectionChange }: AttendeeSelectorProps) => {
   const [isAttendeeListOpen, setIsAttendeeListOpen] = useState(false);
 
+  // 드롭다운 + 트리거 영역 전체를 감쌀 ref
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
   const toggleAttendee = (name: string) => {
     if (selectedAttendees.includes(name)) {
       onSelectionChange(selectedAttendees.filter((item) => item !== name));
@@ -26,12 +29,32 @@ const AttendeeSelector = ({ selectedAttendees, onSelectionChange }: AttendeeSele
     }
   };
 
+  useEffect(() => {
+    if (!isAttendeeListOpen) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const el = containerRef.current;
+      if (!el) return;
+
+      const targetNode = event.target as Node | null;
+      if (targetNode && !el.contains(targetNode)) {
+        setIsAttendeeListOpen(false);
+      }
+    };
+
+    document.addEventListener('pointerdown', handlePointerDown);
+
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+    };
+  }, [isAttendeeListOpen]);
+
   return (
-    <div className="relative space-y-3">
+    <div ref={containerRef} className="relative space-y-3">
       <label className="block text-lg font-medium">참석자</label>
 
       <div
-        onClick={() => setIsAttendeeListOpen(!isAttendeeListOpen)}
+        onClick={() => setIsAttendeeListOpen((prev) => !prev)}
         className="flex min-h-12 w-full flex-wrap items-center gap-2 rounded-xl bg-white px-3.5 py-1.5 text-lg font-medium outline-1 -outline-offset-1 outline-gray-300"
       >
         {selectedAttendees.length === 0 ? (
@@ -54,6 +77,7 @@ const AttendeeSelector = ({ selectedAttendees, onSelectionChange }: AttendeeSele
           <div className="flex flex-col gap-2">
             {DUMMY_MEMBERS.map((member) => {
               const isSelected = selectedAttendees.includes(member.name);
+
               return (
                 <div
                   key={member.id}

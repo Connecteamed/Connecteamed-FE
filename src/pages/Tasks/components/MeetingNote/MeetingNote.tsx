@@ -36,6 +36,7 @@ const MeetingNote = ({ newMeeting }: MeetingNoteProps) => {
 
   const handleCreateClick = () => {
     navigate('/minutes');
+    // navigate(`/team/${teamId}/minutes`); API 연결시 경로 수정
   };
 
   const handleDelete = (id: Meeting['id']) => {
