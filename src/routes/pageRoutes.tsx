@@ -63,6 +63,14 @@ export const publicRoutes: RouteObject[] = [
           </Suspense>
         ),
       },
+      {
+        path: 'minutes',
+        element: (
+          <Suspense fallback={null}>
+            <lazyRoutes.Minutes />
+          </Suspense>
+        ),
+      },
     ],
   },
 ];

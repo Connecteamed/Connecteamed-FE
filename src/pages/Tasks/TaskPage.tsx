@@ -1,7 +1,9 @@
 import React from 'react';
+import { useLocation } from 'react-router-dom';
 import bell from '@assets/icon-bell-black.svg';
 import setting from '@assets/icon-setting-outline.svg';
 import Calender from '@/components/calender';
+import MeetingNote from './components/MeetingNote/MeetingNote';
 
 const team = {
   teamname: 'UMC 3팀',
@@ -19,7 +21,10 @@ const profile = {
 };
 
 const TaskPage = () => {
-  const [selectedTask, setSelectedTask] = React.useState<string | null>('1');
+  const location = useLocation();
+  const [selectedTask, setSelectedTask] = React.useState<string | null>(
+    location.state?.selectedTask || '1',
+  );
   const [selectedDate, setSelectedDate] = React.useState<Date>(() => new Date());
   const [isCalendarOpen, setIsCalendarOpen] = React.useState<boolean>(false);
 
@@ -117,7 +122,11 @@ const TaskPage = () => {
             </div>
           )}
           {selectedTask === '2' && <div>문서 컴포넌트</div>}
-          {selectedTask === '3' && <div>회의록 컴포넌트</div>}
+          {selectedTask === '3' && (
+            <div>
+              <MeetingNote newMeeting={location.state?.newMeeting} />
+            </div>
+          )}
           {selectedTask === '4' && <div>완료한 업무 컴포넌트</div>}
           {selectedTask === '5' && <div>AI 회고 컴포넌트</div>}
         </div>
