@@ -8,13 +8,14 @@
  * 컴포넌트 작업 이후 연결 부탁드립니다.
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import bell from '@assets/icon-bell-black.svg';
 import setting from '@assets/icon-setting-outline.svg';
 import TaskManagement from './components/TaskManagement/TaskManagement';
 import Modal from '@/components/Modal';
 import selectedRoll from '@assets/icon-selectedRoll-orange.svg';
 import unselectedRoll from '@assets/icon-unSelectedRoll-orange.svg';
+import Dropdown from '@/components/Dropdown';
 
 type Member = { name: string; roles: string[] };
 type RawMember = { name: string; roles: Array<string | null> };
@@ -36,13 +37,14 @@ const profile = {
 };
 
 const TaskPage = () => {
-  const [selectedTask, setSelectedTask] = React.useState<string | null>('1');
-  const [isRoleModalOpen, setIsRoleModalOpen] = React.useState(false);
-  const [roleModalPos, setRoleModalPos] = React.useState<{ top: number; left: number } | null>(null);
-  const [activeMemberIndex, setActiveMemberIndex] = React.useState<number | null>(null);
-  const [members, setMembers] = React.useState<Member[]>(
+  const [selectedTask, setSelectedTask] = useState<string | null>('1');
+  const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
+  const [roleModalPos, setRoleModalPos] = useState<{ top: number; left: number } | null>(null);
+  const [activeMemberIndex, setActiveMemberIndex] = useState<number | null>(null);
+  const [members, setMembers] = useState<Member[]>(
     initialTeam.members.map((m) => ({ ...m, roles: m.roles.filter((r): r is string => !!r) }))
   );
+  const [settingDropdownIsOpen, setSettingDropdownIsOpen] = useState(false);
 
   const tasks = [
     { id: '1', title: '업무 목록' },
@@ -93,8 +95,23 @@ const TaskPage = () => {
                 </div>
               </div>
             </div>
-            <div className="w-6 h-6 relative overflow-hidden">
-              <img src={setting} alt="setting" className="w-6 h-6" />
+            <div className="w-6 h-6 relative overflow-hidden"
+            onClick={() => setSettingDropdownIsOpen(!settingDropdownIsOpen)}>
+              <img src={setting} alt="setting" className="w-6 h-6 cursor-pointer" />
+              <div className='mt-[97px] mr-0'>
+              {settingDropdownIsOpen && (
+                <Dropdown isOpen={settingDropdownIsOpen} onClose={() => setSettingDropdownIsOpen(false)}>
+                  <div className='w-[124px] h-[94px] px-3 py-3 gap-2.5 flex flex-col text-xs text-white bg-white rounded-[10px]'>
+                    <div className='w-full h-7.5 py-1.5 px-[15px] bg-orange-500 rounded-[20px] flex justify-center items-center cursor-pointer'>
+                      프로젝트 종료
+                    </div>
+                    <div className='w-full h-7.5 py-1.5 px-[15px] bg-zinc-200 text-neutral-600 rounded-[20px] flex justify-center items-center cursor-pointer'>
+                      프로젝트 수정
+                    </div>
+                  </div>
+                </Dropdown>
+              )}
+              </div>
             </div>
           </div>
         </div>
