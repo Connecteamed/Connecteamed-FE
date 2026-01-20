@@ -1,5 +1,6 @@
 import DocumentPageContent from './components/DocumentPageContent';
 import { useDocumentPageController } from './hooks/useDocumentPageController';
+import DeleteModal from '@components/DeleteModal';
 
 const DocumentPage = () => {
   const {
@@ -50,6 +51,14 @@ const DocumentPage = () => {
           onDownload={downloadLocal}
         />
       </div>
+
+      <DeleteModal
+        isOpen={isDeleteOpen}
+        title="문서 삭제"
+        description="해당 문서를 삭제할까요?"
+        onClose={closeDeleteModal}
+        onConfirm={confirmDelete}
+      />
     </>
   );
 };
