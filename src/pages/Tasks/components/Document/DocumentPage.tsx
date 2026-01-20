@@ -14,7 +14,8 @@ const DocumentPage = () => {
     isDeleteOpen,
 
     onPickFiles,
-    triggerFilePicker,
+    triggerPickAnyFile,
+    triggerPickFileByType,
 
     openTextCreate,
     openTextEdit,
@@ -41,7 +42,8 @@ const DocumentPage = () => {
           editingDoc={editingDoc}
           onBackToList={goList}
           onSaveText={handleSaveText}
-          onPickFile={triggerFilePicker}
+          onPickAnyFile={triggerPickAnyFile}
+          onPickFileByType={triggerPickFileByType}
           onClickText={openTextCreate}
           onEditText={openTextEdit}
           onDelete={onRequestDelete}

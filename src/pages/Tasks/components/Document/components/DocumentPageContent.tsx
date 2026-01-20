@@ -5,6 +5,8 @@ import DocumentList from './DocumentList/DocumentList';
 import EmptyDocument from './EmptyDocument';
 import TextEditor from './TextEditor';
 
+type PickFileType = 'pdf' | 'docx' | 'image';
+
 type Props = {
   view: ViewMode;
   isEmpty: boolean;
@@ -16,7 +18,8 @@ type Props = {
   onBackToList: () => void;
   onSaveText: (payload: { title: string; content: string }) => void;
 
-  onPickFile: () => void;
+  onPickAnyFile: () => void;
+  onPickFileByType: (type: PickFileType) => void;
   onClickText: () => void;
   onEditText: (id: string) => void;
 
@@ -32,7 +35,8 @@ const DocumentPageContent: React.FC<Props> = ({
   editingDoc,
   onBackToList,
   onSaveText,
-  onPickFile,
+  onPickAnyFile,
+  onPickFileByType,
   onClickText,
   onEditText,
   onDelete,
@@ -53,7 +57,7 @@ const DocumentPageContent: React.FC<Props> = ({
   if (isEmpty) {
     return (
       <div className="flex-1 min-h-0 flex">
-        <EmptyDocument onAdd={onPickFile} />
+        <EmptyDocument onAdd={onPickAnyFile} />
       </div>
     );
   }
@@ -64,7 +68,7 @@ const DocumentPageContent: React.FC<Props> = ({
         documents={documents}
         onDelete={onDelete}
         onDownload={onDownload}
-        onPickFile={onPickFile}
+        onPickFile={onPickFileByType}
         onClickText={onClickText}
         onEditText={onEditText}
       />

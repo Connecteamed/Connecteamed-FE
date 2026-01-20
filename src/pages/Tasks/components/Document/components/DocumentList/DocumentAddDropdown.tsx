@@ -2,7 +2,7 @@ import React from 'react';
 import useOutsideClose from '../../hooks/useOutsideClose';
 
 type Props = {
-  onPickFile: () => void;
+  onPickFile: (type: 'pdf' | 'docx' | 'image') => void;
   onClickText: () => void;
 };
 
@@ -38,7 +38,7 @@ const DocumentAddDropdown = ({ onPickFile, onClickText }: Props) => {
                   type="button"
                   onClick={() => {
                     close();
-                    onPickFile();
+                    onPickFile('pdf');
                   }}
                   className="self-stretch h-7 px-3.5 py-1.5 bg-zinc-200 rounded-[5px] inline-flex justify-center items-center gap-2.5"
                 >
@@ -51,7 +51,7 @@ const DocumentAddDropdown = ({ onPickFile, onClickText }: Props) => {
                   type="button"
                   onClick={() => {
                     close();
-                    onPickFile();
+                    onPickFile('docx');
                   }}
                   className="self-stretch h-7 px-3.5 py-1.5 bg-zinc-200 rounded-[5px] inline-flex justify-center items-center gap-2.5"
                 >
@@ -64,7 +64,7 @@ const DocumentAddDropdown = ({ onPickFile, onClickText }: Props) => {
                   type="button"
                   onClick={() => {
                     close();
-                    onPickFile();
+                    onPickFile('image');
                   }}
                   className="self-stretch h-7 px-3.5 py-1.5 bg-zinc-200 rounded-[5px] inline-flex justify-center items-center gap-2.5"
                 >

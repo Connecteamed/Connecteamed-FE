@@ -2,13 +2,13 @@ import React from 'react';
 import { type DocumentItem } from '../../types/document';
 import DocumentRow from '../DocumentRow/DocumentRow';
 import DocumentListHeader from '../DocumentList/DocumentListHeader';
-import DocumentAddDropdown from '../DocumentList/DocumentAppDropdown';
+import DocumentAddDropdown from './DocumentAddDropdown';
 
 type Props = {
   documents: DocumentItem[];
   onDelete: (id: string) => void;
   onDownload: (doc: DocumentItem) => void;
-  onPickFile: () => void;
+  onPickFile: (type: 'pdf' | 'docx' | 'image') => void;
   onClickText: () => void;
   onEditText: (id: string) => void;
 };

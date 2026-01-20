@@ -2,6 +2,8 @@ import { useMemo, useRef, useState } from 'react';
 import { useDocuments } from '../hooks/useDocuments';
 import { type ViewMode } from '../types/document';
 
+export type PickFileType = 'pdf' | 'docx' | 'image';
+
 export const useDocumentPageController = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -32,7 +34,41 @@ export const useDocumentPageController = () => {
     e.target.value = '';
   };
 
-  const triggerFilePicker = () => fileInputRef.current?.click();
+  const triggerFilePicker = (type: PickFileType) => {
+    const input = fileInputRef.current;
+    if (!input) return;
+
+    const acceptMap: Record<PickFileType, string> = {
+      pdf: 'application/pdf,.pdf',
+      docx: '.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      image: 'image/*',
+    };
+
+    input.accept = acceptMap[type];
+
+    input.value = '';
+    input.click();
+  };
+
+  const acceptMap: Record<PickFileType, string> = {
+    pdf: 'application/pdf,.pdf',
+    docx: '.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    image: 'image/*',
+  };
+
+  const triggerPickAnyFile = () => {
+    const input = fileInputRef.current;
+    if (!input) return;
+    input.accept = ''; // 제한 없음
+    input.click();
+  };
+
+  const triggerPickFileByType = (type: PickFileType) => {
+    const input = fileInputRef.current;
+    if (!input) return;
+    input.accept = acceptMap[type];
+    input.click();
+  };
 
   const openTextCreate = () => {
     setEditingTextId(null);
@@ -88,6 +124,8 @@ export const useDocumentPageController = () => {
     // actions
     onPickFiles,
     triggerFilePicker,
+    triggerPickAnyFile,
+    triggerPickFileByType,
 
     openTextCreate,
     openTextEdit,
