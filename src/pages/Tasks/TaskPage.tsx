@@ -89,7 +89,7 @@ const TaskPage = () => {
           ))}
         </div>
 
-        <div className={selectedTask === '2' ? 'flex-1 min-h-0 flex flex-col' : ''}>
+        <div className="flex-1 min-h-0 flex flex-col">
           {/* 선택된 task에 따른 컴포넌트가 들어가는 부분 */}
           {/* 각 컴포넌트 퍼블리싱 하실 때 여기에 연결 해주세요!*/}
           {selectedTask === '1' && (
@@ -120,13 +120,11 @@ const TaskPage = () => {
               )}
             </div>
           )}
-
           {selectedTask === '2' && (
             <div className="flex-1 min-h-0 flex flex-col">
               <DocumentPage />
             </div>
           )}
-
           {selectedTask === '3' && <div>회의록 컴포넌트</div>}
           {selectedTask === '4' && <div>완료한 업무 컴포넌트</div>}
           {selectedTask === '5' && <div>AI 회고 컴포넌트</div>}
