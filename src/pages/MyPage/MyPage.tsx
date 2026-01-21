@@ -84,6 +84,7 @@ const MyPage = () => {
           </table>
         </div>
       </section>
+      <h2 className="mt-20 text-[24px] text-primary-500 font-bold">로그아웃</h2>
 
       <DeleteModal
         isOpen={isOpen}
