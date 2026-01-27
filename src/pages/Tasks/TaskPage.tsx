@@ -1,7 +1,7 @@
 /**
- * 
+ *
  * @author 곽도윤
- * 
+ *
  * @description
  * 팀 페이지입니다.
  * 하단 selectedTask에 따라 각 컴포넌트로 변경되도록 설정해두었고
@@ -19,6 +19,8 @@ import Dropdown from '@/components/Dropdown';
 import { useLocation } from 'react-router-dom';
 import Calender from '@/components/calender';
 import MeetingNote from './components/MeetingNote/MeetingNote';
+import InviteModal from './components/InviteModal';
+import NotificationModal from './components/NotificationModal';
 
 type Member = { name: string; roles: string[] };
 type RawMember = { name: string; roles: Array<string | null> };
@@ -45,12 +47,14 @@ const TaskPage = () => {
   const [roleModalPos, setRoleModalPos] = useState<{ top: number; left: number } | null>(null);
   const [activeMemberIndex, setActiveMemberIndex] = useState<number | null>(null);
   const [members, setMembers] = useState<Member[]>(
-    initialTeam.members.map((m) => ({ ...m, roles: m.roles.filter((r): r is string => !!r) }))
+    initialTeam.members.map((m) => ({ ...m, roles: m.roles.filter((r): r is string => !!r) })),
   );
   const [settingDropdownIsOpen, setSettingDropdownIsOpen] = useState(false);
   const location = useLocation();
   const [selectedDate, setSelectedDate] = React.useState<Date>(() => new Date());
   const [isCalendarOpen, setIsCalendarOpen] = React.useState<boolean>(false);
+  const [inviteModalIsOpen, setInviteModalIsOpen] = useState<boolean>(false);
+  const [notificationModalIsOpen, setNotificationModalIsOpen] = useState<boolean>(false);
 
   const tasks = [
     { id: '1', title: '업무 목록' },
@@ -78,22 +82,32 @@ const TaskPage = () => {
       prev.map((member, idx) => {
         if (idx !== activeMemberIndex) return member;
         const hasRole = member.roles.includes(roleName);
-        const nextRoles = hasRole ? member.roles.filter((r) => r !== roleName) : [...member.roles, roleName];
+        const nextRoles = hasRole
+          ? member.roles.filter((r) => r !== roleName)
+          : [...member.roles, roleName];
         return { ...member, roles: nextRoles };
-      })
+      }),
     );
   };
 
   return (
     <div>
       <div className="ml-[80px] mt-[50px] mr-[40px] flex justify-between">
-        <div className="w-[453px] h-[61px] text-black text-5xl font-bold">{initialTeam.teamname}</div>
+        <div className="w-[453px] h-[61px] text-black text-5xl font-bold">
+          {initialTeam.teamname}
+        </div>
         <div className="flex">
           <div className="inline-flex justify-start items-center gap-6">
-            <div className="w-24 h-8 px-2 py-[5px] bg-orange-500 rounded-[10px] flex justify-center items-center gap-2.5">
+            <div className="w-24 h-8 px-2 py-[5px] bg-orange-500 rounded-[10px] flex justify-center items-center gap-2.5 cursor-pointer"
+            onClick={() => setInviteModalIsOpen(!inviteModalIsOpen)}>
               <div className="text-center justify-center text-white text-xs">초대하기</div>
+              {inviteModalIsOpen && (
+                <Modal isOpen={inviteModalIsOpen} onClose={() => setInviteModalIsOpen(false)}>
+                  <InviteModal />
+                </Modal>
+              )}
             </div>
-            <div className="w-6 h-6 relative overflow-hidden">
+            <div className="w-6 h-6 relative overflow-hidden" onClick={() => setNotificationModalIsOpen(!notificationModalIsOpen)}>
               <img src={bell} alt="notification" className="w-6 h-6" />
               <div className="bg-orange-500 w-2.5 h-2.5">
                 <div className="w-1.5 h-1.5 left-[15px] top-[3px] absolute text-center justify-center bg-orange-500 text-white text-[8px] font-normal font-['Roboto']">
@@ -101,23 +115,31 @@ const TaskPage = () => {
                 </div>
               </div>
             </div>
-            <div className="w-6 h-6 relative overflow-hidden"
-            onClick={() => setSettingDropdownIsOpen(!settingDropdownIsOpen)}>
+            {notificationModalIsOpen && (
+              <Modal isOpen={notificationModalIsOpen} onClose={() => setNotificationModalIsOpen(false)}>
+                <NotificationModal />
+              </Modal>
+            )}
+            <div
+              className="w-6 h-6 relative overflow-hidden"
+              onClick={() => setSettingDropdownIsOpen(!settingDropdownIsOpen)}
+            >
               <img src={setting} alt="setting" className="w-6 h-6 cursor-pointer" />
-              <div className='mt-[97px] mr-0'>
               {settingDropdownIsOpen && (
-                <Dropdown isOpen={settingDropdownIsOpen} onClose={() => setSettingDropdownIsOpen(false)}>
-                  <div className='w-[124px] h-[94px] px-3 py-3 gap-2.5 flex flex-col text-xs text-white bg-white rounded-[10px]'>
-                    <div className='w-full h-7.5 py-1.5 px-[15px] bg-orange-500 rounded-[20px] flex justify-center items-center cursor-pointer'>
+                <Dropdown
+                  isOpen={settingDropdownIsOpen}
+                  onClose={() => setSettingDropdownIsOpen(false)}
+                >
+                  <div className="absolute top-[97px] right-0 w-[124px] h-[94px] px-3 py-3 gap-2.5 flex flex-col text-xs text-white bg-white rounded-[10px]">
+                    <div className="w-full h-7.5 py-1.5 px-[15px] bg-orange-500 rounded-[20px] flex justify-center items-center cursor-pointer">
                       프로젝트 종료
                     </div>
-                    <div className='w-full h-7.5 py-1.5 px-[15px] bg-zinc-200 text-neutral-600 rounded-[20px] flex justify-center items-center cursor-pointer'>
+                    <div className="w-full h-7.5 py-1.5 px-[15px] bg-zinc-200 text-neutral-600 rounded-[20px] flex justify-center items-center cursor-pointer">
                       프로젝트 수정
                     </div>
                   </div>
                 </Dropdown>
               )}
-              </div>
             </div>
           </div>
         </div>
@@ -192,7 +214,9 @@ const TaskPage = () => {
           >
             <div className="w-28 left-[12px] top-[12px] absolute inline-flex flex-col justify-start items-start gap-2">
               {initialTeam.memberRoles.map((roleName) => {
-                const isSelected = activeMemberIndex !== null && members[activeMemberIndex]?.roles.includes(roleName);
+                const isSelected =
+                  activeMemberIndex !== null &&
+                  members[activeMemberIndex]?.roles.includes(roleName);
                 return (
                   <button
                     type="button"
@@ -201,7 +225,9 @@ const TaskPage = () => {
                     className="self-stretch inline-flex justify-start items-center gap-2"
                   >
                     <div className="w-20 h-7 px-1.5 py-1 bg-gray-400 rounded-[5px] flex justify-center items-center gap-2.5">
-                      <div className="text-center justify-center text-white text-sm font-medium">{roleName}</div>
+                      <div className="text-center justify-center text-white text-sm font-medium">
+                        {roleName}
+                      </div>
                     </div>
                     <img
                       src={isSelected ? selectedRoll : unselectedRoll}
