@@ -1,4 +1,9 @@
-import { useState, type FormEvent, useMemo } from 'react';
+import { type FormEvent, useMemo, useState } from 'react';
+
+import { useNavigate } from 'react-router-dom';
+
+import { checkId, postSignup } from '@/apis/auth';
+
 import Button from '@/components/Button';
 import Input from '@/components/Input';
 
@@ -25,6 +30,8 @@ const SignupForm = () => {
     }
   };
 
+  const navigate = useNavigate();
+
   // 유효성 검사 로직
   const isIdValid = form.userId.length >= 6 && form.userId.length <= 12;
 
@@ -32,39 +39,66 @@ const SignupForm = () => {
   const isPwValid = /^(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{8,})/.test(form.password);
   const isPwConfirmValid = form.password === form.passwordConfirm && form.passwordConfirm !== '';
 
-  const handleIdCheck = () => {
+  const isFormValid = useMemo(() => {
+    return form.name !== '' && isIdChecked && isPwValid && isPwConfirmValid;
+  }, [form.name, isIdChecked, isPwValid, isPwConfirmValid]);
+
+  const handleIdCheck = async () => {
     if (!isIdValid) {
       setIdError('아이디는 6~12자의 영문, 숫자만 사용할 수 있어요');
       return;
     }
 
-    if (form.userId === 'admin') {
-      setIdError('중복된 아이디가 있습니다.');
+    try {
+      const res = await checkId(form.userId);
+      if (res.status === 'success' && res.data) {
+        if (res.data.available) {
+          setIdError('');
+          setIsIdChecked(true);
+        } else {
+          setIdError('중복된 아이디가 있습니다.');
+          setIsIdChecked(false);
+        }
+      } else {
+        setIdError(res.message ?? '');
+        setIsIdChecked(false);
+      }
+    } catch {
+      setIdError('아이디 중복확인 중 오류가 발생했습니다.');
       setIsIdChecked(false);
-    } else {
-      setIdError('');
-      setIsIdChecked(true);
     }
   };
 
-  // 4. 모든 조건 만족 시 버튼 활성화 (주황색)
-  const isFormValid = useMemo(() => {
-    return form.name !== '' && isIdChecked && isPwValid && isPwConfirmValid;
-  }, [form.name, isIdChecked, isPwValid, isPwConfirmValid]);
-
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (isFormValid) console.log('회원가입 완료:', form);
+    if (!isFormValid) return;
+
+    try {
+      const res = await postSignup({
+        name: form.name,
+        loginId: form.userId,
+        password: form.password,
+      });
+
+      if (res.status === 'success') {
+        navigate('/login');
+        console.log('회원가입 성공:', res.data);
+      } else {
+        console.log('회원가입 실패:', res.message);
+      }
+    } catch {
+      console.log('회원가입 중 오류가 발생했습니다.');
+    }
   };
 
   return (
-    <div className="flex flex-col w-full">
+    <div className="flex w-full flex-col">
       <header className="mb-6">
-        <h1 className="text-[42px] text-black font-medium">회원가입</h1>
+        <h1 className="text-[42px] font-medium text-black">회원가입</h1>
       </header>
 
       <form
-        className="flex flex-col gap-6 pb-10 border-b border-neutral-40"
+        className="border-neutral-40 flex flex-col gap-6 border-b pb-10"
         onSubmit={handleSubmit}
       >
         {/* 이름 */}
@@ -88,8 +122,8 @@ const SignupForm = () => {
               value={form.userId}
               onChange={handleInputChange}
               placeholder="아이디 (6~12자 이내 영문/숫자/기호)"
-              className={`flex-1 shadow-md h-12 ${placeholderClass} ${
-                idError ? 'ring-1 ring-error' : isIdChecked ? 'ring-1 ring-success' : ''
+              className={`h-12 flex-1 shadow-md ${placeholderClass} ${
+                idError ? 'ring-error ring-1' : isIdChecked ? 'ring-success ring-1' : ''
               }`}
             />
             <Button
@@ -97,12 +131,12 @@ const SignupForm = () => {
               onClick={handleIdCheck}
               disabled={isIdChecked || !isIdValid}
               variant="secondary"
-              className="h-12 text-white shrink-0 whitespace-nowrap"
+              className="h-12 shrink-0 whitespace-nowrap text-white"
             >
               중복확인
             </Button>
           </div>
-          {idError && <p className="ml-1 text-xs text-error">{idError}</p>}
+          {idError && <p className="text-error ml-1 text-xs">{idError}</p>}
         </div>
 
         {/* 비밀번호 */}
@@ -117,16 +151,16 @@ const SignupForm = () => {
               placeholder="비밀번호 (영문, 숫자, 기호 조합 8자 이상)"
               className={`h-12 shadow-md ${placeholderClass} ${
                 form.password && !isPwValid
-                  ? 'ring-1 ring-error'
+                  ? 'ring-error ring-1'
                   : form.password && isPwValid
-                    ? 'ring-1 ring-success'
+                    ? 'ring-success ring-1'
                     : ''
               }`}
             />
             <button type="button" onClick={() => setShowPassword(!showPassword)}></button>
           </div>
           {form.password && !isPwValid && (
-            <p className="ml-1 text-xs text-error">
+            <p className="text-error ml-1 text-xs">
               비밀번호는 8자 이상, 영문, 숫자, 기호를 모두 포함해야 해요
             </p>
           )}
@@ -143,14 +177,14 @@ const SignupForm = () => {
             placeholder="비밀번호를 다시 입력하세요"
             className={`h-2 shadow-md ${placeholderClass} ${
               form.passwordConfirm && !isPwConfirmValid
-                ? ' ring-1 ring-error'
+                ? 'ring-error ring-1'
                 : form.passwordConfirm && isPwConfirmValid
-                  ? ' ring-1 ring-success'
+                  ? 'ring-success ring-1'
                   : ''
             }`}
           />
           {form.passwordConfirm && !isPwConfirmValid && (
-            <p className="ml-1 text-xs text-error">비밀번호가 일치하지 않아요.</p>
+            <p className="text-error ml-1 text-xs">비밀번호가 일치하지 않아요.</p>
           )}
         </div>
 
@@ -159,7 +193,7 @@ const SignupForm = () => {
           fullWidth
           disabled={!isFormValid}
           variant="secondary"
-          className={`h-12 mt-4 text-[18px] `}
+          className={`mt-4 h-12 text-[18px]`}
         >
           회원가입
         </Button>
@@ -168,7 +202,7 @@ const SignupForm = () => {
       <footer className="mt-10">
         <p className="text-[16px] text-black">
           이미 계정이 있으신가요?
-          <a className="ml-2 text-primary-500 hover:underline" href="/login">
+          <a className="text-primary-500 ml-2 hover:underline" href="/login">
             로그인
           </a>
         </p>
