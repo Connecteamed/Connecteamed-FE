@@ -2,7 +2,7 @@ import type { ApiResponse } from './api';
 
 export interface LoginData {
   memberId: number;
-  acessToken: string;
+  accessToken: string;
   refreshToken: string;
   grantType: string;
   expiresIn: number;
