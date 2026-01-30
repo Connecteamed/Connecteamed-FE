@@ -8,7 +8,7 @@
  * 컴포넌트 작업 이후 연결 부탁드립니다.
  */
 
-import React, { useState } from 'react';
+import { useState, MouseEvent } from 'react';
 import bell from '@assets/icon-bell-black.svg';
 import setting from '@assets/icon-setting-outline.svg';
 import TaskManagement from './components/TaskManagement/TaskManagement';
@@ -17,7 +17,6 @@ import selectedRoll from '@assets/icon-selectedRoll-orange.svg';
 import unselectedRoll from '@assets/icon-unSelectedRoll-orange.svg';
 import Dropdown from '@/components/Dropdown';
 import { useLocation } from 'react-router-dom';
-import Calender from '@/components/calender';
 import MeetingNote from './components/MeetingNote/MeetingNote';
 import InviteModal from './components/InviteModal';
 import NotificationModal from './components/NotificationModal';
@@ -51,8 +50,6 @@ const TaskPage = () => {
   );
   const [settingDropdownIsOpen, setSettingDropdownIsOpen] = useState(false);
   const location = useLocation();
-  const [selectedDate, setSelectedDate] = React.useState<Date>(() => new Date());
-  const [isCalendarOpen, setIsCalendarOpen] = React.useState<boolean>(false);
   const [inviteModalIsOpen, setInviteModalIsOpen] = useState<boolean>(false);
   const [notificationModalIsOpen, setNotificationModalIsOpen] = useState<boolean>(false);
 
@@ -64,7 +61,7 @@ const TaskPage = () => {
     { id: '5', title: 'AI 회고' },
   ];
 
-  const handleOpenRoleModal = (event: React.MouseEvent<HTMLButtonElement>, memberIndex: number) => {
+  const handleOpenRoleModal = (event: MouseEvent<HTMLButtonElement>, memberIndex: number) => {
     const rect = event.currentTarget.getBoundingClientRect();
     const modalWidth = 128; // w-32
     const offsetY = 8;

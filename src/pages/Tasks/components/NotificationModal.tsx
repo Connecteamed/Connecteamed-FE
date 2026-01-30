@@ -1,5 +1,3 @@
-import React from 'react';
-
 const NotificationModal = () => {
 	return (
 		<div className="w-72 h-96 p-4 relative inline-flex justify-end items-start gap-2.5">

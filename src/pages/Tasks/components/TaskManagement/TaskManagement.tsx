@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 import Modal from '@/components';
 import searchPaper from '@assets/icon-search-paper.svg';
@@ -13,14 +13,14 @@ type TaskRow = {
   id: string;
   title: string;
   description: string;
-  status: '시작 전' | '진행 중';
+  status: '시작 전' | '진행 중' | '완료';
   startDate: string;
   endDate: string;
   assignees: string;
 };
 
 // 실제 데이터 연결 시 null 가능성을 대비해 널 허용
-const tasks: TaskRow[] | null = [
+const initialTasks: TaskRow[] = [
   {
     id: 'task-1',
     title: '와이어프레임 제작',
@@ -54,21 +54,19 @@ const tasks: TaskRow[] | null = [
 const statusStyle: Record<TaskRow['status'], string> = {
   '시작 전': 'bg-zinc-200 text-neutral-600',
   '진행 중': 'bg-orange-100 text-neutral-600',
+  완료: 'bg-green-100 text-neutral-700',
 };
 
 const TaskManagement = () => {
-  const hasTasks = Array.isArray(tasks) && tasks.length > 0;
-  const [selectedStatus, setSelectedStatus] = useState<'시작 전' | '진행 중' | '완료'>('시작 전');
+  const [taskList, setTaskList] = useState<TaskRow[]>(initialTasks);
+  const hasTasks = taskList.length > 0;
   const [statusDropdownOpenId, setStatusDropdownOpenId] = useState<string | null>(null);
   const [assigneeDropdownOpenId, setAssigneeDropdownOpenId] = useState<string | null>(null);
   const [addTaskModalIsOpen, setAddTaskModalIsOpen] = useState(false);
 
-  const handleSelectStatus = (status: '시작 전' | '진행 중' | '완료') => {
-    setSelectedStatus(status);
-  };
-
-  const handleIsStatusToggleOpen = () => {
-    setStatusToggleIsOpen(!statusToggleIsOpen);
+  const handleSelectStatus = (taskId: string, status: '시작 전' | '진행 중' | '완료') => {
+    setTaskList((prev) => prev.map((task) => (task.id === taskId ? { ...task, status } : task)));
+    setStatusDropdownOpenId(null);
   };
 
   if (!hasTasks) {
@@ -120,7 +118,7 @@ const TaskManagement = () => {
         </div>
       </div>
 
-      {tasks.map((task, index) => (
+      {taskList.map((task, index) => (
         <div
           key={task.id ?? index}
           className="flex flex-col gap-2.5 self-stretch border-r border-b border-l border-gray-200 bg-white p-3.5"
@@ -149,19 +147,19 @@ const TaskManagement = () => {
                       <div className="absolute top-0 left-0 flex h-32 w-24 flex-col gap-2.5 rounded-[10px] bg-white px-3 py-3 text-xs">
                         <div
                           className="flex h-7 w-[78px] items-center justify-center self-stretch rounded-[20px] bg-zinc-200"
-                          onClick={() => handleSelectStatus('시작 전')}
+                          onClick={() => handleSelectStatus(task.id, '시작 전')}
                         >
                           시작 전
                         </div>
                         <div
                           className="flex h-7 w-[78px] items-center justify-center self-stretch rounded-[20px] bg-orange-100"
-                          onClick={() => handleSelectStatus('진행 중')}
+                          onClick={() => handleSelectStatus(task.id, '진행 중')}
                         >
                           진행 중
                         </div>
                         <div
                           className="flex h-7 w-[78px] items-center justify-center self-stretch rounded-[20px] bg-orange-300"
-                          onClick={() => handleSelectStatus('완료')}
+                          onClick={() => handleSelectStatus(task.id, '완료')}
                         >
                           완료
                         </div>

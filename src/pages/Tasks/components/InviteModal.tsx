@@ -1,5 +1,3 @@
-import React from 'react';
-
 type InviteModalProps = {
   inviteCode?: string;
   projectName?: string;
