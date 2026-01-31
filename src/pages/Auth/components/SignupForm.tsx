@@ -1,95 +1,25 @@
-import { type FormEvent, useMemo, useState } from 'react';
-
-import { useNavigate } from 'react-router-dom';
-
-import { checkId, postSignup } from '@/apis/auth';
-
 import Button from '@/components/Button';
 import Input from '@/components/Input';
 
+import { useSignupForm } from '../hooks/useSignupForm';
+
 const SignupForm = () => {
-  const [showPassword, setShowPassword] = useState(false);
   const placeholderClass = 'placeholder:text-neutral-70';
 
-  const [form, setForm] = useState({
-    name: '',
-    userId: '',
-    password: '',
-    passwordConfirm: '',
-  });
-
-  const [isIdChecked, setIsIdChecked] = useState(false);
-  const [idError, setIdError] = useState('');
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-    if (name === 'userId') {
-      setIsIdChecked(false); // 아이디 수정 시 중복확인 초기화
-      setIdError('');
-    }
-  };
-
-  const navigate = useNavigate();
-
-  // 유효성 검사 로직
-  const isIdValid = form.userId.length >= 6 && form.userId.length <= 12;
-
-  // 비밀번호 조건: 8자 이상, 영문/숫자/기호 조합 (정규표현식)
-  const isPwValid = /^(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{8,})/.test(form.password);
-  const isPwConfirmValid = form.password === form.passwordConfirm && form.passwordConfirm !== '';
-
-  const isFormValid = useMemo(() => {
-    return form.name !== '' && isIdChecked && isPwValid && isPwConfirmValid;
-  }, [form.name, isIdChecked, isPwValid, isPwConfirmValid]);
-
-  const handleIdCheck = async () => {
-    if (!isIdValid) {
-      setIdError('아이디는 6~12자의 영문, 숫자만 사용할 수 있어요');
-      return;
-    }
-
-    try {
-      const res = await checkId(form.userId);
-      if (res.status === 'success' && res.data) {
-        if (res.data.available) {
-          setIdError('');
-          setIsIdChecked(true);
-        } else {
-          setIdError('중복된 아이디가 있습니다.');
-          setIsIdChecked(false);
-        }
-      } else {
-        setIdError(res.message ?? '');
-        setIsIdChecked(false);
-      }
-    } catch {
-      setIdError('아이디 중복확인 중 오류가 발생했습니다.');
-      setIsIdChecked(false);
-    }
-  };
-
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!isFormValid) return;
-
-    try {
-      const res = await postSignup({
-        name: form.name,
-        loginId: form.userId,
-        password: form.password,
-      });
-
-      if (res.status === 'success') {
-        navigate('/login');
-        console.log('회원가입 성공:', res.data);
-      } else {
-        console.log('회원가입 실패:', res.message);
-      }
-    } catch {
-      console.log('회원가입 중 오류가 발생했습니다.');
-    }
-  };
+  const {
+    form,
+    showPassword,
+    setShowPassword,
+    isIdChecked,
+    idError,
+    isIdValid,
+    isPwValid,
+    isPwConfirmValid,
+    isFormValid,
+    handleInputChange,
+    handleIdCheck,
+    handleSubmit,
+  } = useSignupForm();
 
   return (
     <div className="flex w-full flex-col">
