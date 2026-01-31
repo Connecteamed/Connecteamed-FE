@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 
+import { useNavigate } from 'react-router-dom';
+
+import { postLogout } from '@/apis/auth';
 import {
   deleteProject,
   deleteRestrospective,
@@ -29,8 +32,8 @@ const MyPage = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [retros, setRetros] = useState<Retrospective[]>([]);
 
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [, /*loading*/ setLoading] = useState(true);
+  const [, /*error*/ setError] = useState('');
 
   const openDeleteModal = (target: DeleteTarget) => {
     setTarget(target);
@@ -97,6 +100,23 @@ const MyPage = () => {
     if (!target) return '';
     return `선택하신 "${target.label}" 항목을 영구적으로 삭제할까요?`;
   }, [target]);
+
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      const res = await postLogout();
+      if (res.status !== 'success') {
+        console.log(res.message);
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      navigate('/login');
+    }
+  };
 
   return (
     <div className="mt-10 flex flex-col justify-center px-20.5">
@@ -185,7 +205,9 @@ const MyPage = () => {
           </table>
         </div>
       </section>
-      <h2 className="text-primary-500 mt-20 text-[24px] font-bold">로그아웃</h2>
+      <h2 className="text-primary-500 mt-20 text-[24px] font-bold" onClick={handleLogout}>
+        로그아웃
+      </h2>
 
       <DeleteModal
         isOpen={isOpen}

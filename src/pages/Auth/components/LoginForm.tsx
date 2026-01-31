@@ -27,11 +27,12 @@ const LoginForm = () => {
 
     try {
       const response = await postLogin(loginId, password);
-      if (response.status === 'success') {
+      if (response.status === 'success' && response.data) {
         localStorage.setItem('accessToken', response.data.accessToken);
         localStorage.setItem('refreshToken', response.data.refreshToken);
         setIsError(false);
         navigate('/');
+        return;
       }
     } catch (error) {
       console.error(error);

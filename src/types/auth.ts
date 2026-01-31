@@ -17,6 +17,11 @@ export interface CheckIdData {
   available: boolean;
 }
 
+export interface RefreshTokenData {
+  accessToken: string;
+  refreshToken: string;
+}
+
 export type LoginResponse = ApiResponse<LoginData>;
 export type SignupResponse = ApiResponse<SignupData>;
 export type CheckIdResponse = ApiResponse<CheckIdData>;
