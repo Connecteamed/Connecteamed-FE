@@ -9,6 +9,8 @@ import Input from '@/components/Input';
 
 import iconError from '@/assets/icon-error.svg';
 import iconEye from '@/assets/icon-eye.svg';
+import iconGoogle from '@/assets/icon-google.svg';
+import iconKakao from '@/assets/icon-kakao.svg';
 import iconLogin from '@/assets/icon-login.svg';
 import iconOpenEye from '@/assets/icon-open-eye.svg';
 import iconPassword from '@/assets/icon-password.svg';
@@ -41,6 +43,9 @@ const LoginForm = () => {
   };
 
   const placeholderClass = 'placeholder:text-neutral-70';
+
+  // const handleGoogleLogin = () => { }
+  // const handleKakaoLogin = () => { }
 
   return (
     <div className="flex w-full flex-col">
@@ -99,6 +104,23 @@ const LoginForm = () => {
           로그인
         </Button>
       </form>
+      <div className="flex flex-col">
+        <button
+          type="button"
+          className="relative mt-4 flex h-15 w-full items-center rounded-md bg-[#f2f2f2] text-[14px] font-normal"
+        >
+          <img src={iconGoogle} alt="google" className="absolute left-4 h-5 w-5" />
+          <span className="mx-auto">Google 로그인</span>
+        </button>
+
+        <button
+          type="button"
+          className="relative mt-4 flex h-15 w-full items-center rounded-md bg-[#fee500] text-[14px] font-normal"
+        >
+          <img src={iconKakao} alt="kakao" className="absolute left-4 h-5 w-5" />
+          <span className="mx-auto">카카오 로그인</span>
+        </button>
+      </div>
 
       <footer className="mt-10">
         <p className="text-[16px] text-black">

@@ -211,7 +211,7 @@ const MyPage = () => {
 
       <DeleteModal
         isOpen={isOpen}
-        onClose={() => setIsOpen(false)}
+        onClose={closeModal}
         onConfirm={handleDelete}
         title="항목 삭제"
         description={modalDescription}
