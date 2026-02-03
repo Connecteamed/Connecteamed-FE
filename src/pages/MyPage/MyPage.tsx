@@ -13,6 +13,8 @@ import type { Project, Retrospective } from '@/types/mypage';
 
 import DeleteModal from '@/components/DeleteModal';
 
+import EmptyState from './components/EmptyState';
+
 const formatDate = (iso: string) => {
   const d = new Date(iso);
   const yyyy = d.getFullYear();
@@ -123,24 +125,25 @@ const MyPage = () => {
       <h1 className="text-[42px] font-bold text-black">마이페이지</h1>
       <section className="mt-10.5 mb-20 w-full">
         <h2 className="text-secondary-900 mb-6 text-[24px] font-medium">완료한 프로젝트</h2>
-        <div className="border-neutral-30 overflow-hidden border">
-          <table className="w-full bg-white text-left text-sm">
-            <thead className="border-b-neutral-30 bg-neutral-10 text-black">
-              <tr className="whitespace-nowrap">
-                <th className="p-4">프로젝트명</th>
-                <th className="w-30 p-4">역할</th>
-                <th className="w-30 p-4">시작일</th>
-                <th className="w-30 p-4">종료일</th>
-                <th className="w-20 p-4"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {projects.length === 0 ? (
-                <tr>
-                  <td>완료한 프로젝트가 없습니다.</td>
+        {projects.length === 0 ? (
+          <EmptyState
+            title="완료된 프로젝트가 없어요"
+            description="프로젝트를 마무리하면 이곳에서 확인할 수 있어요"
+          />
+        ) : (
+          <div className="border-neutral-30 overflow-hidden border">
+            <table className="w-full bg-white text-left text-sm">
+              <thead className="border-b-neutral-30 bg-neutral-10 text-black">
+                <tr className="whitespace-nowrap">
+                  <th className="p-4">프로젝트명</th>
+                  <th className="w-30 p-4">역할</th>
+                  <th className="w-30 p-4">시작일</th>
+                  <th className="w-30 p-4">종료일</th>
+                  <th className="w-20 p-4"></th>
                 </tr>
-              ) : (
-                projects.map((p) => (
+              </thead>
+              <tbody>
+                {projects.map((p) => (
                   <tr
                     key={p.id}
                     className="border-b-neutral-30 font-medium whitespace-nowrap text-black"
@@ -156,34 +159,32 @@ const MyPage = () => {
                       삭제
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
 
       <section className="mt-10.5 w-full">
         <h2 className="text-secondary-900 mb-6 text-[24px] font-medium">나의 회고</h2>
-        <div className="border-neutral-30 overflow-hidden border">
-          <table className="w-full bg-white text-left text-sm">
-            <thead className="border-b-neutral-30 bg-neutral-10 text-black">
-              <tr className="whitespace-nowrap">
-                <th className="p-4">제목</th>
-                <th className="w-30 p-4">만든 날짜</th>
-                <th className="w-20 p-4"></th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {retros.length === 0 ? (
-                <tr>
-                  <td className="text-neutral-70 p-4" colSpan={3}>
-                    작성한 회고가 없습니다.
-                  </td>
+        {retros.length === 0 ? (
+          <EmptyState
+            title="작성한 회고가 없어요"
+            description="프로젝트를 완료한 뒤 회고를 작성하면 이곳에서 모아볼 수 있어요"
+          />
+        ) : (
+          <div className="border-neutral-30 overflow-hidden border">
+            <table className="w-full bg-white text-left text-sm">
+              <thead className="border-b-neutral-30 bg-neutral-10 text-black">
+                <tr className="whitespace-nowrap">
+                  <th className="p-4">제목</th>
+                  <th className="w-30 p-4">만든 날짜</th>
+                  <th className="w-20 p-4"></th>
                 </tr>
-              ) : (
-                retros.map((r) => (
+              </thead>
+              <tbody>
+                {retros.map((r) => (
                   <tr
                     key={r.id}
                     className="border-b-neutral-30 font-medium whitespace-nowrap text-black"
@@ -199,11 +200,11 @@ const MyPage = () => {
                       삭제
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
       <h2 className="text-primary-500 mt-20 text-[24px] font-bold" onClick={handleLogout}>
         로그아웃
