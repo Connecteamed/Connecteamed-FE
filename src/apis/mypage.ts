@@ -50,7 +50,7 @@ export const getMyRetrospectives = async () => {
 /**
  * 회고 삭제
  */
-export const deleteRestrospective = async (retrospectiveId: number) => {
+export const deleteRetrospective = async (retrospectiveId: number) => {
   const res = await axios.delete<ApiResponse<null>>(
     `${API_URL}/api/mypage/retrospective/${retrospectiveId}`,
     {

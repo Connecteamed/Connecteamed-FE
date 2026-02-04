@@ -21,19 +21,20 @@ export const postLogout = async () => {
   const accessToken = localStorage.getItem('accessToken');
   const refreshToken = localStorage.getItem('refreshToken');
 
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-  };
-
-  if (accessToken) {
-    headers.Authorization = `Bearer ${accessToken}`;
-  }
-  if (refreshToken) {
-    headers['Refresh-Token'] = refreshToken;
+  if (!accessToken || !refreshToken) {
+    return {
+      status: 'error',
+      data: null,
+      message: '토큰이 없습니다. 다시 로그인해주세요.',
+    } as ApiResponse<null>;
   }
 
   const response = await axios.post<ApiResponse<null>>(`${API_URL}/api/auth/logout`, null, {
-    headers,
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Refresh-Token': refreshToken,
+      'Content-Type': 'application/json',
+    },
   });
 
   return response.data;

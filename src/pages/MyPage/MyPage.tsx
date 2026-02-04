@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { postLogout } from '@/apis/auth';
 import {
   deleteProject,
-  deleteRestrospective,
+  deleteRetrospective,
   getMyProjects,
   getMyRetrospectives,
 } from '@/apis/mypage';
@@ -75,7 +75,7 @@ const MyPage = () => {
 
     try {
       if (target.type === 'retrospective') {
-        const res = await deleteRestrospective(target.id);
+        const res = await deleteRetrospective(target.id);
         if (res.status === 'success') {
           setRetros((prev) => prev.filter((r) => r.id !== target.id));
         } else {
