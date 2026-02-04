@@ -1,13 +1,18 @@
 import { Outlet } from 'react-router-dom';
+
+import FooterBar from '@/components/FooterBar';
 import SideBar from '@/components/SideBar';
 
 const SideBarLayout = () => {
   return (
     <div className="flex h-screen w-full">
-      <SideBar />
-      <main className="flex-1 overflow-auto bg-[#F2F4F8]">
+      <div className="hidden md:block">
+        <SideBar />
+      </div>
+      <main className="flex-1 overflow-auto bg-[#F2F4F8] pb-20 md:pb-0">
         <Outlet />
       </main>
+      <FooterBar />
     </div>
   );
 };
