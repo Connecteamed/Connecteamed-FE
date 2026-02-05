@@ -8,7 +8,8 @@
  * 컴포넌트 작업 이후 연결 부탁드립니다.
  */
 
-import React, { useState } from 'react';
+import { useState } from 'react';
+import type { MouseEvent } from 'react';
 import bell from '@assets/icon-bell-black.svg';
 import setting from '@assets/icon-setting-outline.svg';
 import TaskManagement from './components/TaskManagement/TaskManagement';
@@ -17,7 +18,6 @@ import selectedRoll from '@assets/icon-selectedRoll-orange.svg';
 import unselectedRoll from '@assets/icon-unSelectedRoll-orange.svg';
 import Dropdown from '@/components/Dropdown';
 import { useLocation } from 'react-router-dom';
-import Calender from '@/components/calender';
 import DocumentPage from '@/pages/Tasks/components/Document/DocumentPage';
 import MeetingNote from './components/MeetingNote/MeetingNote';
 import InviteModal from './components/InviteModal';
@@ -34,7 +34,7 @@ const initialTeam = {
     { name: '팀원3', roles: ['PPT'] },
     { name: '팀원4', roles: ['기획'] },
   ] as RawMember[],
-  memberRoles: ['기획', '디자인', 'PPT'],
+  memberRoles: ['기획', '디자인', 'PPT', '개발', 'PM', '마케팅', '영상편집', '기타', 'db엔지니어', '서버관리', '프론트엔드', '백엔드'],
 };
 
 const profile = {
@@ -48,12 +48,10 @@ const TaskPage = () => {
   const [roleModalPos, setRoleModalPos] = useState<{ top: number; left: number } | null>(null);
   const [activeMemberIndex, setActiveMemberIndex] = useState<number | null>(null);
   const [members, setMembers] = useState<Member[]>(
-    initialTeam.members.map((m) => ({ ...m, roles: m.roles.filter((r): r is string => !!r) })),
+    initialTeam.members.map(({ name, roles }) => ({ name, roles: roles.filter(Boolean) as string[] })),
   );
   const [settingDropdownIsOpen, setSettingDropdownIsOpen] = useState(false);
   const location = useLocation();
-  const [selectedDate, setSelectedDate] = React.useState<Date>(() => new Date());
-  const [isCalendarOpen, setIsCalendarOpen] = React.useState<boolean>(false);
   const [inviteModalIsOpen, setInviteModalIsOpen] = useState<boolean>(false);
   const [notificationModalIsOpen, setNotificationModalIsOpen] = useState<boolean>(false);
 
@@ -65,13 +63,13 @@ const TaskPage = () => {
     { id: '5', title: 'AI 회고' },
   ];
 
-  const handleOpenRoleModal = (event: React.MouseEvent<HTMLButtonElement>, memberIndex: number) => {
+  const handleOpenRoleModal = (event: MouseEvent<HTMLButtonElement>, memberIndex: number) => {
     const rect = event.currentTarget.getBoundingClientRect();
     const modalWidth = 128; // w-32
     const offsetY = 8;
     setRoleModalPos({
-      top: rect.bottom + offsetY + window.scrollY,
-      left: rect.left + rect.width / 2 - modalWidth / 2 + window.scrollX,
+      top: rect.bottom + offsetY,
+      left: rect.left + rect.width / 2 - modalWidth / 2,
     });
     setActiveMemberIndex(memberIndex);
     setIsRoleModalOpen(true);
@@ -104,7 +102,11 @@ const TaskPage = () => {
               <div className="text-center justify-center text-white text-xs">초대하기</div>
               {inviteModalIsOpen && (
                 <Modal isOpen={inviteModalIsOpen} onClose={() => setInviteModalIsOpen(false)}>
-                  <InviteModal />
+                  <InviteModal
+                    inviteCode="a47ab466le"
+                    projectName={initialTeam.teamname}
+                    onClose={() => setInviteModalIsOpen(false)}
+                  />
                 </Modal>
               )}
             </div>
@@ -209,43 +211,48 @@ const TaskPage = () => {
           {selectedTask === '5' && <div>AI 회고 컴포넌트</div>}
         </div>
 
-        <Modal isOpen={isRoleModalOpen} onClose={() => setIsRoleModalOpen(false)}>
+        {isRoleModalOpen && roleModalPos && (
           <div
-            className="absolute w-32 h-32 bg-white rounded-[10px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.15)]"
-            style={{
-              top: roleModalPos?.top ?? '50%',
-              left: roleModalPos?.left ?? '50%',
-              transform: roleModalPos ? 'none' : 'translate(-50%, -50%)',
-            }}
+            className="fixed inset-0 z-40"
+            onClick={() => setIsRoleModalOpen(false)}
+            role="presentation"
           >
-            <div className="w-28 left-[12px] top-[12px] absolute inline-flex flex-col justify-start items-start gap-2">
-              {initialTeam.memberRoles.map((roleName) => {
-                const isSelected =
-                  activeMemberIndex !== null &&
-                  members[activeMemberIndex]?.roles.includes(roleName);
-                return (
-                  <button
-                    type="button"
-                    key={roleName}
-                    onClick={() => handleToggleRole(roleName)}
-                    className="self-stretch inline-flex justify-start items-center gap-2"
-                  >
-                    <div className="w-20 h-7 px-1.5 py-1 bg-gray-400 rounded-[5px] flex justify-center items-center gap-2.5">
-                      <div className="text-center justify-center text-white text-sm font-medium">
-                        {roleName}
+            <div
+              className="fixed w-32 bg-white rounded-[10px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.15)]"
+              style={{ top: roleModalPos.top, left: roleModalPos.left }}
+              onClick={(e) => e.stopPropagation()}
+              role="dialog"
+              aria-modal="true"
+            >
+              <div className="w-28 left-[12px] top-[12px] absolute inline-flex flex-col justify-start items-start gap-2 bg-white">
+                {initialTeam.memberRoles.map((roleName) => {
+                  const isSelected =
+                    activeMemberIndex !== null &&
+                    members[activeMemberIndex]?.roles.includes(roleName);
+                  return (
+                    <button
+                      type="button"
+                      key={roleName}
+                      onClick={() => handleToggleRole(roleName)}
+                      className="self-stretch inline-flex justify-start items-center gap-2 "
+                    >
+                      <div className="w-20 h-7 px-1.5 py-1 bg-gray-400 rounded-[5px] flex justify-center items-center gap-2.5">
+                        <div className="text-center justify-center text-white text-sm font-medium">
+                          {roleName}
+                        </div>
                       </div>
-                    </div>
-                    <img
-                      src={isSelected ? selectedRoll : unselectedRoll}
-                      alt={isSelected ? 'selected role' : 'unselected role'}
-                      className="w-4 h-4"
-                    />
-                  </button>
-                );
-              })}
+                      <img
+                        src={isSelected ? selectedRoll : unselectedRoll}
+                        alt={isSelected ? 'selected role' : 'unselected role'}
+                        className="w-4 h-4"
+                      />
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
-        </Modal>
+        )}
       </div>
     </div>
   );
