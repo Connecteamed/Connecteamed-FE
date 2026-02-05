@@ -6,9 +6,7 @@ const API_URL = 'https://api.connecteamed.shop';
 
 const authHeaders = () => {
   const token = localStorage.getItem('accessToken');
-  return {
-    Authorization: token ? `Bearer ${token}` : '',
-  };
+  return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
 /**
