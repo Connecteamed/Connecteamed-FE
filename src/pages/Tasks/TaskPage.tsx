@@ -18,6 +18,7 @@ import selectedRoll from '@assets/icon-selectedRoll-orange.svg';
 import unselectedRoll from '@assets/icon-unSelectedRoll-orange.svg';
 import Dropdown from '@/components/Dropdown';
 import { useLocation } from 'react-router-dom';
+import DocumentPage from '@/pages/Tasks/components/Document/DocumentPage';
 import MeetingNote from './components/MeetingNote/MeetingNote';
 import InviteModal from './components/InviteModal';
 import NotificationModal from './components/NotificationModal';
@@ -178,6 +179,7 @@ const TaskPage = () => {
             </div>
           ))}
         </div>
+
         <div className="mt-[30px] gap-[42px] flex">
           {tasks.map((task) => (
             <div
@@ -195,7 +197,11 @@ const TaskPage = () => {
               <TaskManagement />
             </div>
           )}
-          {selectedTask === '2' && <div>문서 컴포넌트</div>}
+          {selectedTask === '2' && (
+            <div className="flex-1 min-h-0 flex flex-col">
+              <DocumentPage />
+            </div>
+          )}
           {selectedTask === '3' && (
             <div>
               <MeetingNote newMeeting={location.state?.newMeeting} />
