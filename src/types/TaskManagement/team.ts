@@ -1,7 +1,12 @@
+import type { CommonResponse } from "../common";
+
+export interface TeamList {
+    teams: Team[];
+}
+
 export interface Team {
     id: number;
     name: string;
-    members: Member[];
 }
 
 export interface Member {
@@ -9,3 +14,5 @@ export interface Member {
     name: string;
     roles: string[];
 }
+
+export type ResponseTeamListDTO = CommonResponse<TeamList[]>;

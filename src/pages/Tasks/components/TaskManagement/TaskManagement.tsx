@@ -54,7 +54,7 @@ const initialTasks: TaskRow[] = [
 const statusStyle: Record<TaskRow['status'], string> = {
   '시작 전': 'bg-zinc-200 text-neutral-600',
   '진행 중': 'bg-orange-100 text-neutral-600',
-  완료: 'bg-green-100 text-neutral-700',
+  '완료': 'bg-orange-300 text-neutral-700',
 };
 
 const TaskManagement = () => {

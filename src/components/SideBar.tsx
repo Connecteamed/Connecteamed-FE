@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { NavLink } from 'react-router-dom';
 
@@ -13,14 +13,28 @@ import iconSearchBlack from '@assets/icon-search-black.svg';
 import iconSearchOrange from '@assets/icon-search-orange.svg';
 import logoImg from '@assets/icon-sidebar-logo.png';
 
-// TODO: 실제 팀 데이터로 교체
-const teamList = [
-  { id: '1', name: '00공모전' },
-  { id: '2', name: '마케팅 원론 2조' },
-];
+import useGetTeamList from '@/hooks/TaskPage/Query/useGetTeamList';
+
+type Team = {
+  teamId: number;
+  name: string;
+};
 
 const Sidebar = () => {
   const [isTeamOpen, setIsTeamOpen] = useState(true);
+  const { data, isLoading, isError } = useGetTeamList();
+
+  const teams: Team[] = useMemo(() => {
+    if (!data?.data) return [];
+    const payload = data.data;
+
+    // 서버 응답이 TeamList[] 또는 TeamList 단일 객체 둘 다 대응
+    const list = Array.isArray(payload) ? payload : [payload];
+
+    return list.flatMap((group) =>
+      group?.teams?.map((team) => ({ teamId: team.id, name: team.name })) ?? [],
+    );
+  }, [data]);
 
   return (
     <aside className="flex h-screen w-[300px] flex-col justify-between border-r-2 border-zinc-200 bg-white px-5 py-4">
@@ -70,7 +84,7 @@ const Sidebar = () => {
           >
             <div className="flex items-center gap-3">
               <img src={iconFoldersBlack} alt="team" className="h-6 w-6" />
-              <span className="text-base font-medium text-black">팀</span>
+              <span className="text-base font-medium text-black">내 프로젝트</span>
             </div>
             <img
               src={iconArrowDownBlack}
@@ -82,19 +96,30 @@ const Sidebar = () => {
           {/* 팀 리스트 */}
           {isTeamOpen && (
             <div className="flex flex-col">
-              {teamList.map((team) => (
-                <NavLink
-                  key={team.id}
-                  to={`/team/${team.id}`}
-                  className={({ isActive }) =>
-                    `flex h-10 items-center rounded-md px-11 py-1.5 transition-colors ${
-                      isActive ? 'text-primary-500 bg-slate-100' : 'text-black hover:bg-slate-50'
-                    }`
-                  }
-                >
-                  <span className="text-base font-medium">{team.name}</span>
-                </NavLink>
-              ))}
+              {isLoading && (
+                <span className="text-neutral-80 px-11 py-1.5 text-sm">팀을 불러오는 중...</span>
+              )}
+              {!isLoading && isError && (
+                <span className="px-11 py-1.5 text-sm text-red-500">팀 정보를 불러오지 못했습니다.</span>
+              )}
+              {!isLoading && !isError && teams.length === 0 && (
+                <span className="text-neutral-80 px-11 py-1.5 text-sm">참여한 팀이 없어요</span>
+              )}
+              {!isLoading &&
+                !isError &&
+                teams.map((team) => (
+                  <NavLink
+                    key={team.teamId}
+                    to={`/team/${team.teamId}`}
+                    className={({ isActive }) =>
+                      `flex h-10 items-center rounded-md px-11 py-1.5 transition-colors ${
+                        isActive ? 'text-primary-500 bg-slate-100' : 'text-black hover:bg-slate-50'
+                      }`
+                    }
+                  >
+                    <span className="text-base font-medium">{team.name}</span>
+                  </NavLink>
+                ))}
             </div>
           )}
 
