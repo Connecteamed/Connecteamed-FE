@@ -12,7 +12,7 @@ const ProjectNameInput = ({ value, currentLength, maxLength, onChange }: Project
         <div className="h-7 justify-center self-stretch text-lg text-black">프로젝트명</div>
         <div className="inline-flex h-12 items-center justify-start gap-2.5 self-stretch rounded-[10px] bg-white px-3.5 py-1.5 outline-1 -outline-offset-1 outline-gray-300">
           <input
-            className="w-full justify-center text-lg text-gray-300 outline-none"
+            className="w-full justify-center text-lg text-black outline-none"
             placeholder="프로젝트명을 입력해주세요"
             value={value}
             maxLength={maxLength}

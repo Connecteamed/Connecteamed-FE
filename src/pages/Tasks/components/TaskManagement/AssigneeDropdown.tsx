@@ -1,5 +1,3 @@
-import React from 'react'
-
 const AssigneeDropdown = () => {
   return (
     <div className='bg-white p-3 rounded-10px flex flex-col gap-2 w-[134px] h-full'>
