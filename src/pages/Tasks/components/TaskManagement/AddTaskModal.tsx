@@ -14,12 +14,12 @@ const AddTaskModal = () => {
   return (
     <div className="flex h-175 w-150 flex-col items-center justify-center rounded-[20px] bg-white px-10 py-12.5">
       <div className="flex flex-col items-center justify-center gap-3">
-        <div className="flex flex-col">
-          <div className="h-7.5 w-full leading-4">업무명</div>
+        <div className="flex flex-col gap-3">
+          <div className="h-7.5 w-full leading-4 text-base font-medium">업무명</div>
           <input className="h-12 w-130 bg-slate-100 px-4 py-2.5" />
         </div>
-        <div className="flex flex-col">
-          <div className="h-7.5 w-full leading-4">담당자</div>
+        <div className="flex flex-col gap-3">
+          <div className="h-7.5 w-full leading-4 font-medium">담당자</div>
           <input className="h-12 w-130 bg-slate-100 px-4 py-2.5" type="text" />
         </div>
         <div className="flex gap-15">

@@ -8,7 +8,8 @@
  * 컴포넌트 작업 이후 연결 부탁드립니다.
  */
 
-import { useState, MouseEvent } from 'react';
+import { useState } from 'react';
+import type { MouseEvent } from 'react';
 import bell from '@assets/icon-bell-black.svg';
 import setting from '@assets/icon-setting-outline.svg';
 import TaskManagement from './components/TaskManagement/TaskManagement';
@@ -32,7 +33,7 @@ const initialTeam = {
     { name: '팀원3', roles: ['PPT'] },
     { name: '팀원4', roles: ['기획'] },
   ] as RawMember[],
-  memberRoles: ['기획', '디자인', 'PPT'],
+  memberRoles: ['기획', '디자인', 'PPT', '개발', 'PM', '마케팅', '영상편집', '기타', 'db엔지니어', '서버관리', '프론트엔드', '백엔드'],
 };
 
 const profile = {
@@ -217,7 +218,7 @@ const TaskPage = () => {
               role="dialog"
               aria-modal="true"
             >
-              <div className="w-28 left-[12px] top-[12px] absolute inline-flex flex-col justify-start items-start gap-2">
+              <div className="w-28 left-[12px] top-[12px] absolute inline-flex flex-col justify-start items-start gap-2 bg-white">
                 {initialTeam.memberRoles.map((roleName) => {
                   const isSelected =
                     activeMemberIndex !== null &&
@@ -227,7 +228,7 @@ const TaskPage = () => {
                       type="button"
                       key={roleName}
                       onClick={() => handleToggleRole(roleName)}
-                      className="self-stretch inline-flex justify-start items-center gap-2"
+                      className="self-stretch inline-flex justify-start items-center gap-2 "
                     >
                       <div className="w-20 h-7 px-1.5 py-1 bg-gray-400 rounded-[5px] flex justify-center items-center gap-2.5">
                         <div className="text-center justify-center text-white text-sm font-medium">
