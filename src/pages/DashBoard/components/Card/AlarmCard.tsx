@@ -1,14 +1,7 @@
 import Card from '@/pages/DashBoard/components/Card/Card';
-import { useRecentNotifications } from '../../hooks/useRecentNotifications';
 
-function pad2(n: number) {
-  return String(n).padStart(2, '0');
-}
-function formatMMDD(iso: string) {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return '';
-  return `${pad2(d.getMonth() + 1)}.${pad2(d.getDate())}`;
-}
+import { useRecentNotifications } from '../../hooks/useRecentNotifications';
+import { formatMMDD } from '../../utils/date';
 
 export default function AlarmCard() {
   const { data = [], isLoading, isError } = useRecentNotifications();
@@ -20,18 +13,16 @@ export default function AlarmCard() {
 
       {!isLoading && !isError && (
         <div className="flex flex-col gap-3">
-          {data.length === 0 && (
-            <div className="text-sm text-neutral-500">알림이 없어요.</div>
-          )}
+          {data.length === 0 && <div className="text-sm text-neutral-500">알림이 없어요.</div>}
 
           {data.map((n) => (
             <div key={n.id} className="flex items-center justify-between">
-              <div className="flex items-center min-w-0 gap-3">
-                <div className="w-2 h-2 bg-orange-500 rounded-full shrink-0" />
-                <div className="text-sm truncate text-neutral-700">{n.message}</div>
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="h-2 w-2 shrink-0 rounded-full bg-orange-500" />
+                <div className="truncate text-sm text-neutral-700">{n.message}</div>
               </div>
 
-              <div className="flex items-center gap-4 text-sm shrink-0 text-neutral-500">
+              <div className="flex shrink-0 items-center gap-4 text-sm text-neutral-500">
                 <span>{n.teamName}</span>
                 <span>{formatMMDD(n.createdAt)}</span>
               </div>

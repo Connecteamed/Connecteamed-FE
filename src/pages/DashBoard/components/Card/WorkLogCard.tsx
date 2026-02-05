@@ -1,6 +1,4 @@
-// src/pages/Dashboard/components/WorkRecordCard.tsx
-import React from 'react';
-import Card from './Card'; // ✅ 실제 Card.tsx 위치에 맞게 경로만 조정해줘
+import Card from '@/pages/DashBoard/components/Card/Card';
 
 type Level = 0 | 1 | 2 | 3 | 4;
 
@@ -32,7 +30,6 @@ const CELL = 14; // px
 const GAP = 4; // px
 
 function splitIntoSix<T>(arr: T[]) {
-  // 6등분(각 month 구간을 “균등 폭”으로 만들어서 라벨 정렬용)
   const base = Math.floor(arr.length / 6);
   const rem = arr.length % 6;
 
@@ -49,31 +46,26 @@ function splitIntoSix<T>(arr: T[]) {
 export default function WorkLogCard() {
   const data = makeMockYear();
 
-  // “주 단위 컬럼”처럼 7개씩 끊어서 세로로 쌓고, 그 묶음을 옆으로 나열
   const weeks: Level[][] = [];
   for (let i = 0; i < data.length; i += 7) weeks.push(data.slice(i, i + 7));
 
-  // 위/아래 2줄로 나누기(1~6 / 7~12)
   const half = Math.ceil(weeks.length / 2);
   const topWeeks = weeks.slice(0, half);
   const bottomWeeks = weeks.slice(half);
 
-  // ✅ 라벨 정렬을 위해 “6등분” (폭 계산용)
   const topSegments = splitIntoSix(topWeeks);
   const bottomSegments = splitIntoSix(bottomWeeks);
 
-  // 한 세그먼트(월 구간)의 “픽셀 폭” = (컬럼 수 * CELL) + (컬럼 사이 GAP)
   const segWidthPx = (cols: number) => cols * CELL + Math.max(0, cols - 1) * GAP;
 
   const MonthRow = ({ labels, segments }: { labels: readonly string[]; segments: Level[][][] }) => (
     <div className="flex items-center">
-      {/* 요일 라벨 자리만큼 왼쪽 여백(피그마처럼) */}
       <div className="w-2" />
       <div className="flex items-center">
         {labels.map((m, i) => (
           <div
             key={m}
-            className="text-black text-[10px] font-medium font-['Roboto']"
+            className="font-['Roboto'] text-[10px] font-medium text-black"
             style={{ width: segWidthPx(segments[i].length) }}
           >
             {m}
@@ -85,19 +77,17 @@ export default function WorkLogCard() {
 
   const GrassRow = ({ weeksChunk }: { weeksChunk: Level[][] }) => (
     <div className="inline-flex items-start">
-      {/* 요일 */}
-      <div className="w-2 inline-flex flex-col justify-start items-start gap-1 mr-1.5">
+      <div className="mr-1.5 inline-flex w-2 flex-col items-start justify-start gap-1">
         {DAY_LABELS.map((d) => (
           <div
             key={d}
-            className="h-[14px] leading-[14px] text-black text-[10px] font-medium font-['Roboto']"
+            className="h-[14px] font-['Roboto'] text-[10px] leading-[14px] font-medium text-black"
           >
             {d}
           </div>
         ))}
       </div>
 
-      {/* 잔디: “월 구간” 구분 없이 그냥 한 줄로 쭉 이어 붙이기 */}
       <div className="flex items-start gap-1">
         {weeksChunk.map((week, wi) => (
           <div key={wi} className="inline-flex flex-col gap-1">
@@ -118,31 +108,23 @@ export default function WorkLogCard() {
   );
 
   return (
-    <Card
-      title="업무 기록"
-      className="flex flex-col w-full h-full "
-    >
-      {/* ✅ Card.tsx가 이미 mt-6(=24px)로 헤더↔내용 간격 만들어줌 */}
-      <div className="flex flex-col h-full min-h-0">
-        {/* 상단(1~6월) */}
+    <Card title="업무 기록" className="flex h-full w-full flex-col">
+      <div className="flex h-full min-h-0 flex-col">
         <div className="flex flex-col gap-2.5">
           <MonthRow labels={MONTHS_TOP} segments={topSegments} />
           <GrassRow weeksChunk={topWeeks} />
         </div>
 
-        {/* ✅ 1~6과 7~12 사이 간격: 기존보다 줄이기 */}
         <div className="h-4" />
 
-        {/* 하단(7~12월) */}
         <div className="flex flex-col gap-2.5">
           <MonthRow labels={MONTHS_BOTTOM} segments={bottomSegments} />
           <GrassRow weeksChunk={bottomWeeks} />
         </div>
 
-        {/* ✅ 범례: 오른쪽 아래로 “올려서”, 카드 내부에서 안 잘리게 */}
-        <div className="flex justify-end mt-3">
-          <div className="inline-flex justify-start items-center gap-1.5">
-            <div className="text-neutral-500 text-[10px] font-medium font-['Roboto']">적음</div>
+        <div className="mt-3 flex justify-end">
+          <div className="inline-flex items-center justify-start gap-1.5">
+            <div className="font-['Roboto'] text-[10px] font-medium text-neutral-500">적음</div>
             <div className="flex items-center justify-start gap-1">
               <div className="rounded-[3px] bg-gray-100" style={{ width: CELL, height: CELL }} />
               <div className="rounded-[3px] bg-orange-100" style={{ width: CELL, height: CELL }} />
@@ -150,7 +132,7 @@ export default function WorkLogCard() {
               <div className="rounded-[3px] bg-orange-500" style={{ width: CELL, height: CELL }} />
               <div className="rounded-[3px] bg-orange-600" style={{ width: CELL, height: CELL }} />
             </div>
-            <div className="text-neutral-500 text-[10px] font-medium font-['Roboto']">많음</div>
+            <div className="font-['Roboto'] text-[10px] font-medium text-neutral-500">많음</div>
           </div>
         </div>
       </div>

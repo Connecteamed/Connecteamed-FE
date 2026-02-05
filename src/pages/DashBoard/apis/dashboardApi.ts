@@ -1,9 +1,27 @@
+import axios, { AxiosError } from 'axios';
+
 export type UpcomingTaskApi = {
   id: number;
   title: string;
   teamName: string;
   writtenDate: string;
   teamId?: number | string;
+};
+
+export type RecentRetrospectiveApi = {
+  id: number;
+  title: string;
+  teamName: string;
+  writtenDate: string;
+  teamId?: number | string;
+};
+
+export type RecentNotification = {
+  id: number;
+  message: string;
+  teamName: string;
+  isRead: boolean;
+  createdAt: string;
 };
 
 type ApiResponse<T> = {
@@ -17,97 +35,79 @@ type UpcomingTaskListRes = {
   tasks: UpcomingTaskApi[];
 };
 
-const BASE_URL = "https://api.connecteamed.shop";
-
-function getAccessToken() {
-  return localStorage.getItem("accessToken");
-}
-
-export async function getUpcomingTasks(): Promise<UpcomingTaskApi[]> {
-  const token = getAccessToken();
-  if (!token) {
-    throw new Error("Access token not found. Please login first.");
-  }
-
-  const res = await fetch(`${BASE_URL}/api/tasks/upcoming`, {
-    method: "GET",
-    headers: {
-      accept: "*/*",
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    throw new Error(`Failed to fetch upcoming tasks (${res.status}): ${text}`);
-  }
-
-  const json = (await res.json()) as ApiResponse<UpcomingTaskListRes>;
-  return json.data?.tasks ?? [];
-}
-
-export type RecentRetrospectiveApi = {
-  id: number;
-  title: string;
-  teamName: string;
-  writtenDate: string;
-  teamId?: number | string;
-};
-
 type RecentRetrospectiveListRes = {
   retrospectives: RecentRetrospectiveApi[];
-};
-
-export async function getRecentRetrospectives(): Promise<RecentRetrospectiveApi[]> {
-  const token = getAccessToken();
-  if (!token) throw new Error("Access token not found. Please login first.");
-
-  const res = await fetch(`${BASE_URL}/api/retrospectives/recent`, {
-    method: "GET",
-    headers: {
-      accept: "*/*",
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    throw new Error(`Failed to fetch retrospectives (${res.status}): ${text}`);
-  }
-
-  const json = (await res.json()) as ApiResponse<RecentRetrospectiveListRes>;
-  return json.data?.retrospectives ?? [];
-}
-
-export type RecentNotification = {
-  id: number;
-  message: string;
-  teamName: string;
-  isRead: boolean;
-  createdAt: string;
 };
 
 type RecentNotificationListRes = {
   notifications: RecentNotification[];
 };
 
-export async function getRecentNotifications(): Promise<RecentNotification[]> {
+const BASE_URL = 'https://api.connecteamed.shop';
+
+function getAccessToken() {
+  return localStorage.getItem('accessToken');
+}
+
+const dashboardClient = axios.create({
+  baseURL: BASE_URL,
+  headers: {
+    Accept: '*/*',
+  },
+});
+
+dashboardClient.interceptors.request.use((config) => {
   const token = getAccessToken();
-  if (!token) throw new Error("Access token not found. Please login first.");
-
-  const res = await fetch(`${BASE_URL}/api/notifications/recent`, {
-    method: "GET",
-    headers: {
-      accept: "*/*",
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    throw new Error(`Failed to fetch notifications (${res.status}): ${text}`);
+  if (!token) {
+    // 토큰 없으면 여기서 막아 일관된 에러 처리
+    throw new Error('Access token not found. Please login first.');
   }
 
-  const json = (await res.json()) as ApiResponse<RecentNotificationListRes>;
-  return json.data?.notifications ?? [];
+  config.headers = config.headers ?? {};
+  config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
+
+function toErrorMessage(err: unknown, fallback: string) {
+  if (err instanceof Error) return err.message;
+
+  const ax = err as AxiosError<any>;
+  const serverMsg =
+    ax?.response?.data?.message || ax?.response?.data?.error || ax?.response?.data?.msg;
+
+  if (typeof serverMsg === 'string' && serverMsg.trim().length > 0) return serverMsg;
+  if (typeof ax?.message === 'string' && ax.message.trim().length > 0) return ax.message;
+
+  return fallback;
+}
+
+export async function getUpcomingTasks(): Promise<UpcomingTaskApi[]> {
+  try {
+    const res = await dashboardClient.get<ApiResponse<UpcomingTaskListRes>>('/api/tasks/upcoming');
+    return res.data?.data?.tasks ?? [];
+  } catch (err) {
+    throw new Error(toErrorMessage(err, 'Failed to fetch upcoming tasks.'));
+  }
+}
+
+export async function getRecentRetrospectives(): Promise<RecentRetrospectiveApi[]> {
+  try {
+    const res = await dashboardClient.get<ApiResponse<RecentRetrospectiveListRes>>(
+      '/api/retrospectives/recent',
+    );
+    return res.data?.data?.retrospectives ?? [];
+  } catch (err) {
+    throw new Error(toErrorMessage(err, 'Failed to fetch retrospectives.'));
+  }
+}
+
+export async function getRecentNotifications(): Promise<RecentNotification[]> {
+  try {
+    const res = await dashboardClient.get<ApiResponse<RecentNotificationListRes>>(
+      '/api/notifications/recent',
+    );
+    return res.data?.data?.notifications ?? [];
+  } catch (err) {
+    throw new Error(toErrorMessage(err, 'Failed to fetch notifications.'));
+  }
 }
