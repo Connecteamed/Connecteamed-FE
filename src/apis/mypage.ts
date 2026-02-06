@@ -26,7 +26,7 @@ export const getMyProjects = async () => {
  * 완료한 프로젝트 삭제
  */
 export const deleteProject = async (projectId: number) => {
-  const res = await axios.delete<ApiResponse<null>>(`${API_URL}/api/mypage/project/${projectId}`, {
+  const res = await axios.delete<ApiResponse<null>>(`${API_URL}/api/mypage/projects/${projectId}`, {
     headers: authHeaders(),
   });
   return res.data;
@@ -50,7 +50,7 @@ export const getMyRetrospectives = async () => {
  */
 export const deleteRetrospective = async (retrospectiveId: number) => {
   const res = await axios.delete<ApiResponse<null>>(
-    `${API_URL}/api/mypage/retrospective/${retrospectiveId}`,
+    `${API_URL}/api/mypage/retrospectives/${retrospectiveId}`,
     {
       headers: authHeaders(),
     },

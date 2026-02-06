@@ -22,7 +22,7 @@ export interface CreateAgendaRequest {
 export interface CreateMinuteRequest {
   title: string;
   meetingDate: string;
-  attendeeMemberIds: number[];
+  attendeeIds: number[];
   agendas: CreateAgendaRequest[];
 }
 
