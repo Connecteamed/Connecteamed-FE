@@ -2,7 +2,7 @@ import { type FormEvent, useState } from 'react';
 
 import { useNavigate } from 'react-router-dom';
 
-import { postLogin } from '@/apis/auth';
+import { getSocialLoginUrl, type SocialProvider, postLogin } from '@/apis/auth';
 
 import Button from '@/components/Button';
 import Input from '@/components/Input';
@@ -44,8 +44,9 @@ const LoginForm = () => {
 
   const placeholderClass = 'placeholder:text-neutral-70';
 
-  // const handleGoogleLogin = () => { }
-  // const handleKakaoLogin = () => { }
+  const handleSocialLogin = (provider: SocialProvider) => {
+    window.location.href = getSocialLoginUrl(provider);
+  };
 
   return (
     <div className="flex w-full flex-col">
@@ -128,6 +129,7 @@ const LoginForm = () => {
       <div className="border-neutral-40 flex flex-col border-b">
         <button
           type="button"
+          onClick={() => handleSocialLogin('google')}
           className="relative flex h-[38px] w-full items-center rounded-md bg-[#f2f2f2] text-[14px] font-normal md:h-15"
         >
           <img
@@ -140,6 +142,7 @@ const LoginForm = () => {
 
         <button
           type="button"
+          onClick={() => handleSocialLogin('kakao')}
           className="relative mt-4 flex h-[38px] w-full items-center rounded-md bg-[#fee500] text-[14px] font-normal md:h-15"
         >
           <img

@@ -23,6 +23,14 @@ export const authRoutes: RouteObject[] = [
       </Suspense>
     ),
   },
+  {
+    path: '/login/callback',
+    element: (
+      <Suspense fallback={null}>
+        <lazyRoutes.LoginCallbackPage />
+      </Suspense>
+    ),
+  },
 ];
 
 // 사이드바가 있는 공개 페이지

@@ -9,5 +9,6 @@ export const lazyRoutes = {
   MyPage: React.lazy(() => import('../pages/MyPage/MyPage')),
   Minutes: React.lazy(() => import('../pages/Minutes/MinutesPage')),
   LoginPage: React.lazy(() => import('../pages/Auth/LoginPage')),
+  LoginCallbackPage: React.lazy(() => import('../pages/Auth/LoginCallbackPage')),
   SignupPage: React.lazy(() => import('../pages/Auth/SignupPage')),
 };

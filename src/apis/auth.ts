@@ -9,6 +9,11 @@ import axios from 'axios';
 
 const API_URL = 'https://api.connecteamed.shop';
 
+export type SocialProvider = 'google' | 'kakao';
+
+export const getSocialLoginUrl = (provider: SocialProvider) =>
+  `${API_URL}/api/auth/login/${provider}`;
+
 export const postLogin = async (loginId: string, password: string) => {
   const response = await axios.post<ApiResponse<LoginData>>(`${API_URL}/api/auth/login`, {
     loginId,
