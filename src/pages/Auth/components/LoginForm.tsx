@@ -58,10 +58,7 @@ const LoginForm = () => {
         </p>
       </header>
 
-      <form
-        className="border-neutral-40 flex flex-col border-b pb-4 md:gap-6 md:pb-10"
-        onSubmit={handleSubmit}
-      >
+      <form className="flex flex-col md:gap-6" onSubmit={handleSubmit}>
         <div className="flex flex-col gap-4 md:gap-6">
           <div className="flex flex-col gap-2">
             <div className="relative flex items-center">
@@ -121,10 +118,17 @@ const LoginForm = () => {
           로그인
         </Button>
       </form>
-      <div className="border-neutral-40 flex flex-col border-b pb-4">
+
+      <div className="border-neutral-40 text-neutral-60 my-4 flex items-center gap-2 text-[10px] md:my-6 md:text-xs">
+        <span className="bg-neutral-40 h-px flex-1" />
+        <span className="text-[8px]">또는</span>
+        <span className="bg-neutral-40 h-px flex-1" />
+      </div>
+
+      <div className="border-neutral-40 flex flex-col border-b">
         <button
           type="button"
-          className="relative mt-4 flex h-[38px] w-full items-center rounded-md bg-[#f2f2f2] text-[14px] font-normal md:h-15"
+          className="relative flex h-[38px] w-full items-center rounded-md bg-[#f2f2f2] text-[14px] font-normal md:h-15"
         >
           <img
             src={iconGoogle}
