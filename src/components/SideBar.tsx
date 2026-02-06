@@ -32,9 +32,13 @@ const Sidebar = () => {
     const list = Array.isArray(payload) ? payload : [payload];
 
     return list.flatMap((group) =>
-      group?.teams?.map((team) => ({ teamId: team.id, name: team.name })) ?? [],
+      group?.teams?.map((team, idx) => ({
+        teamId: (team as any).teamId ?? (team as any).id ?? idx,
+        name: team.name,
+      })) ?? [],
     );
   }, [data]);
+  
 
   return (
     <aside className="flex h-screen w-[300px] flex-col justify-between border-r-2 border-zinc-200 bg-white px-5 py-4">
@@ -107,9 +111,9 @@ const Sidebar = () => {
               )}
               {!isLoading &&
                 !isError &&
-                teams.map((team) => (
+                teams.map((team, idx) => (
                   <NavLink
-                    key={team.teamId}
+                    key={team.teamId ?? idx}
                     to={`/team/${team.teamId}`}
                     className={({ isActive }) =>
                       `flex h-10 items-center rounded-md px-11 py-1.5 transition-colors ${

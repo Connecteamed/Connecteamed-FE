@@ -3,9 +3,10 @@ import type { KeyboardEvent } from 'react';
 import Modal from '@/components/Modal';
 import SearchCheckModal from './components/SearchCheckModal';
 import projectSearchImage from '@assets/image-project-search.png'
+import usePostProjectJoin from '@/hooks/SearchProject/Mutate/usePostProjectJoin';
 
 const SearchProject = () => {
-  const CODE_LENGTH = 6;
+  const CODE_LENGTH = 8;
   const [code, setCode] = useState('');
   const [isOpen, setIsOpen] = useState(false);
 
@@ -14,21 +15,30 @@ const SearchProject = () => {
     setCode(next);
   };
 
-  const isComplete = code.length === CODE_LENGTH;
+  const { mutate: joinProject, isPending } = usePostProjectJoin(code);
 
-  const handleOpenModal = () => {
-    if (!isComplete) return;
-    setIsOpen(true);
-  };
+  const isComplete = code.length === CODE_LENGTH;
 
   const handleKeyPress = (event: KeyboardEvent<HTMLDivElement>) => {
     if ((event.key === 'Enter' || event.key === ' ') && isComplete) {
       event.preventDefault();
-      setIsOpen(true);
+      handleSearch();
     }
   };
 
   const handleCloseModal = () => setIsOpen(false);
+
+  const handleSearch = () => {
+    if (!isComplete) return;
+    setIsOpen(true);
+  };
+
+  const handleConfirm = () => {
+    if (isPending) return;
+    joinProject(undefined, {
+      onSuccess: () => setIsOpen(false),
+    });
+  };
 
   return (
     <>
@@ -53,7 +63,7 @@ const SearchProject = () => {
                   <div className="inline-flex h-12 items-center justify-start gap-2.5 self-stretch rounded-[10px] bg-white px-3.5 py-1.5 outline-1 -outline-offset-1 outline-gray-300">
                     <input
                       className="w-full justify-center text-lg text-gray-300 outline-none"
-                      placeholder="6자리 코드를 입력해주세요"
+                      placeholder="8자리 코드를 입력해주세요"
                       value={code}
                       onChange={(e) => handleChange(e.target.value)}
                       maxLength={CODE_LENGTH}
@@ -66,7 +76,7 @@ const SearchProject = () => {
               className={`inline-flex h-12 items-center justify-center self-stretch rounded-[10px] px-3 py-4 ${isComplete ? 'bg-orange-500' : 'bg-gray-300'} ${isComplete ? 'cursor-pointer' : 'cursor-not-allowed'}`}
               role="button"
               tabIndex={0}
-              onClick={handleOpenModal}
+              onClick={handleSearch}
               onKeyDown={handleKeyPress}
             >
               <div className="flex items-center justify-center gap-2.5 px-4">
@@ -81,7 +91,11 @@ const SearchProject = () => {
     </div>
     {isOpen && (
     <Modal isOpen={isOpen} onClose={handleCloseModal}>
-      <SearchCheckModal />
+      <SearchCheckModal
+        onConfirm={handleConfirm}
+        onCancel={handleCloseModal}
+        isLoading={isPending}
+      />
     </Modal>
     )}
     </>

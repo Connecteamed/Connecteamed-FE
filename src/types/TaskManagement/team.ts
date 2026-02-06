@@ -5,7 +5,7 @@ export interface TeamList {
 }
 
 export interface Team {
-    id: number;
+    teamId: number;
     name: string;
 }
 
