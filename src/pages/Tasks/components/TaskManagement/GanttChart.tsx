@@ -1,5 +1,3 @@
-import React from "react";
-
 // 간단한 정적 간트 차트 컴포넌트 (피그마 시안 기반)
 const GanttChart = () => {
   return (

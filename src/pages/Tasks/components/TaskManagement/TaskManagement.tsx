@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 import Modal from '@/components';
 import searchPaper from '@assets/icon-search-paper.svg';
@@ -10,17 +10,19 @@ import AssigneeDropdown from './AssigneeDropdown';
 import GanttChart from './GanttChart';
 
 type TaskRow = {
+  id: string;
   title: string;
   description: string;
-  status: '시작 전' | '진행 중';
+  status: '시작 전' | '진행 중' | '완료';
   startDate: string;
   endDate: string;
   assignees: string;
 };
 
 // 실제 데이터 연결 시 null 가능성을 대비해 널 허용
-const tasks: TaskRow[] | null = [
+const initialTasks: TaskRow[] = [
   {
+    id: 'task-1',
     title: '와이어프레임 제작',
     description: 'UI 디자인을 위한 와이어프레임 제작 후 디자이너에게 연락',
     status: '시작 전',
@@ -29,6 +31,7 @@ const tasks: TaskRow[] | null = [
     assignees: '팀원1',
   },
   {
+    id: 'task-2',
     title: 'API  명세서 작성',
     description:
       '와이어프레임 보고 서비스에 기능별 API 제작 : 스웨거로 관리할 거고 REST API 형식...',
@@ -38,6 +41,7 @@ const tasks: TaskRow[] | null = [
     assignees: '팀원1, 팀원2, 팀원3, 팀원4',
   },
   {
+    id: 'task-3',
     title: 'ERD 작성',
     description: '데이터베이스 ERD 작성',
     status: '진행 중',
@@ -50,21 +54,19 @@ const tasks: TaskRow[] | null = [
 const statusStyle: Record<TaskRow['status'], string> = {
   '시작 전': 'bg-zinc-200 text-neutral-600',
   '진행 중': 'bg-orange-100 text-neutral-600',
+  '완료': 'bg-orange-300 text-neutral-700',
 };
 
 const TaskManagement = () => {
-  const hasTasks = Array.isArray(tasks) && tasks.length > 0;
-  const [selectedStatus, setSelectedStatus] = useState<'시작 전' | '진행 중' | '완료'>('시작 전');
-  const [statusToggleIsOpen, setStatusToggleIsOpen] = useState(false);
-  const [assigneeModalIsOpen, setAssigneeModalIsOpen] = useState(false);
+  const [taskList, setTaskList] = useState<TaskRow[]>(initialTasks);
+  const hasTasks = taskList.length > 0;
+  const [statusDropdownOpenId, setStatusDropdownOpenId] = useState<string | null>(null);
+  const [assigneeDropdownOpenId, setAssigneeDropdownOpenId] = useState<string | null>(null);
   const [addTaskModalIsOpen, setAddTaskModalIsOpen] = useState(false);
 
-  const handleSelectStatus = (status: '시작 전' | '진행 중' | '완료') => {
-    setSelectedStatus(status);
-  };
-
-  const handleIsStatusToggleOpen = () => {
-    setStatusToggleIsOpen(!statusToggleIsOpen);
+  const handleSelectStatus = (taskId: string, status: '시작 전' | '진행 중' | '완료') => {
+    setTaskList((prev) => prev.map((task) => (task.id === taskId ? { ...task, status } : task)));
+    setStatusDropdownOpenId(null);
   };
 
   if (!hasTasks) {
@@ -87,6 +89,7 @@ const TaskManagement = () => {
           <button
             type="button"
             className="inline-flex h-12 w-36 items-center justify-center gap-2.5 rounded-[10px] bg-orange-500 px-2 py-[5px] text-sm font-medium text-white"
+            onClick={() => setAddTaskModalIsOpen(true)}
           >
             업무 추가
           </button>
@@ -115,9 +118,9 @@ const TaskManagement = () => {
         </div>
       </div>
 
-      {tasks.map((task) => (
+      {taskList.map((task, index) => (
         <div
-          key={task.title}
+          key={task.id ?? index}
           className="flex flex-col gap-2.5 self-stretch border-r border-b border-l border-gray-200 bg-white p-3.5"
         >
           <div className="body-xl inline-flex items-center justify-start gap-4">
@@ -129,31 +132,34 @@ const TaskManagement = () => {
               <div
                 className={`flex w-20 items-center justify-center rounded-[20px] px-3.5 py-1.5 ${statusStyle[task.status]}`}
               >
-                <div className="text-xs" onClick={() => setStatusToggleIsOpen(true)}>
+                <div
+                  className="text-xs"
+                  onClick={() => setStatusDropdownOpenId((prev) => (prev === task.id ? null : task.id))}
+                >
                   {task.status}
                 </div>
-                {statusToggleIsOpen && (
+                {statusDropdownOpenId === task.id && (
                   <div>
                     <Dropdown
-                      isOpen={statusToggleIsOpen}
-                      onClose={() => setStatusToggleIsOpen(false)}
+                      isOpen={statusDropdownOpenId === task.id}
+                      onClose={() => setStatusDropdownOpenId(null)}
                     >
                       <div className="absolute top-0 left-0 flex h-32 w-24 flex-col gap-2.5 rounded-[10px] bg-white px-3 py-3 text-xs">
                         <div
                           className="flex h-7 w-[78px] items-center justify-center self-stretch rounded-[20px] bg-zinc-200"
-                          onClick={() => handleSelectStatus('시작 전')}
+                          onClick={() => handleSelectStatus(task.id, '시작 전')}
                         >
                           시작 전
                         </div>
                         <div
                           className="flex h-7 w-[78px] items-center justify-center self-stretch rounded-[20px] bg-orange-100"
-                          onClick={() => handleSelectStatus('진행 중')}
+                          onClick={() => handleSelectStatus(task.id, '진행 중')}
                         >
                           진행 중
                         </div>
                         <div
                           className="flex h-7 w-[78px] items-center justify-center self-stretch rounded-[20px] bg-orange-300"
-                          onClick={() => handleSelectStatus('완료')}
+                          onClick={() => handleSelectStatus(task.id, '완료')}
                         >
                           완료
                         </div>
@@ -168,13 +174,15 @@ const TaskManagement = () => {
                   <div className="w-24 text-xs text-neutral-600">{task.endDate}</div>
                   <div
                     className="w-24 cursor-pointer text-xs whitespace-pre-line text-neutral-600"
-                    onClick={() => setAssigneeModalIsOpen(true)}
+                    onClick={() =>
+                      setAssigneeDropdownOpenId((prev) => (prev === task.id ? null : task.id))
+                    }
                   >
-                    {task.assignees.replace(', ', '\n')}
-                    {assigneeModalIsOpen && (
+                    {task.assignees.replaceAll(', ', '\n')}
+                    {assigneeDropdownOpenId === task.id && (
                       <Dropdown
-                        isOpen={assigneeModalIsOpen}
-                        onClose={() => setAssigneeModalIsOpen(false)}
+                        isOpen={assigneeDropdownOpenId === task.id}
+                        onClose={() => setAssigneeDropdownOpenId(null)}
                       >
                         <AssigneeDropdown />
                       </Dropdown>
@@ -190,12 +198,13 @@ const TaskManagement = () => {
         </div>
       ))}
 
-      <div
+      <button
+        type="button"
         className="right-0 mt-[30px] flex h-[32px] w-[90px] cursor-pointer items-center justify-center rounded-[10px] bg-orange-500 text-xs text-white"
         onClick={() => setAddTaskModalIsOpen(true)}
       >
         업무 추가
-      </div>
+      </button>
       {addTaskModalIsOpen && (
         <Modal isOpen={addTaskModalIsOpen} onClose={() => setAddTaskModalIsOpen(false)}>
           <AddTaskModal />

@@ -10,7 +10,7 @@ const MakeProject = () => {
   const isReady = projectNameInput.value.trim().length > 0 && projectGoalInput.value.trim().length > 0;
 
   return (
-    <div className='w-full h-full bg-white'>
+    <div className='w-full h-[700px] bg-white'>
       <div className="inline-flex flex-col items-start justify-start gap-8 pl-20.5 pt-18.75">
         <div className="w-113.25 h-16 justify-center self-stretch text-3xl font-bold text-black">
           새로운 프로젝트를 만들어 볼까요?
