@@ -1,13 +1,17 @@
+import useGetProjectIniteCode from "@/hooks/MakeProject/Query/useGetProjectInviteCode";
+
 type InviteModalProps = {
-  inviteCode?: string;
+  projectId: number;
   projectName?: string;
   onClose?: () => void;
 };
 
-const InviteModal = ({ inviteCode = 'a47ab466le', projectName = '00공모전', onClose }: InviteModalProps) => {
+const InviteModal = ({ projectId, projectName = '00공모전', onClose }: InviteModalProps) => {
+  const { data:inviteCode } = useGetProjectIniteCode(projectId)
+
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(inviteCode);
+      await navigator.clipboard.writeText(inviteCode?.inviteCode ?? '');
     } catch (error) {
       console.error('Failed to copy invite code', error);
     }
@@ -21,7 +25,7 @@ const InviteModal = ({ inviteCode = 'a47ab466le', projectName = '00공모전', o
       <div className="py-12.5 flex flex-col items-center justify-center gap-6">
         <div>코드를 팀원에게 공유하면 {projectName}에 초대할 수 있어요.</div>
         <div className="w-[510px] h-[76px] p-3.5 flex gap-6.5 bg-slate-100 rounded-[10px] justify-between items-center">
-          <input className="w-[338px] h-12 text-2xl font-bold" type="text" readOnly value={inviteCode} />
+          <input className="w-[338px] h-12 text-2xl font-bold" type="text" readOnly value={inviteCode?.inviteCode ?? ''} />
           <button
             type="button"
             className="w-30 h-10 px-[25px] py-[2.5] bg-blue-600 rounded-[10px] flex items-center justify-center text-white text-xs"
