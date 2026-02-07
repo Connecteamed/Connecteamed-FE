@@ -12,7 +12,7 @@ const AuthLayout = ({ children, mode }: AuthLayoutProps) => {
 
   return (
     <div
-      className="relative flex min-h-screen w-full items-start justify-end bg-cover bg-center bg-no-repeat pr-[47px]"
+      className="relative flex min-h-screen w-full items-start justify-end bg-cover bg-center bg-no-repeat pr-11.75"
       style={{ backgroundImage: `url(${loginBackground})` }}
     >
       {/*
@@ -22,7 +22,7 @@ const AuthLayout = ({ children, mode }: AuthLayoutProps) => {
       <div
         className={`relative z-10 flex w-156 flex-col bg-white shadow-sm ${isLogin ? 'mt-36 h-[calc(100vh-144px)] rounded-tr-[20px]' : 'h-screen'} `}
       >
-        <div className="flex h-full w-full flex-col items-center justify-center px-16">
+        <div className="flex h-full w-full flex-col items-center justify-center px-16 pt-[155px]">
           {children}
         </div>
       </div>

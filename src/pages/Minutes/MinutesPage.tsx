@@ -1,65 +1,126 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
+
+import { postMinute } from '@/apis/minutes';
+import type { CreateMinuteRequest } from '@/types/minutes';
 
 import Input from '@/components/Input';
 import Calender from '@/components/calender';
 
 import backIcon from '@/assets/icon-back-black.svg';
 
-import AttendeeSelector from './components/AttendeeSelector';
+import AttendeeSelector, { type AttendeeOption } from './components/AttendeeSelector';
 
 interface Agenda {
   title: string;
   content: string;
 }
 
+interface MinutesPageLocationState {
+  memberOptions?: AttendeeOption[];
+}
+
+const formatDisplayDate = (date: Date) => {
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  return `${yyyy}.${mm}.${dd}`;
+};
+
+const formatApiDate = (date: Date) => {
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+};
+
 const MinutesPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { teamId } = useParams();
+  const projectId = Number(teamId);
 
-  // 상태 관리
+  const state = location.state as MinutesPageLocationState | null;
+  const memberOptions = useMemo(() => state?.memberOptions ?? [], [state?.memberOptions]);
+
   const [title, setTitle] = useState('');
-
-  // 참석자 관련 상태
-  const [selectedAttendees, setSelectedAttendees] = useState<string[]>([]);
-
-  // 날짜 & 달력 상태
+  const [selectedAttendeeIds, setSelectedAttendeeIds] = useState<number[]>([]);
   const [dateStr, setDateStr] = useState('');
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-
-  // 안건 상태
   const [agendas, setAgendas] = useState<Agenda[]>([{ title: '', content: '' }]);
+  const [isSaving, setIsSaving] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleAddAgenda = () => {
-    setAgendas([...agendas, { title: '', content: '' }]);
-  };
-
-  const handleSave = () => {
-    // NOTE: 회의록 저장 API 호출 로직 필요
-    const newMeeting = {
-      id: Date.now(), // 임시 ID
-      title: title,
-      members: selectedAttendees.join(', '),
-      date: dateStr,
-      agendas: agendas,
-    };
-
-    // 저장이 성공했다고 가정하고, teamId '1'의 태스크 페이지로 이동하며 새 회의록 데이터 전달
-    navigate(`/team/1`, { state: { selectedTask: '3', newMeeting: newMeeting } });
+    setAgendas((prev) => [...prev, { title: '', content: '' }]);
   };
 
   const handleAgendaChange = (index: number, field: keyof Agenda, value: string) => {
-    const newAgendas = [...agendas];
-    newAgendas[index][field] = value;
-    setAgendas(newAgendas);
+    setAgendas((prev) =>
+      prev.map((agenda, i) => (i === index ? { ...agenda, [field]: value } : agenda)),
+    );
   };
 
   const handleDateSelect = (date: Date) => {
     setSelectedDate(date);
-    const formattedDate = `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
-    setDateStr(formattedDate);
+    setDateStr(formatDisplayDate(date));
     setIsCalendarOpen(false);
+  };
+
+  const handleSave = async () => {
+    if (!Number.isFinite(projectId)) {
+      setErrorMessage('유효한 팀 정보가 없습니다.');
+      return;
+    }
+
+    if (!title.trim()) {
+      setErrorMessage('회의명을 입력해주세요.');
+      return;
+    }
+
+    if (!dateStr) {
+      setErrorMessage('회의 날짜를 선택해주세요.');
+      return;
+    }
+
+    const validAgendas = agendas
+      .map((agenda, index) => ({
+        title: agenda.title.trim(),
+        content: agenda.content.trim(),
+        sortOrder: index + 1,
+      }))
+      .filter((agenda) => agenda.title.length > 0 || agenda.content.length > 0);
+
+    if (validAgendas.length === 0) {
+      setErrorMessage('안건을 1개 이상 입력해주세요.');
+      return;
+    }
+
+    const payload: CreateMinuteRequest = {
+      title: title.trim(),
+      meetingDate: formatApiDate(selectedDate),
+      attendeeIds: selectedAttendeeIds,
+      agendas: validAgendas,
+    };
+
+    try {
+      setIsSaving(true);
+      setErrorMessage('');
+      const res = await postMinute(projectId, payload);
+
+      if (res.status !== 'success') {
+        setErrorMessage(res.message ?? '회의록 저장에 실패했습니다.');
+        return;
+      }
+
+      navigate(`/team/${projectId}`, { state: { selectedTask: '3' } });
+    } catch {
+      setErrorMessage('회의록 저장에 실패했습니다.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -70,7 +131,6 @@ const MinutesPage = () => {
         </button>
       </div>
 
-      {/* 폼 입력 영역 */}
       <div className="w-full space-y-6">
         <div className="space-y-3">
           <label className="block text-lg font-medium">회의명</label>
@@ -82,14 +142,14 @@ const MinutesPage = () => {
         </div>
 
         <AttendeeSelector
-          selectedAttendees={selectedAttendees}
-          onSelectionChange={setSelectedAttendees}
+          options={memberOptions}
+          selectedAttendeeIds={selectedAttendeeIds}
+          onSelectionChange={setSelectedAttendeeIds}
         />
 
         <div className="relative space-y-3">
           <label className="block text-lg font-medium">회의 날짜</label>
-
-          <div onClick={() => setIsCalendarOpen(!isCalendarOpen)} className="cursor-pointer">
+          <div onClick={() => setIsCalendarOpen((prev) => !prev)} className="cursor-pointer">
             <Input
               type="text"
               placeholder="회의 날짜를 선택하세요"
@@ -112,7 +172,7 @@ const MinutesPage = () => {
 
         {agendas.map((agenda, index) => (
           <div key={index} className="space-y-3 pt-2">
-            <label className="block text-lg font-medium">안건{index + 1}</label>
+            <label className="block text-lg font-medium">안건 {index + 1}</label>
 
             <Input
               placeholder="안건을 입력하세요"
@@ -129,6 +189,8 @@ const MinutesPage = () => {
           </div>
         ))}
 
+        {errorMessage && <div className="text-sm text-red-500">{errorMessage}</div>}
+
         <div className="mt-8 flex flex-col items-center gap-12">
           <button
             onClick={handleAddAgenda}
@@ -139,9 +201,10 @@ const MinutesPage = () => {
 
           <button
             onClick={handleSave}
-            className="bg-primary-500 h-14 w-96 rounded-md text-base font-bold text-white"
+            disabled={isSaving}
+            className="bg-primary-500 h-14 w-96 rounded-md text-base font-bold text-white disabled:opacity-60"
           >
-            저장하기
+            {isSaving ? '저장 중...' : '저장하기'}
           </button>
         </div>
       </div>
