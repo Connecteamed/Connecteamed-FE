@@ -1,75 +1,143 @@
-import { useState } from 'react';
-import { type DocumentItem } from '../types/document';
+import { useMemo } from 'react';
 
-const formatDate = (d: Date) => {
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0');
-  return `${yyyy}.${mm}.${dd}`;
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+
+import {
+  type ServerDocumentType,
+  createTextDocument,
+  deleteDocument,
+  downloadDocumentBlob,
+  getDocumentDetail,
+  getDocuments,
+  patchTextDocument,
+  uploadDocumentFile,
+} from '../apis/document';
+import type { DocumentItem } from '../types/document';
+import { formatDotDate, toDisplayExt } from '../types/document';
+
+const qk = {
+  list: (projectId: number) => ['documents', projectId] as const,
+  detail: (documentId: number) => ['document', documentId] as const,
 };
 
-const getExt = (fileName: string) => {
-  const idx = fileName.lastIndexOf('.');
-  return idx >= 0 ? fileName.slice(idx + 1).toUpperCase() : 'FILE';
-};
+const toItem = (x: any): DocumentItem => ({
+  id: x.documentId,
+  name: x.title,
+  type: x.type as ServerDocumentType,
+  ext: toDisplayExt(x.type as ServerDocumentType),
+  uploader: x.uploaderName,
+  uploadedAt: formatDotDate(x.uploadDate),
+  canEdit: Boolean(x.canEdit),
+  downloadUrl: x.downloadUrl ?? undefined,
+});
 
-const getNameWithoutExt = (fileName: string) => {
-  const idx = fileName.lastIndexOf('.');
-  return idx >= 0 ? fileName.slice(0, idx) : fileName;
-};
+export const useDocuments = (projectId: number | undefined) => {
+  const enabled = typeof projectId === 'number' && Number.isFinite(projectId);
+  const qc = useQueryClient();
 
-export const useDocuments = () => {
-  const [documents, setDocuments] = useState<DocumentItem[]>([]);
+  const listQuery = useQuery({
+    queryKey: enabled ? qk.list(projectId!) : ['documents', 'disabled'],
+    queryFn: async () => {
+      const res = await getDocuments(projectId!);
+      return res.map(toItem);
+    },
+    enabled,
+  });
 
-  const addFiles = (files: File[]) => {
-    const now = new Date();
+  const documents = useMemo(() => listQuery.data ?? [], [listQuery.data]);
 
-    const newDocs: DocumentItem[] = files.map((file) => ({
-      id: crypto.randomUUID(),
-      name: getNameWithoutExt(file.name),
-      ext: getExt(file.name),
-      // TODO: Auth 연동 후 실제 uploader 정보 적용 예정
-      uploader: '팀원1',
-      uploadedAt: formatDate(now),
-      file,
-    }));
+  const uploadMutation = useMutation({
+    mutationFn: async (args: { file: File; type: Exclude<ServerDocumentType, 'TEXT'> }) => {
+      if (!projectId) throw new Error('projectId missing');
+      return uploadDocumentFile(projectId, args.file, args.type);
+    },
+    onSuccess: () => {
+      if (projectId) qc.invalidateQueries({ queryKey: qk.list(projectId) });
+    },
+  });
 
-    setDocuments((prev) => [...prev, ...newDocs]);
+  const createTextMutation = useMutation({
+    mutationFn: async (payload: { title: string; content: string }) => {
+      if (!projectId) throw new Error('projectId missing');
+      return createTextDocument(projectId, payload);
+    },
+    onSuccess: () => {
+      if (projectId) qc.invalidateQueries({ queryKey: qk.list(projectId) });
+    },
+  });
+
+  const patchTextMutation = useMutation({
+    mutationFn: async (args: { documentId: number; title: string; content: string }) =>
+      patchTextDocument(args.documentId, { title: args.title, content: args.content }),
+    onSuccess: (_data, vars) => {
+      qc.setQueryData(qk.detail(vars.documentId), (prev: any) =>
+        prev ? { ...prev, title: vars.title, content: vars.content } : prev,
+      );
+      if (projectId) qc.invalidateQueries({ queryKey: qk.list(projectId) });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (documentId: number) => deleteDocument(documentId),
+    onSuccess: () => {
+      if (projectId) qc.invalidateQueries({ queryKey: qk.list(projectId) });
+    },
+  });
+
+  const getDetail = async (documentId: number) => {
+    const cached = qc.getQueryData(qk.detail(documentId)) as any | undefined;
+    if (cached) return cached;
+    const detail = await qc.fetchQuery({
+      queryKey: qk.detail(documentId),
+      queryFn: () => getDocumentDetail(documentId),
+    });
+    return detail;
   };
 
-  const addTextDocument = (title: string, content: string) => {
-    const now = new Date();
-
-    const newDoc: DocumentItem = {
-      id: crypto.randomUUID(),
-      name: title,
-      ext: '텍스트',
-      // TODO: Auth 연동 후 실제 uploader 정보 적용 예정
-      uploader: '팀원1',
-      uploadedAt: formatDate(now),
-      content,
-      file: undefined,
+  const addFiles = async (files: File[], uiType: 'pdf' | 'docx' | 'image') => {
+    const typeMap: Record<typeof uiType, Exclude<ServerDocumentType, 'TEXT'>> = {
+      pdf: 'PDF',
+      docx: 'DOCX',
+      image: 'IMAGE',
     };
+    const serverType = typeMap[uiType];
 
-    setDocuments((prev) => [...prev, newDoc]);
+    // 여러 개 업로드 지원
+    for (const file of files) {
+      await uploadMutation.mutateAsync({ file, type: serverType });
+    }
   };
 
-  const updateTextDocument = (id: string, title: string, content: string) => {
-    setDocuments((prev) => prev.map((d) => (d.id === id ? { ...d, name: title, content } : d)));
+  const addTextDocumentUI = async (title: string, content: string) => {
+    await createTextMutation.mutateAsync({ title, content });
   };
 
-  const deleteDocument = (id: string) => {
-    setDocuments((prev) => prev.filter((d) => d.id !== id));
+  const updateTextDocumentUI = async (documentId: number, title: string, content: string) => {
+    await patchTextMutation.mutateAsync({ documentId, title, content });
   };
 
-  const downloadLocal = (doc: DocumentItem) => {
-    if (!doc.file) return;
+  const deleteDocumentUI = async (documentId: number) => {
+    await deleteMutation.mutateAsync(documentId);
+  };
 
-    const url = URL.createObjectURL(doc.file);
+  const download = async (doc: DocumentItem) => {
+    const blob = await downloadDocumentBlob(doc.id);
+    const url = URL.createObjectURL(blob);
+
     try {
       const a = document.createElement('a');
       a.href = url;
-      a.download = doc.file.name;
+
+      const ext =
+        doc.type === 'TEXT'
+          ? 'txt'
+          : doc.type === 'PDF'
+            ? 'pdf'
+            : doc.type === 'DOCX'
+              ? 'docx'
+              : 'file';
+
+      a.download = `${doc.name}.${ext}`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -81,10 +149,15 @@ export const useDocuments = () => {
   return {
     documents,
     isEmpty: documents.length === 0,
+    isLoading: listQuery.isLoading,
+    isError: listQuery.isError,
+
     addFiles,
-    addTextDocument,
-    updateTextDocument,
-    deleteDocument,
-    downloadLocal,
+    addTextDocument: addTextDocumentUI,
+    updateTextDocument: updateTextDocumentUI,
+    deleteDocument: deleteDocumentUI,
+    download,
+
+    getDetail,
   };
 };
