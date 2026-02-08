@@ -1,46 +1,55 @@
-import DocumentPageContent from './components/DocumentPageContent';
-import { useDocumentPageController } from './hooks/useDocumentPageController';
+import { useParams } from 'react-router-dom';
+
 import DeleteModal from '@components/DeleteModal';
 
+import DocumentPageContent from './components/DocumentPageContent';
+import { useDocumentPageController } from './hooks/useDocumentPageController';
+
 const DocumentPage = () => {
+  const { teamId } = useParams();
+  const projectId = teamId ? Number(teamId) : undefined;
+
+  const controller = useDocumentPageController(projectId);
   const {
     fileInputRef,
-
     documents,
     isEmpty,
     view,
     editingTextId,
-    editingDoc,
-
+    editingDocTitle,
+    editingDocContent,
     isDeleteOpen,
-
     onPickFiles,
     triggerPickAnyFile,
     triggerPickFileByType,
-
     openTextCreate,
     openTextEdit,
     onRequestDelete,
-    downloadLocal,
-
+    download,
     handleSaveText,
     goList,
-
     closeDeleteModal,
     confirmDelete,
-  } = useDocumentPageController();
+  } = controller;
 
   return (
     <>
-      <input ref={fileInputRef} type="file" hidden multiple onChange={onPickFiles} />
+      <input
+        ref={fileInputRef}
+        type="file"
+        hidden
+        multiple
+        onChange={(e) => onPickFiles(e)} // AnyFile 선택 시
+      />
 
-      <div className="flex-1 min-h-0 flex flex-col">
+      <div className="flex min-h-0 flex-1 flex-col">
         <DocumentPageContent
           view={view}
           isEmpty={isEmpty}
           documents={documents}
           editingTextId={editingTextId}
-          editingDoc={editingDoc}
+          editingTitle={editingDocTitle}
+          editingContent={editingDocContent}
           onBackToList={goList}
           onSaveText={handleSaveText}
           onPickAnyFile={triggerPickAnyFile}
@@ -48,7 +57,8 @@ const DocumentPage = () => {
           onClickText={openTextCreate}
           onEditText={openTextEdit}
           onDelete={onRequestDelete}
-          onDownload={downloadLocal}
+          onDownload={download}
+          onPickFiles={onPickFiles}
         />
       </div>
 

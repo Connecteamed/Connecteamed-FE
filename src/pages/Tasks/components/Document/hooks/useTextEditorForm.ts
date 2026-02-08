@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 type SavePayload = { title: string; content: string };
 
@@ -11,6 +11,9 @@ type Options = {
 export const useTextEditorForm = ({ initialTitle = '', initialContent = '', onSave }: Options) => {
   const [title, setTitle] = useState(initialTitle);
   const [content, setContent] = useState(initialContent);
+
+  useEffect(() => setTitle(initialTitle), [initialTitle]);
+  useEffect(() => setContent(initialContent), [initialContent]);
 
   const trimmedTitle = useMemo(() => title.trim(), [title]);
   const trimmedContent = useMemo(() => content.trim(), [content]);
@@ -25,12 +28,5 @@ export const useTextEditorForm = ({ initialTitle = '', initialContent = '', onSa
     onSave({ title: trimmedTitle, content: trimmedContent });
   }, [canSubmit, onSave, trimmedTitle, trimmedContent]);
 
-  return {
-    title,
-    setTitle,
-    content,
-    setContent,
-    canSubmit,
-    submit,
-  };
+  return { title, setTitle, content, setContent, canSubmit, submit };
 };

@@ -1,10 +1,12 @@
 import { useMemo, useRef, useState } from 'react';
-import { useDocuments } from '../hooks/useDocuments';
-import { type ViewMode } from '../types/document';
+
+import type { ViewMode } from '../types/document';
+import type { DocumentItem } from '../types/document';
+import { useDocuments } from './useDocuments';
 
 export type PickFileType = 'pdf' | 'docx' | 'image';
 
-export const useDocumentPageController = () => {
+export const useDocumentPageController = (projectId: number | undefined) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
@@ -14,40 +16,48 @@ export const useDocumentPageController = () => {
     addTextDocument,
     updateTextDocument,
     deleteDocument,
-    downloadLocal,
-  } = useDocuments();
+    download,
+    getDetail,
+  } = useDocuments(projectId);
 
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
 
   const [view, setView] = useState<ViewMode>('LIST');
-  const [editingTextId, setEditingTextId] = useState<string | null>(null);
+  const [editingTextId, setEditingTextId] = useState<number | null>(null);
 
-  const editingDoc = useMemo(() => {
+  const [editingDetail, setEditingDetail] = useState<{ title: string; content: string } | null>(
+    null,
+  );
+
+  const editingDoc = useMemo<DocumentItem | null>(() => {
     if (!editingTextId) return null;
     return documents.find((d) => d.id === editingTextId) ?? null;
   }, [documents, editingTextId]);
 
-  const onPickFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onPickFiles = async (e: React.ChangeEvent<HTMLInputElement>, forcedType?: PickFileType) => {
     const files = Array.from(e.target.files ?? []);
-    if (files.length) addFiles(files);
     e.target.value = '';
-  };
+    if (!files.length) return;
 
-  const triggerFilePicker = (type: PickFileType) => {
-    const input = fileInputRef.current;
-    if (!input) return;
-
-    const acceptMap: Record<PickFileType, string> = {
-      pdf: 'application/pdf,.pdf',
-      docx: '.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      image: 'image/*',
+    const infer = (file: File): PickFileType => {
+      const name = file.name.toLowerCase();
+      if (name.endsWith('.pdf')) return 'pdf';
+      if (name.endsWith('.doc') || name.endsWith('.docx')) return 'docx';
+      return 'image';
     };
 
-    input.accept = acceptMap[type];
+    if (forcedType) {
+      await addFiles(files, forcedType);
+      return;
+    }
 
-    input.value = '';
-    input.click();
+    const groups: Record<PickFileType, File[]> = { pdf: [], docx: [], image: [] };
+    files.forEach((f) => groups[infer(f)].push(f));
+
+    for (const t of Object.keys(groups) as PickFileType[]) {
+      if (groups[t].length) await addFiles(groups[t], t);
+    }
   };
 
   const acceptMap: Record<PickFileType, string> = {
@@ -59,7 +69,7 @@ export const useDocumentPageController = () => {
   const triggerPickAnyFile = () => {
     const input = fileInputRef.current;
     if (!input) return;
-    input.accept = ''; // 제한 없음
+    input.accept = '';
     input.click();
   };
 
@@ -72,15 +82,20 @@ export const useDocumentPageController = () => {
 
   const openTextCreate = () => {
     setEditingTextId(null);
+    setEditingDetail({ title: '', content: '' });
     setView('TEXT_EDITOR');
   };
 
-  const openTextEdit = (id: string) => {
+  const openTextEdit = async (id: number) => {
     setEditingTextId(id);
+
+    const detail = await getDetail(id);
+    setEditingDetail({ title: detail.title ?? '', content: detail.content ?? '' });
+
     setView('TEXT_EDITOR');
   };
 
-  const onRequestDelete = (id: string) => {
+  const onRequestDelete = (id: number) => {
     setDeleteTargetId(id);
     setIsDeleteOpen(true);
   };
@@ -90,17 +105,17 @@ export const useDocumentPageController = () => {
     setDeleteTargetId(null);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (!deleteTargetId) return;
-    deleteDocument(deleteTargetId);
+    await deleteDocument(deleteTargetId);
     closeDeleteModal();
   };
 
-  const handleSaveText = ({ title, content }: { title: string; content: string }) => {
+  const handleSaveText = async ({ title, content }: { title: string; content: string }) => {
     if (editingTextId) {
-      updateTextDocument(editingTextId, title, content);
+      await updateTextDocument(editingTextId, title, content);
     } else {
-      addTextDocument(title, content);
+      await addTextDocument(title, content);
     }
     setView('LIST');
   };
@@ -108,32 +123,30 @@ export const useDocumentPageController = () => {
   const goList = () => setView('LIST');
 
   return {
-    // refs
     fileInputRef,
 
-    // data
     documents,
     isEmpty,
     view,
-    editingTextId,
-    editingDoc,
 
-    // delete modal
+    editingTextId,
+    editingDocTitle: editingDetail?.title ?? editingDoc?.name ?? '',
+    editingDocContent: editingDetail?.content ?? editingDoc?.content ?? '',
+
     isDeleteOpen,
 
-    // actions
     onPickFiles,
-    triggerFilePicker,
     triggerPickAnyFile,
     triggerPickFileByType,
 
     openTextCreate,
     openTextEdit,
+
     onRequestDelete,
     confirmDelete,
     closeDeleteModal,
 
-    downloadLocal,
+    download,
     handleSaveText,
     goList,
   };

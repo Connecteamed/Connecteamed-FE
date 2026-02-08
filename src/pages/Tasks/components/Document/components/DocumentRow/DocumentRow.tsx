@@ -1,13 +1,13 @@
+import useDocumentPreview from '../../hooks/useDocumentPreview';
 import { type DocumentItem } from '../../types/document';
 import DocumentPreviewModal from '../DocumentPreviewModal';
 import DocumentRowActions from './DocumentRowActions';
-import useDocumentPreview from '../../hooks/useDocumentPreview';
 
 type Props = {
   doc: DocumentItem;
-  onDelete: (id: string) => void;
+  onDelete: (id: number) => void;
   onDownload: (doc: DocumentItem) => void;
-  onEditText: (id: string) => void;
+  onEditText: (id: number) => void;
 };
 
 const DocumentRow = ({ doc, onDelete, onDownload, onEditText }: Props) => {
@@ -15,26 +15,26 @@ const DocumentRow = ({ doc, onDelete, onDownload, onEditText }: Props) => {
 
   return (
     <>
-      <div className="self-stretch h-14 p-3.5 bg-white border-l border-r border-b border-gray-200 flex items-center">
-        <div className="w-full inline-flex justify-between items-center">
+      <div className="flex h-14 items-center self-stretch border-r border-b border-l border-gray-200 bg-white p-3.5">
+        <div className="inline-flex w-full items-center justify-between">
           <button
             type="button"
             onClick={openPreview}
-            className="w-44 overflow-hidden whitespace-nowrap text-ellipsis text-neutral-600 text-xs font-medium font-['Roboto'] text-left hover:underline"
+            className="w-44 overflow-hidden text-left font-['Roboto'] text-xs font-medium text-ellipsis whitespace-nowrap text-neutral-600 hover:underline"
             title={doc.name}
           >
             {doc.name}
           </button>
 
-          <div className="flex justify-start items-center gap-7">
-            <div className="flex justify-start items-center gap-14">
-              <div className="w-12 text-neutral-600 text-xs font-medium font-['Roboto']">
+          <div className="flex items-center justify-start gap-7">
+            <div className="flex items-center justify-start gap-14">
+              <div className="w-12 font-['Roboto'] text-xs font-medium text-neutral-600">
                 {doc.ext}
               </div>
-              <div className="w-12 text-neutral-600 text-xs font-medium font-['Roboto']">
+              <div className="w-12 font-['Roboto'] text-xs font-medium text-neutral-600">
                 {doc.uploader}
               </div>
-              <div className="w-16 text-neutral-600 text-xs font-medium font-['Roboto']">
+              <div className="w-16 font-['Roboto'] text-xs font-medium text-neutral-600">
                 {doc.uploadedAt}
               </div>
             </div>
