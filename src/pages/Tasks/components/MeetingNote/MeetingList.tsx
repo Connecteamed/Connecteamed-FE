@@ -3,10 +3,11 @@ import type { Meeting } from './type';
 interface MeetingListProps {
   meetings: Meeting[];
   onCreate: () => void;
+  onOpen: (id: string | number) => void;
   onDelete: (id: string | number) => void;
 }
 
-const MeetingList = ({ meetings, onCreate, onDelete }: MeetingListProps) => {
+const MeetingList = ({ meetings, onCreate, onOpen, onDelete }: MeetingListProps) => {
   return (
     <div className="w-full">
       <div>
@@ -22,9 +23,13 @@ const MeetingList = ({ meetings, onCreate, onDelete }: MeetingListProps) => {
         <div className="border-neutral-30 border">
           {meetings.map((meeting) => (
             <div key={meeting.id} className="flex items-center px-4 py-3">
-              <div className="text-neutral-90 flex h-14 flex-1 items-center truncate font-medium">
+              <button
+                type="button"
+                className="text-neutral-90 flex h-14 flex-1 items-center truncate text-left font-medium"
+                onClick={() => onOpen(meeting.id)}
+              >
                 {meeting.title}
-              </div>
+              </button>
               <div className="text-neutral-90 w-32 truncate text-center text-sm">
                 {meeting.members}
               </div>

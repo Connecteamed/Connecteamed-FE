@@ -1,24 +1,28 @@
-import { useMemo, useState } from 'react';
-
+import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
-import { postMinute } from '@/apis/minutes';
-import type { CreateMinuteRequest } from '@/types/minutes';
-
+import { getMinuteDetail, patchMinute, postMinute } from '@/apis/minutes';
+import backIcon from '@/assets/icon-back-black.svg';
 import Input from '@/components/Input';
 import Calender from '@/components/calender';
-
-import backIcon from '@/assets/icon-back-black.svg';
+import type {
+  CreateMinuteRequest,
+  MinuteAttendee,
+  MinuteAgenda,
+  UpdateMinuteRequest,
+} from '@/types/minutes';
 
 import AttendeeSelector, { type AttendeeOption } from './components/AttendeeSelector';
 
 interface Agenda {
+  id?: number;
   title: string;
   content: string;
 }
 
 interface MinutesPageLocationState {
   memberOptions?: AttendeeOption[];
+  meetingId?: number;
 }
 
 const formatDisplayDate = (date: Date) => {
@@ -28,12 +32,8 @@ const formatDisplayDate = (date: Date) => {
   return `${yyyy}.${mm}.${dd}`;
 };
 
-const formatApiDate = (date: Date) => {
-  const yyyy = date.getFullYear();
-  const mm = String(date.getMonth() + 1).padStart(2, '0');
-  const dd = String(date.getDate()).padStart(2, '0');
-  return `${yyyy}-${mm}-${dd}`;
-};
+const getAttendeeId = (attendee: MinuteAttendee) => attendee.attendeeId ?? attendee.id ?? 0;
+const getAttendeeName = (attendee: MinuteAttendee) => attendee.name ?? attendee.nickname ?? '';
 
 const MinutesPage = () => {
   const navigate = useNavigate();
@@ -41,17 +41,78 @@ const MinutesPage = () => {
   const { teamId } = useParams();
   const projectId = Number(teamId);
 
-  const state = location.state as MinutesPageLocationState | null;
-  const memberOptions = useMemo(() => state?.memberOptions ?? [], [state?.memberOptions]);
+  const state = (location.state as MinutesPageLocationState | null) ?? null;
+  const meetingId = Number(state?.meetingId);
+  const isEditMode = Number.isFinite(meetingId);
+  const memberOptionsFromState = useMemo(() => state?.memberOptions ?? [], [state?.memberOptions]);
 
   const [title, setTitle] = useState('');
   const [selectedAttendeeIds, setSelectedAttendeeIds] = useState<number[]>([]);
+  const [detailAttendeeOptions, setDetailAttendeeOptions] = useState<AttendeeOption[]>([]);
   const [dateStr, setDateStr] = useState('');
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [agendas, setAgendas] = useState<Agenda[]>([{ title: '', content: '' }]);
   const [isSaving, setIsSaving] = useState(false);
+  const [isDetailLoading, setIsDetailLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+
+  const memberOptions = useMemo(() => {
+    const map = new Map<number, string>();
+    memberOptionsFromState.forEach((item) => map.set(item.id, item.name));
+    detailAttendeeOptions.forEach((item) => map.set(item.id, item.name));
+    return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
+  }, [detailAttendeeOptions, memberOptionsFromState]);
+
+  useEffect(() => {
+    if (!isEditMode) return;
+
+    const fetchDetail = async () => {
+      try {
+        setIsDetailLoading(true);
+        setErrorMessage('');
+        const res = await getMinuteDetail(meetingId);
+        if (res.status !== 'success' || !res.data) {
+          setErrorMessage(res.message ?? '회의록 상세를 불러오지 못했습니다.');
+          return;
+        }
+
+        const detail = res.data;
+        setTitle(detail.title ?? '');
+
+        const date = new Date(detail.meetingDate);
+        if (!Number.isNaN(date.getTime())) {
+          setSelectedDate(date);
+          setDateStr(formatDisplayDate(date));
+        }
+
+        const attendees = detail.attendees ?? [];
+        const attendeeIds = attendees.map(getAttendeeId).filter((id) => id > 0);
+        setSelectedAttendeeIds(attendeeIds);
+        setDetailAttendeeOptions(
+          attendees
+            .map((attendee) => ({
+              id: getAttendeeId(attendee),
+              name: getAttendeeName(attendee),
+            }))
+            .filter((item) => item.id > 0 && item.name.length > 0),
+        );
+
+        const detailAgendas = (detail.agendas ?? []).map((agenda: MinuteAgenda) => ({
+          id: agenda.id ?? agenda.agendaId,
+          title: agenda.title ?? '',
+          content: agenda.content ?? '',
+        }));
+        setAgendas(detailAgendas.length > 0 ? detailAgendas : [{ title: '', content: '' }]);
+      } catch {
+        setErrorMessage('회의록 상세를 불러오지 못했습니다.');
+      } finally {
+        setIsDetailLoading(false);
+      }
+    };
+
+    void fetchDetail();
+  }, [isEditMode, meetingId]);
 
   const handleAddAgenda = () => {
     setAgendas((prev) => [...prev, { title: '', content: '' }]);
@@ -85,39 +146,68 @@ const MinutesPage = () => {
       return;
     }
 
-    const validAgendas = agendas
+    if (selectedAttendeeIds.length === 0) {
+      setErrorMessage('참석자를 1명 이상 선택해주세요.');
+      return;
+    }
+
+    const normalizedAgendas = agendas
       .map((agenda, index) => ({
+        id: agenda.id,
         title: agenda.title.trim(),
         content: agenda.content.trim(),
-        sortOrder: index + 1,
+        sortOrder: index,
       }))
       .filter((agenda) => agenda.title.length > 0 || agenda.content.length > 0);
 
-    if (validAgendas.length === 0) {
+    if (normalizedAgendas.length === 0) {
       setErrorMessage('안건을 1개 이상 입력해주세요.');
       return;
     }
 
-    const payload: CreateMinuteRequest = {
-      title: title.trim(),
-      meetingDate: formatApiDate(selectedDate),
-      attendeeIds: selectedAttendeeIds,
-      agendas: validAgendas,
-    };
-
     try {
       setIsSaving(true);
       setErrorMessage('');
-      const res = await postMinute(projectId, payload);
 
-      if (res.status !== 'success') {
-        setErrorMessage(res.message ?? '회의록 저장에 실패했습니다.');
-        return;
+      if (isEditMode) {
+        const updatePayload: UpdateMinuteRequest = {
+          title: title.trim(),
+          meetingDate: selectedDate.toISOString(),
+          attendeeIds: selectedAttendeeIds,
+          agendas: normalizedAgendas.map((agenda, index) => ({
+            id: agenda.id,
+            title: agenda.title,
+            content: agenda.content,
+            sortOrder: index,
+          })),
+        };
+
+        const res = await patchMinute(meetingId, updatePayload);
+        if (res.status !== 'success') {
+          setErrorMessage(res.message ?? '회의록 수정에 실패했습니다.');
+          return;
+        }
+      } else {
+        const createPayload: CreateMinuteRequest = {
+          projectId,
+          title: title.trim(),
+          meetingDate: selectedDate.toISOString(),
+          attendeeIds: selectedAttendeeIds,
+          agendas: normalizedAgendas.map((agenda) =>
+            agenda.title && agenda.content ? `${agenda.title}\n${agenda.content}` : agenda.title || agenda.content,
+          ),
+        };
+
+        const res = await postMinute(projectId, createPayload);
+        if (res.status !== 'success') {
+          setErrorMessage(res.message ?? '회의록 저장에 실패했습니다.');
+          return;
+        }
       }
 
       navigate(`/team/${projectId}`, { state: { selectedTask: '3' } });
     } catch {
-      setErrorMessage('회의록 저장에 실패했습니다.');
+      setErrorMessage(isEditMode ? '회의록 수정에 실패했습니다.' : '회의록 저장에 실패했습니다.');
     } finally {
       setIsSaving(false);
     }
@@ -132,6 +222,12 @@ const MinutesPage = () => {
       </div>
 
       <div className="w-full space-y-6">
+        {isDetailLoading && (
+          <div className="rounded-md bg-neutral-100 px-4 py-2 text-sm text-neutral-700">
+            회의록 상세를 불러오는 중입니다...
+          </div>
+        )}
+
         <div className="space-y-3">
           <label className="block text-lg font-medium">회의명</label>
           <Input
@@ -171,7 +267,7 @@ const MinutesPage = () => {
         </div>
 
         {agendas.map((agenda, index) => (
-          <div key={index} className="space-y-3 pt-2">
+          <div key={`${agenda.id ?? 'new'}-${index}`} className="space-y-3 pt-2">
             <label className="block text-lg font-medium">안건 {index + 1}</label>
 
             <Input
@@ -201,10 +297,10 @@ const MinutesPage = () => {
 
           <button
             onClick={handleSave}
-            disabled={isSaving}
+            disabled={isSaving || isDetailLoading}
             className="bg-primary-500 h-14 w-96 rounded-md text-base font-bold text-white disabled:opacity-60"
           >
-            {isSaving ? '저장 중...' : '저장하기'}
+            {isSaving ? '저장 중...' : isEditMode ? '수정하기' : '저장하기'}
           </button>
         </div>
       </div>
