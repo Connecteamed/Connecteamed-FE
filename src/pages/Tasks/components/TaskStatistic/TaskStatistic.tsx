@@ -94,7 +94,7 @@ const DummyData: TeamActivity[] = [
 ];
 
 
-export const TaskStastistic = () => {
+export const TaskStatistic = () => {
   return (
     <div className="flex w-[960px] flex-col items-center justify-center rounded-lg bg-white">
       <div className="mt-[24px] mb-[36px] w-full">
@@ -105,4 +105,4 @@ export const TaskStastistic = () => {
   );
 };
 
-export default TaskStastistic;
+export default TaskStatistic;

@@ -29,7 +29,7 @@ import InviteModal from './components/InviteModal';
 import MeetingNote from './components/MeetingNote/MeetingNote';
 import NotificationModal from './components/NotificationModal';
 import TaskManagement from './components/TaskManagement/TaskManagement';
-import TaskStastistic from './components/TaskStatistic/TaskStastistic';
+import TaskStatistic from './components/TaskStatistic/TaskStatistic';
 
 type Member = { id?: number; name: string; roles: string[] };
 
@@ -262,7 +262,7 @@ const TaskPage = () => {
           {selectedTask === '4' && <div>완료한 업무 컴포넌트</div>}
           {selectedTask === '5' && (
             <div>
-              <TaskStastistic />
+              <TaskStatistic />
             </div>
           )}
           {selectedTask === '6' && <div>AI 회고 컴포넌트</div>}
