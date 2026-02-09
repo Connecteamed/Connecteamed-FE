@@ -1,59 +1,83 @@
 import type { ApiResponse } from './api';
 
-// 목록 아이템
+export interface MinuteListAttendee {
+  attendeeId?: number;
+  id?: number;
+  name?: string;
+  nickname?: string;
+}
+
 export interface MinuteListItem {
-  minuteId: number;
+  meetingId?: number;
+  minuteId?: number;
   title: string;
-  attendees: string[];
+  attendees: Array<MinuteListAttendee | string>;
   meetingDate: string;
 }
 
 export interface GetMinutesData {
-  minutes: MinuteListItem[];
-}
-
-// 생성 요청
-export interface CreateAgendaRequest {
-  title: string;
-  content: string;
-  sortOrder: number;
+  meetings?: MinuteListItem[];
+  minutes?: MinuteListItem[];
 }
 
 export interface CreateMinuteRequest {
+  projectId: number;
   title: string;
   meetingDate: string;
   attendeeIds: number[];
-  agendas: CreateAgendaRequest[];
+  agendas: string[];
 }
 
-// 생성 응답
 export interface CreateMinuteData {
   minuteId: number;
   createdAt: string;
 }
 
-// 상세 조회
 export interface MinuteAttendee {
-  id: number;
-  nickname: string;
-  role: string;
+  attendeeId?: number;
+  id?: number;
+  name?: string;
+  nickname?: string;
+  role?: string;
 }
 
 export interface MinuteAgenda {
-  agendaId: number;
+  id?: number;
+  agendaId?: number;
   title: string;
   content: string;
+  sortOrder?: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface GetMinuteDetailData {
-  minuteId: number;
+  meetingId: number;
+  projectId: number;
   title: string;
   meetingDate: string;
+  createdAt?: string;
+  updatedAt?: string;
   attendees: MinuteAttendee[];
   agendas: MinuteAgenda[];
+}
+
+export interface UpdateMinuteAgendaRequest {
+  id?: number;
+  title: string;
+  content: string;
+  sortOrder: number;
+}
+
+export interface UpdateMinuteRequest {
+  title: string;
+  meetingDate: string;
+  attendeeIds: number[];
+  agendas: UpdateMinuteAgendaRequest[];
 }
 
 export type GetMinutesResponse = ApiResponse<GetMinutesData>;
 export type CreateMinuteResponse = ApiResponse<CreateMinuteData>;
 export type GetMinuteDetailResponse = ApiResponse<GetMinuteDetailData>;
+export type UpdateMinuteResponse = ApiResponse<null>;
 export type DeleteMinuteResponse = ApiResponse<null>;
