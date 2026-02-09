@@ -6,8 +6,8 @@
   --color-primary-100: #ffe6cc;
   --color-primary-300: #ffb266;
   --color-primary-500: #fe7318;
-  --color-primary-700: #cc4f00;
-  --color-primary-900: #732800;
+  --color-primary-700: #e25e0e;
+  --color-primary-900: #b84800;
 
   /* Secondary Color */
   --color-secondary-100: #d6e2ff;
@@ -28,7 +28,7 @@
   --color-neutral-70: #878d96;
   --color-neutral-80: #707070;
   --color-neutral-90: #4a4a4a;
-  --color-neutral-100: #b05252ff;
+  --color-neutral-100: #222222;
 
   /* State Colors */
   --color-error: #e5484d;
