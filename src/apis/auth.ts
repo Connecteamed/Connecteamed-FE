@@ -5,17 +5,15 @@
  */
 import type { ApiResponse } from '@/types';
 import type { CheckIdData, LoginData, RefreshTokenData, SignupData } from '@/types/auth';
-import axios from 'axios';
-
-const API_URL = 'https://api.connecteamed.shop';
+import { instance } from './axios';
 
 export type SocialProvider = 'google' | 'kakao';
 
 export const getSocialLoginUrl = (provider: SocialProvider) =>
-  `${API_URL}/api/auth/login/${provider}`;
+  `${instance.defaults.baseURL}/auth/login/${provider}`;
 
 export const postLogin = async (loginId: string, password: string) => {
-  const response = await axios.post<ApiResponse<LoginData>>(`${API_URL}/api/auth/login`, {
+  const response = await instance.post<ApiResponse<LoginData>>('/auth/login', {
     loginId,
     password,
   });
@@ -34,7 +32,7 @@ export const postLogout = async () => {
     } as ApiResponse<null>;
   }
 
-  const response = await axios.post<ApiResponse<null>>(`${API_URL}/api/auth/logout`, null, {
+  const response = await instance.post<ApiResponse<null>>('/auth/logout', null, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
       'Refresh-Token': refreshToken,
@@ -50,22 +48,19 @@ export const postSignup = async (signupData: {
   loginId: string;
   password: string;
 }) => {
-  const response = await axios.post<ApiResponse<SignupData>>(
-    `${API_URL}/api/auth/signup`,
-    signupData,
-  );
+  const response = await instance.post<ApiResponse<SignupData>>('/auth/signup', signupData);
   return response.data;
 };
 
 export const checkId = async (loginId: string) => {
-  const response = await axios.get<ApiResponse<CheckIdData>>(`${API_URL}/api/members/check-id`, {
+  const response = await instance.get<ApiResponse<CheckIdData>>('/members/check-id', {
     params: { loginId },
   });
   return response.data;
 };
 
 export const postRefreshToken = async (refreshToken: string) => {
-  const response = await axios.post<ApiResponse<RefreshTokenData>>(`${API_URL}/api/auth/refresh`, {
+  const response = await instance.post<ApiResponse<RefreshTokenData>>('/auth/refresh', {
     refreshToken,
   });
   return response.data;

@@ -1,24 +1,12 @@
 import type { ApiResponse } from '@/types';
 import type { MyProjectsData, RetrospectivesData } from '@/types/mypage';
-import axios from 'axios';
-
-const API_URL = 'https://api.connecteamed.shop';
-
-const authHeaders = () => {
-  const token = localStorage.getItem('accessToken');
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
+import { instance } from './axios';
 
 /**
  * 완료한 프로젝트 목록 조회
  */
 export const getMyProjects = async () => {
-  const res = await axios.get<ApiResponse<MyProjectsData>>(
-    `${API_URL}/api/mypage/projects/completed`,
-    {
-      headers: authHeaders(),
-    },
-  );
+  const res = await instance.get<ApiResponse<MyProjectsData>>('/mypage/projects/completed');
   return res.data;
 };
 
@@ -26,9 +14,7 @@ export const getMyProjects = async () => {
  * 완료한 프로젝트 삭제
  */
 export const deleteProject = async (projectId: number) => {
-  const res = await axios.delete<ApiResponse<null>>(`${API_URL}/api/mypage/projects/${projectId}`, {
-    headers: authHeaders(),
-  });
+  const res = await instance.delete<ApiResponse<null>>(`/mypage/projects/${projectId}`);
   return res.data;
 };
 
@@ -36,12 +22,7 @@ export const deleteProject = async (projectId: number) => {
  * 나의 회고 목록 조회
  */
 export const getMyRetrospectives = async () => {
-  const res = await axios.get<ApiResponse<RetrospectivesData>>(
-    `${API_URL}/api/mypage/retrospectives`,
-    {
-      headers: authHeaders(),
-    },
-  );
+  const res = await instance.get<ApiResponse<RetrospectivesData>>('/mypage/retrospectives');
   return res.data;
 };
 
@@ -49,11 +30,6 @@ export const getMyRetrospectives = async () => {
  * 회고 삭제
  */
 export const deleteRetrospective = async (retrospectiveId: number) => {
-  const res = await axios.delete<ApiResponse<null>>(
-    `${API_URL}/api/mypage/retrospectives/${retrospectiveId}`,
-    {
-      headers: authHeaders(),
-    },
-  );
+  const res = await instance.delete<ApiResponse<null>>(`/mypage/retrospectives/${retrospectiveId}`);
   return res.data;
 };
