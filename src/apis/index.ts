@@ -1,1 +1,2 @@
-export { instance } from './instance';
+export { instance } from './axios';
+export { getMyTeams } from './team';

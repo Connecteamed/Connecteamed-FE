@@ -1,6 +1,8 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+
+import { deleteMinute, getMinutes } from '@/apis/minutes';
 
 import DeleteModal from '@/components/DeleteModal';
 
@@ -10,33 +12,64 @@ import type { Meeting } from './type';
 
 interface MeetingNoteProps {
   newMeeting?: Meeting;
+  memberOptions?: Array<{ id: number; name: string }>;
 }
 
-const MeetingNote = ({ newMeeting }: MeetingNoteProps) => {
+const formatDate = (value: string) => {
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return value;
+
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}.${mm}.${dd}`;
+};
+
+const MeetingNote = ({ memberOptions = [] }: MeetingNoteProps) => {
   const navigate = useNavigate();
+  const { teamId } = useParams();
+  const projectId = Number(teamId);
 
-  const [meetings, setMeetings] = useState<Meeting[]>([
-    { id: 1, title: '1차 회의', members: '팀원1', date: '2025.11.24' },
-  ]);
-
-  const [deletedIds, setDeletedIds] = useState<Set<Meeting['id']>>(() => new Set());
-
-  const filteredMeetings = useMemo(() => {
-    const baseFiltered = meetings.filter((m) => !deletedIds.has(m.id));
-
-    if (!newMeeting) return baseFiltered;
-    if (deletedIds.has(newMeeting.id)) return baseFiltered;
-
-    const exists = baseFiltered.some((m) => m.id === newMeeting.id);
-    return exists ? baseFiltered : [newMeeting, ...baseFiltered];
-  }, [meetings, newMeeting, deletedIds]);
+  const [meetings, setMeetings] = useState<Meeting[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [meetingIdToDelete, setMeetingIdToDelete] = useState<Meeting['id'] | null>(null);
 
+  const fetchMeetings = useCallback(async () => {
+    if (!Number.isFinite(projectId)) return;
+
+    try {
+      setLoading(true);
+      setErrorMessage('');
+      const res = await getMinutes(projectId);
+
+      const nextMeetings =
+        res.status === 'success'
+          ? (res.data?.minutes ?? []).map((minute) => ({
+              id: minute.minuteId,
+              title: minute.title,
+              members: (minute.attendees ?? []).join(', '),
+              date: formatDate(minute.meetingDate),
+            }))
+          : [];
+      setMeetings(nextMeetings);
+    } catch {
+      setErrorMessage('회의록 목록을 불러오지 못했습니다.');
+      setMeetings([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [projectId]);
+
+  useEffect(() => {
+    void fetchMeetings();
+  }, [fetchMeetings]);
+
   const handleCreateClick = () => {
-    navigate('/minutes');
-    // navigate(`/team/${teamId}/minutes`); API 연결시 경로 수정
+    if (!Number.isFinite(projectId)) return;
+    navigate(`/team/${projectId}/minutes`, { state: { memberOptions } });
   };
 
   const handleDelete = (id: Meeting['id']) => {
@@ -44,19 +77,18 @@ const MeetingNote = ({ newMeeting }: MeetingNoteProps) => {
     setIsDeleteModalOpen(true);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (meetingIdToDelete === null) return;
 
-    setMeetings((prev) => prev.filter((m) => m.id !== meetingIdToDelete));
-
-    setDeletedIds((prev) => {
-      const next = new Set(prev);
-      next.add(meetingIdToDelete);
-      return next;
-    });
-
-    setIsDeleteModalOpen(false);
-    setMeetingIdToDelete(null);
+    try {
+      await deleteMinute(Number(meetingIdToDelete));
+      setMeetings((prev) => prev.filter((m) => m.id !== meetingIdToDelete));
+    } catch {
+      setErrorMessage('회의록 삭제에 실패했습니다.');
+    } finally {
+      setIsDeleteModalOpen(false);
+      setMeetingIdToDelete(null);
+    }
   };
 
   const cancelDelete = () => {
@@ -66,15 +98,19 @@ const MeetingNote = ({ newMeeting }: MeetingNoteProps) => {
 
   return (
     <div className="w-full">
-      {filteredMeetings.length === 0 ? (
-        <EmptyMeeting onCreate={handleCreateClick} />
+      {loading ? (
+        <div className="py-8 text-center text-sm text-neutral-500">
+          회의록을 불러오는 중입니다...
+        </div>
+      ) : meetings.length === 0 ? (
+        <>
+          {errorMessage && <div className="pb-3 text-sm text-red-500">{errorMessage}</div>}
+          <EmptyMeeting onCreate={handleCreateClick} />
+        </>
       ) : (
         <>
-          <MeetingList
-            meetings={filteredMeetings}
-            onCreate={handleCreateClick}
-            onDelete={handleDelete}
-          />
+          {errorMessage && <div className="pb-3 text-sm text-red-500">{errorMessage}</div>}
+          <MeetingList meetings={meetings} onCreate={handleCreateClick} onDelete={handleDelete} />
           <DeleteModal
             isOpen={isDeleteModalOpen}
             onClose={cancelDelete}

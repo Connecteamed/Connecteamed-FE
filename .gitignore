@@ -41,3 +41,4 @@ EditerExample.tsx
 
 # npm lockfile (project uses pnpm)
 package-lock.json
+.env*.local

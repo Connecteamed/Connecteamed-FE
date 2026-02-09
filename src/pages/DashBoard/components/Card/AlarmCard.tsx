@@ -1,30 +1,35 @@
 import Card from '@/pages/DashBoard/components/Card/Card';
-import { alarmItems } from '@pages/DashBoard/constants/dashboard';
-import type { DashboardCardNavProps } from '@/pages/DashBoard/types/types';
 
-export default function AlarmCard({ onGoToTeam }: DashboardCardNavProps) {
+import { useRecentNotifications } from '../../hooks/useRecentNotifications';
+import { formatMMDD } from '../../utils/date';
+
+export default function AlarmCard() {
+  const { data = [], isLoading, isError } = useRecentNotifications();
+
   return (
     <Card title="알림">
-      <div className="flex flex-col gap-4">
-        {alarmItems.map((item) => (
-          <div key={item.id} className="flex items-center gap-3">
-            <div className="w-2.5 h-2.5 bg-amber-500 rounded-full" />
+      {isLoading && <div className="text-sm text-neutral-500">불러오는 중...</div>}
+      {isError && <div className="text-sm text-red-500">알림을 불러오지 못했어요.</div>}
 
-            <button
-              type="button"
-              onClick={() => onGoToTeam(item.teamId)}
-              className="flex-1 text-left text-neutral-600 text-sm font-medium font-['Inter']
-                         hover:underline focus:outline-none"
-            >
-              {item.message}
-            </button>
+      {!isLoading && !isError && (
+        <div className="flex flex-col gap-3">
+          {data.length === 0 && <div className="text-sm text-neutral-500">알림이 없어요.</div>}
 
-            <div className="text-neutral-600 text-sm font-medium font-['Inter']">
-              {item.projectName}
+          {data.map((n) => (
+            <div key={n.id} className="flex items-center justify-between">
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="h-2 w-2 shrink-0 rounded-full bg-orange-500" />
+                <div className="truncate text-sm text-neutral-700">{n.message}</div>
+              </div>
+
+              <div className="flex shrink-0 items-center gap-4 text-sm text-neutral-500">
+                <span>{n.teamName}</span>
+                <span>{formatMMDD(n.createdAt)}</span>
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </Card>
   );
 }

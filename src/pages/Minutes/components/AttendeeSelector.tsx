@@ -1,32 +1,46 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import checkIcon from '@/assets/icon-check-white.svg';
 
-// 팀원 더미 데이터
-const DUMMY_MEMBERS = [
+export interface AttendeeOption {
+  id: number;
+  name: string;
+}
+
+const DEFAULT_MEMBERS: AttendeeOption[] = [
   { id: 1, name: '팀원1' },
   { id: 2, name: '팀원2' },
   { id: 3, name: '팀원3' },
-  { id: 4, name: '팀원44444' },
+  { id: 4, name: '팀원4' },
 ];
 
 interface AttendeeSelectorProps {
-  selectedAttendees: string[];
-  onSelectionChange: (newAttendees: string[]) => void;
+  options?: AttendeeOption[];
+  selectedAttendeeIds: number[];
+  onSelectionChange: (nextIds: number[]) => void;
 }
 
-const AttendeeSelector = ({ selectedAttendees, onSelectionChange }: AttendeeSelectorProps) => {
+const AttendeeSelector = ({
+  options = DEFAULT_MEMBERS,
+  selectedAttendeeIds,
+  onSelectionChange,
+}: AttendeeSelectorProps) => {
   const [isAttendeeListOpen, setIsAttendeeListOpen] = useState(false);
-
-  // 드롭다운 + 트리거 영역 전체를 감쌀 ref
   const containerRef = useRef<HTMLDivElement | null>(null);
 
-  const toggleAttendee = (name: string) => {
-    if (selectedAttendees.includes(name)) {
-      onSelectionChange(selectedAttendees.filter((item) => item !== name));
-    } else {
-      onSelectionChange([...selectedAttendees, name]);
+  const memberOptions = useMemo(() => (options.length > 0 ? options : DEFAULT_MEMBERS), [options]);
+
+  const selectedMembers = useMemo(
+    () => memberOptions.filter((member) => selectedAttendeeIds.includes(member.id)),
+    [memberOptions, selectedAttendeeIds],
+  );
+
+  const toggleAttendee = (id: number) => {
+    if (selectedAttendeeIds.includes(id)) {
+      onSelectionChange(selectedAttendeeIds.filter((item) => item !== id));
+      return;
     }
+    onSelectionChange([...selectedAttendeeIds, id]);
   };
 
   useEffect(() => {
@@ -35,7 +49,6 @@ const AttendeeSelector = ({ selectedAttendees, onSelectionChange }: AttendeeSele
     const handlePointerDown = (event: PointerEvent) => {
       const el = containerRef.current;
       if (!el) return;
-
       const targetNode = event.target as Node | null;
       if (targetNode && !el.contains(targetNode)) {
         setIsAttendeeListOpen(false);
@@ -43,10 +56,7 @@ const AttendeeSelector = ({ selectedAttendees, onSelectionChange }: AttendeeSele
     };
 
     document.addEventListener('pointerdown', handlePointerDown);
-
-    return () => {
-      document.removeEventListener('pointerdown', handlePointerDown);
-    };
+    return () => document.removeEventListener('pointerdown', handlePointerDown);
   }, [isAttendeeListOpen]);
 
   return (
@@ -57,35 +67,33 @@ const AttendeeSelector = ({ selectedAttendees, onSelectionChange }: AttendeeSele
         onClick={() => setIsAttendeeListOpen((prev) => !prev)}
         className="flex min-h-12 w-full flex-wrap items-center gap-2 rounded-xl bg-white px-3.5 py-1.5 text-lg font-medium outline-1 -outline-offset-1 outline-gray-300"
       >
-        {selectedAttendees.length === 0 ? (
+        {selectedMembers.length === 0 ? (
           <span className="text-neutral-60">참석자를 선택하세요</span>
         ) : (
-          selectedAttendees.map((name) => (
+          selectedMembers.map((member) => (
             <div
-              key={name}
-              className="bg-neutral-60 flex h-7.5 w-20 items-center justify-center rounded-md text-sm font-medium text-white"
+              key={member.id}
+              className="bg-neutral-60 flex h-7.5 min-w-20 items-center justify-center rounded-md px-2 text-sm font-medium text-white"
             >
-              <span className="w-full truncate text-center">{name}</span>
+              <span className="w-full truncate text-center">{member.name}</span>
             </div>
           ))
         )}
       </div>
 
-      {/* 드롭다운 목록 */}
       {isAttendeeListOpen && (
         <div className="absolute top-24 left-0 z-20 w-fit rounded-xl bg-white p-4 shadow-xl">
           <div className="flex flex-col gap-2">
-            {DUMMY_MEMBERS.map((member) => {
-              const isSelected = selectedAttendees.includes(member.name);
+            {memberOptions.map((member) => {
+              const isSelected = selectedAttendeeIds.includes(member.id);
 
               return (
                 <div
                   key={member.id}
                   className="flex items-center gap-3"
-                  onClick={() => toggleAttendee(member.name)}
+                  onClick={() => toggleAttendee(member.id)}
                 >
-                  {/* 이름 박스 */}
-                  <div className="bg-neutral-60 flex h-7.5 w-20 items-center justify-center rounded-md text-sm font-medium text-white">
+                  <div className="bg-neutral-60 flex h-7.5 min-w-20 items-center justify-center rounded-md px-2 text-sm font-medium text-white">
                     <span className="w-full truncate px-1 text-center">{member.name}</span>
                   </div>
 
