@@ -1,9 +1,3 @@
-import { type FormEvent, useState } from 'react';
-
-import { useNavigate } from 'react-router-dom';
-
-import { getSocialLoginUrl, type SocialProvider, postLogin } from '@/apis/auth';
-
 import Button from '@/components/Button';
 import Input from '@/components/Input';
 
@@ -15,38 +9,14 @@ import iconLogin from '@/assets/icon-login.svg';
 import iconOpenEye from '@/assets/icon-open-eye.svg';
 import iconPassword from '@/assets/icon-password.svg';
 
+import { useLoginForm } from '../hooks/useLoginForm';
+
 const LoginForm = () => {
-  const [isError, setIsError] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const navigate = useNavigate();
-
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    const formData = new FormData(event.currentTarget);
-    const loginId = formData.get('userId') as string;
-    const password = formData.get('password') as string;
-
-    try {
-      const response = await postLogin(loginId, password);
-      if (response.status === 'success' && response.data) {
-        localStorage.setItem('accessToken', response.data.accessToken);
-        localStorage.setItem('refreshToken', response.data.refreshToken);
-        setIsError(false);
-        navigate('/');
-        return;
-      }
-    } catch (error) {
-      console.error(error);
-      setIsError(true);
-    }
-  };
+  const { isError, showPassword, togglePassword, handleSubmit, handleSocialLogin } = useLoginForm({
+    redirectTo: '/',
+  });
 
   const placeholderClass = 'placeholder:text-neutral-70';
-
-  const handleSocialLogin = (provider: SocialProvider) => {
-    window.location.href = getSocialLoginUrl(provider);
-  };
 
   return (
     <div className="flex w-full flex-col">
@@ -84,9 +54,10 @@ const LoginForm = () => {
                 rounded="rounded-[5px] md:rounded-xl"
                 className={`h-[38px] w-full pr-12 pl-12 text-[12px] shadow-md md:h-14 md:text-[18px] ${placeholderClass} ${isError ? 'ring-error ring-1' : ''}`}
               />
+
               <button
                 type="button"
-                onClick={() => setShowPassword(!showPassword)}
+                onClick={togglePassword}
                 className="absolute right-4 flex items-center justify-center focus:outline-none"
               >
                 <img
