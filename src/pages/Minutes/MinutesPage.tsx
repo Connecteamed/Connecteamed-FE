@@ -1,16 +1,19 @@
 import { useEffect, useMemo, useState } from 'react';
+
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { getMinuteDetail, patchMinute, postMinute } from '@/apis/minutes';
-import backIcon from '@/assets/icon-back-black.svg';
-import Input from '@/components/Input';
-import Calender from '@/components/calender';
 import type {
   CreateMinuteRequest,
-  MinuteAttendee,
   MinuteAgenda,
+  MinuteAttendee,
   UpdateMinuteRequest,
 } from '@/types/minutes';
+
+import Input from '@/components/Input';
+import Calender from '@/components/calender';
+
+import backIcon from '@/assets/icon-back-black.svg';
 
 import AttendeeSelector, { type AttendeeOption } from './components/AttendeeSelector';
 
@@ -32,7 +35,8 @@ const formatDisplayDate = (date: Date) => {
   return `${yyyy}.${mm}.${dd}`;
 };
 
-const getAttendeeId = (attendee: MinuteAttendee) => attendee.attendeeId ?? attendee.id ?? 0;
+// PATCH /meetings/{meetingId} uses IDs that match detail.attendees[].id.
+const getAttendeeId = (attendee: MinuteAttendee) => attendee.id ?? attendee.attendeeId ?? 0;
 const getAttendeeName = (attendee: MinuteAttendee) => attendee.name ?? attendee.nickname ?? '';
 
 const MinutesPage = () => {
@@ -43,7 +47,7 @@ const MinutesPage = () => {
 
   const state = (location.state as MinutesPageLocationState | null) ?? null;
   const meetingId = Number(state?.meetingId);
-  const isEditMode = Number.isFinite(meetingId);
+  const isEditMode = Number.isFinite(meetingId) && meetingId > 0;
   const memberOptionsFromState = useMemo(() => state?.memberOptions ?? [], [state?.memberOptions]);
 
   const [title, setTitle] = useState('');
@@ -98,11 +102,26 @@ const MinutesPage = () => {
             .filter((item) => item.id > 0 && item.name.length > 0),
         );
 
-        const detailAgendas = (detail.agendas ?? []).map((agenda: MinuteAgenda) => ({
-          id: agenda.id ?? agenda.agendaId,
-          title: agenda.title ?? '',
-          content: agenda.content ?? '',
-        }));
+        const detailAgendas = (detail.agendas ?? []).map((agenda: MinuteAgenda) => {
+          const rawTitle = agenda.title ?? '';
+          const rawContent = agenda.content ?? '';
+
+          // Legacy-created meetings may store "title\ncontent" in title with empty content.
+          if (!rawContent && rawTitle.includes('\n')) {
+            const [nextTitle, ...contentParts] = rawTitle.split('\n');
+            return {
+              id: agenda.id ?? agenda.agendaId,
+              title: nextTitle ?? '',
+              content: contentParts.join('\n'),
+            };
+          }
+
+          return {
+            id: agenda.id ?? agenda.agendaId,
+            title: rawTitle,
+            content: rawContent,
+          };
+        });
         setAgendas(detailAgendas.length > 0 ? detailAgendas : [{ title: '', content: '' }]);
       } catch {
         setErrorMessage('회의록 상세를 불러오지 못했습니다.');
@@ -146,7 +165,13 @@ const MinutesPage = () => {
       return;
     }
 
-    if (selectedAttendeeIds.length === 0) {
+    const normalizedAttendeeIds = Array.from(
+      new Set(
+        selectedAttendeeIds.map((id) => Number(id)).filter((id) => Number.isFinite(id) && id > 0),
+      ),
+    );
+
+    if (normalizedAttendeeIds.length === 0) {
       setErrorMessage('참석자를 1명 이상 선택해주세요.');
       return;
     }
@@ -173,9 +198,9 @@ const MinutesPage = () => {
         const updatePayload: UpdateMinuteRequest = {
           title: title.trim(),
           meetingDate: selectedDate.toISOString(),
-          attendeeIds: selectedAttendeeIds,
+          attendeeIds: normalizedAttendeeIds,
           agendas: normalizedAgendas.map((agenda, index) => ({
-            id: agenda.id,
+            id: Number(agenda.id) > 0 ? Number(agenda.id) : 0,
             title: agenda.title,
             content: agenda.content,
             sortOrder: index,
@@ -192,9 +217,11 @@ const MinutesPage = () => {
           projectId,
           title: title.trim(),
           meetingDate: selectedDate.toISOString(),
-          attendeeIds: selectedAttendeeIds,
+          attendeeIds: normalizedAttendeeIds,
           agendas: normalizedAgendas.map((agenda) =>
-            agenda.title && agenda.content ? `${agenda.title}\n${agenda.content}` : agenda.title || agenda.content,
+            agenda.title && agenda.content
+              ? `${agenda.title}\n${agenda.content}`
+              : agenda.title || agenda.content,
           ),
         };
 
