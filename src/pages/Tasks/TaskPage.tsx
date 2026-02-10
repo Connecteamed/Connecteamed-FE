@@ -48,12 +48,9 @@ const TaskPage = () => {
   const [roleModalPos, setRoleModalPos] = useState<{ top: number; left: number } | null>(null);
   const [activeMemberIndex, setActiveMemberIndex] = useState<number | null>(null);
   const { data: projectRoles } = useGetProjectRoleList(parsedProjectId);
-  const { data: memberList } = useGetProjectMemberList(parsedProjectId);
+  const { data: memberList = [] } = useGetProjectMemberList(parsedProjectId);
 
   const { mutate: patchMemberRole } = usePatchMemberRoles(parsedProjectId);
-
-  console.log('projectRoles', projectRoles);
-  console.log('memberList', memberList);
 
   const [members, setMembers] = useState<Member[]>([]);
   const teamName = useMemo(() => '팀원 목록', []);
@@ -65,7 +62,12 @@ const TaskPage = () => {
         ? m.roles
             .map((r) => {
               if (typeof r === 'string') return r;
-              if (r && typeof r === 'object') return (r as any).roleName ?? (r as any).name ?? '';
+              if (r && typeof r === 'object')
+                return (
+                  (r as { roleName?: string; name?: string }).roleName ??
+                  (r as { roleName?: string; name?: string }).name ??
+                  ''
+                );
               return '';
             })
             .filter(Boolean)
@@ -73,7 +75,7 @@ const TaskPage = () => {
 
       return {
         id: m.projectMemberId ?? m.memberId,
-        name: m.memberName ?? m.name ?? '이름없음',
+        name: m.memberName ?? (m as { name?: string }).name ?? '이름없음',
         roles: roleNames,
       };
     });
@@ -83,6 +85,8 @@ const TaskPage = () => {
   const location = useLocation();
   const [inviteModalIsOpen, setInviteModalIsOpen] = useState<boolean>(false);
   const [notificationModalIsOpen, setNotificationModalIsOpen] = useState<boolean>(false);
+
+  const [isProjectEndModalOpen, setIsProjectEndModalOpen] = useState<boolean>(false);
 
   const tasks = [
     { id: '1', title: '업무 목록' },
@@ -111,7 +115,6 @@ const TaskPage = () => {
 
     // 현재 역할 배열
     const hasRole = member.roles.includes(roleName);
-    // 새 역할 배열 (string[] → 서버는 roleId 필요)
     const nextRoles = hasRole
       ? member.roles.filter((r) => r !== roleName)
       : [...member.roles, roleName];
@@ -121,8 +124,6 @@ const TaskPage = () => {
       prev.map((m, idx) => (idx === activeMemberIndex ? { ...m, roles: nextRoles } : m)),
     );
 
-    // 서버 호출: roles → roleIds 변환 필요
-    // 여기서 roleName → roleId 매핑 필요
     const roleIdMap = projectRoles?.reduce<Record<string, number>>(
       (acc, role) => ({ ...acc, [role.name]: role.roleId }),
       {},
@@ -184,7 +185,13 @@ const TaskPage = () => {
                   onClose={() => setSettingDropdownIsOpen(false)}
                 >
                   <div className="absolute top-[97px] right-0 flex h-[94px] w-[124px] flex-col gap-2.5 rounded-[10px] bg-white px-3 py-3 text-xs text-white">
-                    <div className="flex h-7.5 w-full cursor-pointer items-center justify-center rounded-[20px] bg-orange-500 px-[15px] py-1.5">
+                    <div
+                      className="flex h-7.5 w-full cursor-pointer items-center justify-center rounded-[20px] bg-orange-500 px-[15px] py-1.5"
+                      onClick={() => {
+                        setSettingDropdownIsOpen(false);
+                        setIsProjectEndModalOpen(true);
+                      }}
+                    >
                       프로젝트 종료
                     </div>
                     <div className="flex h-7.5 w-full cursor-pointer items-center justify-center rounded-[20px] bg-zinc-200 px-[15px] py-1.5 text-neutral-600">
@@ -244,7 +251,7 @@ const TaskPage = () => {
         <div>
           {selectedTask === '1' && (
             <div>
-              <TaskManagement />
+              <TaskManagement projectId={parsedProjectId} />
             </div>
           )}
           {selectedTask === '2' && (
@@ -302,6 +309,33 @@ const TaskPage = () => {
               </div>
             </div>
           </div>
+        )}
+
+        {isProjectEndModalOpen && (
+          <Modal isOpen={isProjectEndModalOpen} onClose={() => setIsProjectEndModalOpen(false)}>
+            <div className="inline-flex h-[250px] w-[450px] flex-col items-start justify-start gap-2.5 rounded-[10px] bg-white px-8 py-9">
+              <div className="flex w-96 flex-col items-center justify-start gap-4">
+                <div className="h-12 justify-center self-stretch text-center font-['Roboto'] text-3xl font-bold text-black">
+                  프로젝트 종료
+                </div>
+                <div className="h-12 justify-center self-stretch text-center font-['Roboto'] text-base font-normal text-black">
+                  프로젝트를 종료할까요?
+                </div>
+                <div className="inline-flex items-center justify-start gap-6 self-stretch">
+                  <div className="flex h-12 w-44 items-center justify-center gap-2.5 rounded-[5px] bg-zinc-300 px-4 py-2 outline outline-1 outline-offset-[-1px] outline-gray-200">
+                    <div className="justify-center text-center font-['Roboto'] text-base leading-4 font-medium text-black">
+                      아니요
+                    </div>
+                  </div>
+                  <div className="flex h-12 w-44 items-center justify-center gap-2.5 rounded-[5px] bg-blue-600 px-4 py-2 outline outline-1 outline-offset-[-1px] outline-gray-200">
+                    <div className="justify-center text-center font-['Roboto'] text-base leading-4 font-medium text-white">
+                      예
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Modal>
         )}
       </div>
     </div>

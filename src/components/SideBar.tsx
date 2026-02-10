@@ -12,6 +12,7 @@ import iconPeopleBlack from '@assets/icon-people-black.svg';
 import iconSearchBlack from '@assets/icon-search-black.svg';
 import iconSearchOrange from '@assets/icon-search-orange.svg';
 import logoImg from '@assets/icon-sidebar-logo.png';
+import iconPeopleOrange from '@assets/icon-people-orange.svg';
 
 import useGetTeamList from '@/hooks/TaskPage/Query/useGetTeamList';
 
@@ -138,7 +139,7 @@ const Sidebar = () => {
           >
             {({ isActive }) => (
               <>
-                <img src={iconPeopleBlack} alt="create project" className="h-6 w-6" />
+                <img src={isActive ? iconPeopleOrange : iconPeopleBlack} alt="create project" className="h-6 w-6" />
                 <span
                   className={`text-base font-medium ${
                     isActive ? 'text-primary-500' : 'text-black'

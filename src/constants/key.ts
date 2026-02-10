@@ -3,4 +3,6 @@ export const QUERY_KEY = {
   roleList: 'roleList',
   projectMembers: 'projectMembers',
   inviteCode: 'inviteCode',
+  taskList: 'taskList',
+  completeTaskList: 'completeTaskList',
 };
