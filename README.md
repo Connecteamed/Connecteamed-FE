@@ -1,73 +1,173 @@
-# React + TypeScript + Vite
+# connecTeamed
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+> **초보자도 쉽게 시작하고, 프로젝트 경험이 자연스럽게 기록되는 협업 툴**
 
-Currently, two official plugins are available:
+connecTeamed는 협업 경험이 적은 사용자도 **막힘 없이 프로젝트를 시작**하고, 프로젝트 진행 과정에서 쌓인 업무 기록을 바탕으로 **AI가 STAR 기법 기반 경험 정리**를 도와주는 협업 및 개인 프로젝트 관리 서비스입니다.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## React Compiler
+## 🔍 문제 정의
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 문제 1. 초보자가 쓰기 쉬운 협업툴이 없다
 
-## Expanding the ESLint configuration
+* 기존 협업툴(노션, 컨플루언스 등)은 자유도가 지나치게 높음
+* 프로젝트 초반에 무엇을 만들어야 할지, 어떻게 정리해야 할지 가이드가 없음
+* 결과적으로 **툴 세팅 자체가 협업의 진입 장벽**이 됨
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### 문제 2. 프로젝트 종료 후 경험 정리가 귀찮다
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+* 프로젝트가 끝난 뒤 회고, 포트폴리오, 자기소개서 정리가 필요
+* 기억을 다시 되짚고 문장으로 정리하는 과정이 부담
+* 결국 경험 정리가 미뤄지고, 프로젝트 경험이 휘발됨
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+---
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## 💡 해결 방향
+
+* **구조화된 협업 환경 제공**
+
+  * 초보자도 바로 사용할 수 있는 필수 기능 중심 설계
+* **기록을 사후 작업이 아닌 진행 중 작업으로 전환**
+
+  * 업무 단위 기록 → 프로젝트 종료 후 자동 경험 정리
+* **AI 기반 STAR 기법 경험 정리 제공**
+
+  * 사용자가 작성한 업무 기록을 바탕으로 경험 문장 자동 생성
+
+---
+
+## 🧩 주요 기능
+
+### Core Features
+
+| 기능            | 설명                           |
+| ------------- | ---------------------------- |
+| 회원가입 / 로그인    | 기본 계정 관리 기능                  |
+| 대시보드          | 회고 목록, 다가오는 업무, 알림, 캘린더 뷰 제공 |
+| 워크스페이스 입장     | 워크스페이스 코드 기반 참여              |
+| 업무 등록         | 프로젝트 단위 업무 생성                |
+| 업무 상태 관리      | 업무 진행 상태 변경                  |
+| 업무 상세 조회      | 담당자일 경우 느낀 점 작성 가능           |
+| AI STAR 경험 정리 | 업무 기록 기반 STAR 문장 생성          |
+
+### Secondary Features
+
+| 기능        | 설명                   |
+| --------- | -------------------- |
+| 웹 브라우저 알림 | 업무/멘션 알림             |
+| 회의록 작성    | 회의 기록 관리             |
+| 파일 업로드    | PDF / DOCX / 이미지 업로드 |
+| 파일 다운로드   | 첨부 파일 다운로드           |
+| 문서 에디팅    | 텍스트 기반 문서 작성         |
+| DOCX 다운로드 | 문서 DOCX 파일로 변환       |
+
+---
+
+## 🛠 기술 스택
+
+### Frontend
+
+* **React**
+* **TypeScript**
+* **Vite**
+* **pnpm**
+* **TanStack Query**
+* **React Router**
+* **Tailwind CSS**
+* **Axios**
+
+### Code Quality
+
+* **ESLint**
+* **Stylelint**
+* **Prettier**
+
+### Version Control
+
+* **Git / GitHub**
+* **Gitmoji 커밋 컨벤션**
+
+---
+
+## 🌱 Git & 협업 컨벤션
+
+### 브랜치 전략
+
+```
+main      → 운영/배포 브랜치
+develop   → 개발 통합 브랜치
+feat/#이슈번호/기능명 → 기능 개발 브랜치
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+**예시**
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
 ```
+feat/#3/login
+```
+
+### PR 규칙
+
+* 최소 **1명 이상 코드 리뷰** 후 머지 가능
+* 본인 PR은 **본인이 머지**
+* 머지 대상: `feat → develop`
+
+### 커밋 컨벤션
+
+* **Gitmoji 사용**
+
+```
+✨ feat: 로그인 페이지 구현
+🐛 fix: 토큰 갱신 오류 수정
+♻️ refactor: 컴포넌트 구조 개선
+```
+
+---
+
+## 📁 프로젝트 폴더 구조
+
+```
+src/
+ ├─ components/
+ ├─ pages/
+ │   └─ dashboard/
+ │   └─ auth/
+ ├─ hooks/
+ ├─ assets/
+ ├─ services/
+ ├─ store/
+ ├─ styles/
+ └─ utils/
+```
+
+* **컴포넌트/훅/페이지/에셋 상위 분리 구조 채택**
+* 페이지 기준으로 하위 구성 정리
+
+---
+
+## 👥 팀원 소개 및 역할
+
+| 이름  | 역할                |
+| --- | ----------------- |
+| 곽도윤 | FE 리더 /  업무 관리 페이지 |
+| 김기연 | AI 회고 페이지 / 회의록   |
+| 조한솔 | 회원가입 / 로그인 / 계정관리 |
+| 이주석 | 대시보드 / 문서 관리 / 배포 |
+
+---
+
+## 🗓 회의 및 일정
+
+* **정기 회의**: 매주 월요일 22:30
+
+
+---
+
+## 🚀 프로젝트 목표
+
+* 협업 경험이 없는 사용자도 **첫 프로젝트를 완주할 수 있게**
+* 프로젝트 경험이 **기억이 아닌 데이터로 남도록**
+* 기록이 부담이 아닌 **자연스러운 흐름**이 되도록
+
+---
+
+> connecTeamed는 협업을 위한 도구가 아니라, **성장을 기록하는 시스템**을 지향합니다.

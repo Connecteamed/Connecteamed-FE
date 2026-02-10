@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import { createBrowserRouter, type RouteObject } from 'react-router-dom';
 import { lazyRoutes } from './routes';
-import HomeLayout from '@/layouts/HomeLayout';
+// import HomeLayout from '@/layouts/HomeLayout';
 
 import SideBarLayout from '@/layouts/SideBarLayout';
 
@@ -9,17 +9,27 @@ import SideBarLayout from '@/layouts/SideBarLayout';
 export const authRoutes: RouteObject[] = [
   {
     path: '/login',
-    element: <HomeLayout />,
-    children: [
-      // TODO: 로그인 페이지 추가
-    ],
+    element: (
+      <Suspense fallback={null}>
+        <lazyRoutes.LoginPage />
+      </Suspense>
+    ),
   },
   {
     path: '/signup',
-    element: <HomeLayout />,
-    children: [
-      // TODO: 회원가입 페이지 추가
-    ],
+    element: (
+      <Suspense fallback={null}>
+        <lazyRoutes.SignupPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: '/login/callback',
+    element: (
+      <Suspense fallback={null}>
+        <lazyRoutes.LoginCallbackPage />
+      </Suspense>
+    ),
   },
 ];
 
@@ -29,10 +39,46 @@ export const publicRoutes: RouteObject[] = [
     path: '/',
     element: <SideBarLayout />,
     children: [
-      { index: true, element: <Suspense fallback={null}><lazyRoutes.Dashboard /></Suspense> },
-      { path: 'project/create', element: <Suspense fallback={null}><lazyRoutes.MakeProject /></Suspense> },
-      { path: 'project/search', element: <Suspense fallback={null}><lazyRoutes.SearchProject /></Suspense> },
-      { path: 'team/:teamId', element: <Suspense fallback={null}><lazyRoutes.TaskPage /></Suspense> },
+      {
+        index: true,
+        element: (
+          <Suspense fallback={null}>
+            <lazyRoutes.Dashboard />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'project/create',
+        element: (
+          <Suspense fallback={null}>
+            <lazyRoutes.MakeProject />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'project/search',
+        element: (
+          <Suspense fallback={null}>
+            <lazyRoutes.SearchProject />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'team/:teamId',
+        element: (
+          <Suspense fallback={null}>
+            <lazyRoutes.TaskPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'team/:teamId/minutes',
+        element: (
+          <Suspense fallback={null}>
+            <lazyRoutes.Minutes />
+          </Suspense>
+        ),
+      },
     ],
   },
 ];
@@ -43,7 +89,14 @@ export const protectedRoutes: RouteObject[] = [
     path: '/mypage',
     element: <SideBarLayout />,
     children: [
-      { index: true, element: <Suspense fallback={null}><lazyRoutes.MyPage /></Suspense> },
+      {
+        index: true,
+        element: (
+          <Suspense fallback={null}>
+            <lazyRoutes.MyPage />
+          </Suspense>
+        ),
+      },
     ],
   },
 ];
