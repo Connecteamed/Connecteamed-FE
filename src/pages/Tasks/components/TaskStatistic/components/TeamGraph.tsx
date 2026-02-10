@@ -6,7 +6,7 @@ interface Props {
 
 export const TeamGraph = ({ projectId }: Props) => {
   const MAX_Y = 10;
-  const { data: contributionsData, error } = useGetProjectContributions(projectId);
+  const { data: contributionsData} = useGetProjectContributions(projectId);
   // 업무 완료 수에 따른 색상 결정 함수
   const getBarColor = (count: number) => {
     if (count === 0) return 'bg-gray-100';
