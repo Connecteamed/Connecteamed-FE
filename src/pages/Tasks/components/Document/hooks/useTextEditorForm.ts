@@ -8,6 +8,16 @@ type Options = {
   onSave: (payload: SavePayload) => void;
 };
 
+function stripHtmlToText(html: string) {
+  return html
+    .replace(/<style[\s\S]*?<\/style>/gi, '')
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 export const useTextEditorForm = ({ initialTitle = '', initialContent = '', onSave }: Options) => {
   const [title, setTitle] = useState(initialTitle);
   const [content, setContent] = useState(initialContent);
@@ -16,17 +26,17 @@ export const useTextEditorForm = ({ initialTitle = '', initialContent = '', onSa
   useEffect(() => setContent(initialContent), [initialContent]);
 
   const trimmedTitle = useMemo(() => title.trim(), [title]);
-  const trimmedContent = useMemo(() => content.trim(), [content]);
+  const contentText = useMemo(() => stripHtmlToText(content), [content]);
 
   const canSubmit = useMemo(
-    () => trimmedTitle.length > 0 && trimmedContent.length > 0,
-    [trimmedTitle, trimmedContent],
+    () => trimmedTitle.length > 0 && contentText.length > 0,
+    [trimmedTitle, contentText],
   );
 
   const submit = useCallback(() => {
     if (!canSubmit) return;
-    onSave({ title: trimmedTitle, content: trimmedContent });
-  }, [canSubmit, onSave, trimmedTitle, trimmedContent]);
+    onSave({ title: trimmedTitle, content }); // content는 HTML 그대로 저장(서식 유지)
+  }, [canSubmit, onSave, trimmedTitle, content]);
 
   return { title, setTitle, content, setContent, canSubmit, submit };
 };
