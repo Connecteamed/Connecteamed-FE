@@ -48,6 +48,6 @@ export const patchTask = async (projectId: number, taskId: number, RequestPostTa
 }
 
 export const deleteTask = async (taskId: string | number) => {
-    const { data } = await instance.delete(`/task/${taskId}`);
+    const { data } = await instance.delete(`/tasks/${taskId}`);
     return data;
 };
