@@ -27,7 +27,7 @@ const MyPage = () => {
   } = useMyPage();
 
   return (
-    <div className="mx-auto mt-8 flex w-full min-w-[375px] flex-col px-4 pb-24 md:mt-10 md:px-20.5 md:pb-20">
+    <div className="mx-auto mt-8 flex w-full flex-col px-4 pb-24 md:mt-10 md:px-20.5 md:pb-20">
       <h1 className="text-[24px] font-bold text-black md:text-[42px]">마이페이지</h1>
       <section className="mt-[42px] mb-6 w-full md:mt-10.5 md:mb-20">
         <h2 className="text-secondary-900 text mb-6 text-[16px] font-medium md:text-[24px]">
