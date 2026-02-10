@@ -1,16 +1,12 @@
-export interface TeamActivity {
-  date: string;
-  count: number;
-}
+import useGetProjectContributions from '@/hooks/TaskPage/Query/useGetProjectContributions';
 
 interface Props {
-  data: TeamActivity[];
+  projectId: number;
 }
 
-
-export const TeamGraph = ({ data }: Props) => {
+export const TeamGraph = ({ projectId }: Props) => {
   const MAX_Y = 10;
-
+  const { data: contributionsData, error } = useGetProjectContributions(projectId);
   // 업무 완료 수에 따른 색상 결정 함수
   const getBarColor = (count: number) => {
     if (count === 0) return 'bg-gray-100';
@@ -29,6 +25,7 @@ export const TeamGraph = ({ data }: Props) => {
     return `${month}/${day}`;
   };
 
+  console.log('팀 전체 업무 통계 데이터:', contributionsData, error);
   return (
     <div className="bg-neutral-0 hidden w-full max-w-[980px] min-w-[700px] rounded-[20px] px-[30px] pt-[16px] pb-[26px] shadow-[0_4px_4px_rgba(0,0,0,0.25)] min-[540px]:block">
       <h2 className="text-neutral-90 mb-[16px] text-[18px] font-medium">팀 전체 업무 통계</h2>
@@ -44,7 +41,7 @@ export const TeamGraph = ({ data }: Props) => {
 
           {/*막대 그래프 */}
           <div className="relative flex h-full items-end justify-between gap-[5px]">
-            {data.map((item) => {
+            {contributionsData?.map((item) => {
               const heightPercent = Math.min((item.count / MAX_Y) * 100, 100);
               return (
                 <div key={item.date} className="group flex h-full w-full flex-col items-center">
