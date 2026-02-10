@@ -43,6 +43,8 @@ interface DropdownProps {
   closeOnBackdrop?: boolean;
   /** ESC 키 누르면 닫기 여부 (기본값: true) */
   closeOnEsc?: boolean;
+  /** 포털 + 백드롭을 사용한 전체화면 렌더 여부 (기본값: true) */
+  usePortal?: boolean;
 }
 
 const Dropdown = ({
@@ -51,6 +53,7 @@ const Dropdown = ({
   children,
   closeOnBackdrop = true,
   closeOnEsc = true,
+  usePortal = true,
 }: DropdownProps) => {
   // ESC 키로 닫기
   const handleKeyDown = useCallback(
@@ -59,24 +62,33 @@ const Dropdown = ({
         onClose();
       }
     },
-    [closeOnEsc, onClose]
+    [closeOnEsc, onClose],
   );
 
   useEffect(() => {
     if (isOpen) {
       document.addEventListener('keydown', handleKeyDown);
       // 드롭다운 열리면 배경 스크롤 방지
-      document.body.style.overflow = 'hidden';
+      if (usePortal) {
+        document.body.style.overflow = 'hidden';
+      }
     }
 
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = 'unset';
+      if (usePortal) {
+        document.body.style.overflow = 'unset';
+      }
     };
-  }, [isOpen, handleKeyDown]);
+  }, [isOpen, handleKeyDown, usePortal]);
 
   // 드롭다운 닫혀있으면 렌더링 안 함
   if (!isOpen) return null;
+
+  // 인라인 렌더링: 포털/백드롭 없이 children 그대로 렌더
+  if (!usePortal) {
+    return <>{children}</>;
+  }
 
   // 백드롭(바깥) 클릭 시 닫기
   const handleBackdropClick = (e: React.MouseEvent) => {
