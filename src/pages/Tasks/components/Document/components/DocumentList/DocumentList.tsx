@@ -25,7 +25,6 @@ const DocumentList: React.FC<Props> = ({
   onPickFile,
   onClickText,
   onEditText,
-  onPickFiles,
 }) => {
   return (
     <div className="flex w-full flex-col items-start justify-start gap-7">

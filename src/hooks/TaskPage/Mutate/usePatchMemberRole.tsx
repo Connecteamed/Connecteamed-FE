@@ -1,4 +1,5 @@
 import { patchMemberRole } from '@/apis/TaskPage/project';
+import { QUERY_KEY } from '@/constants/key';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { ProjectMember } from '@/types/TaskManagement/project';
 
@@ -11,12 +12,15 @@ const usePatchMemberRoles = (projectId: number) => {
       patchMemberRole(projectId, memberId, roleIds),
 
     onMutate: async ({ memberId, roleIds }) => {
-      await queryClient.cancelQueries(['projectMembers', projectId]);
+      await queryClient.cancelQueries({ queryKey: [QUERY_KEY.projectMembers, projectId] });
 
-      const previousMembers = queryClient.getQueryData<ProjectMember[]>(['projectMembers', projectId]);
+      const previousMembers = queryClient.getQueryData<ProjectMember[]>([
+        QUERY_KEY.projectMembers,
+        projectId,
+      ]);
 
       // Optimistic update: UI 즉시 반영
-      queryClient.setQueryData<ProjectMember[]>(['projectMembers', projectId], (old) =>
+      queryClient.setQueryData<ProjectMember[]>([QUERY_KEY.projectMembers, projectId], (old) =>
         old?.map((m) =>
           m.projectMemberId === memberId
             ? { ...m, roles: roleIds.map((id) => `role-${id}`) } // UI용 string[]
@@ -29,12 +33,12 @@ const usePatchMemberRoles = (projectId: number) => {
 
     onError: (_err, _variables, context) => {
       if (context?.previousMembers) {
-        queryClient.setQueryData(['projectMembers', projectId], context.previousMembers);
+        queryClient.setQueryData([QUERY_KEY.projectMembers, projectId], context.previousMembers);
       }
     },
 
     onSettled: () => {
-      queryClient.invalidateQueries(['projectMembers', projectId]);
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY.projectMembers, projectId] });
     },
   });
 };

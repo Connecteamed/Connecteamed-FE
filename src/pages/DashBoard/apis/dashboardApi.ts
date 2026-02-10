@@ -111,3 +111,14 @@ export async function getRecentNotifications(): Promise<RecentNotification[]> {
     throw new Error(toErrorMessage(err, 'Failed to fetch notifications.'));
   }
 }
+
+// === Daily schedules (stubbed until backend ready) ===
+export function toUTCDateStartISO(date: Date): string {
+  const utc = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+  return utc.toISOString();
+}
+
+export async function getDailySchedules(_date: Date): Promise<never[]> {
+  // API not implemented yet; keep contract satisfied to unblock build
+  return [];
+}

@@ -1,16 +1,12 @@
-export interface TeamActivity {
-  date: string;
-  count: number;
-}
+import useGetProjectContributions from '@/hooks/TaskPage/Query/useGetProjectContributions';
 
 interface Props {
-  data: TeamActivity[];
+  projectId: number;
 }
 
-
-export const TeamGraph = ({ data }: Props) => {
+export const TeamGraph = ({ projectId }: Props) => {
   const MAX_Y = 10;
-
+  const { data: contributionsData} = useGetProjectContributions(projectId);
   // 업무 완료 수에 따른 색상 결정 함수
   const getBarColor = (count: number) => {
     if (count === 0) return 'bg-gray-100';
@@ -44,7 +40,7 @@ export const TeamGraph = ({ data }: Props) => {
 
           {/*막대 그래프 */}
           <div className="relative flex h-full items-end justify-between gap-[5px]">
-            {data.map((item) => {
+            {contributionsData?.map((item) => {
               const heightPercent = Math.min((item.count / MAX_Y) * 100, 100);
               return (
                 <div key={item.date} className="group flex h-full w-full flex-col items-center">
