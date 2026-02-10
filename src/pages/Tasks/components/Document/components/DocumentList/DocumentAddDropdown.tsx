@@ -1,48 +1,80 @@
 import React from 'react';
+
 import useOutsideClose from '../../hooks/useOutsideClose';
 
 type Props = {
   onPickFile: (type: 'pdf' | 'docx' | 'image') => void;
   onClickText: () => void;
+
+  /** ✅ EmptyDocument에서만 중앙정렬/크기 변경용 */
+  containerClassName?: string;
+  triggerClassName?: string;
+  labelClassName?: string;
 };
 
-const DocumentAddDropdown = ({ onPickFile, onClickText }: Props) => {
+const DocumentAddDropdown = ({
+  onPickFile,
+  onClickText,
+  containerClassName,
+  triggerClassName,
+  labelClassName,
+}: Props) => {
   const [isOpen, setIsOpen] = React.useState(false);
+
   const wrapRef = React.useRef<HTMLDivElement | null>(null);
+  const panelRef = React.useRef<HTMLDivElement | null>(null);
 
   const close = React.useCallback(() => setIsOpen(false), []);
-  const toggle = () => setIsOpen((prev) => !prev);
+  const toggle = React.useCallback(() => setIsOpen((prev) => !prev), []);
 
   useOutsideClose({ enabled: isOpen, onClose: close, ref: wrapRef });
 
+  // ✅ 열리면 패널이 화면에 보이도록 "페이지(스크롤 컨테이너)"를 자동 스크롤
+  React.useEffect(() => {
+    if (!isOpen) return;
+
+    const raf = requestAnimationFrame(() => {
+      panelRef.current?.scrollIntoView({
+        block: 'nearest',
+        behavior: 'auto',
+      });
+    });
+
+    return () => cancelAnimationFrame(raf);
+  }, [isOpen]);
+
+  const rootClass = containerClassName ?? 'flex justify-end self-stretch';
+
+  const baseTriggerClass =
+    'inline-flex h-8 w-24 items-center justify-center gap-2.5 rounded-[10px] px-2 py-[5px]';
+  const triggerBgClass = isOpen ? 'bg-gray-400' : 'bg-orange-500';
+
+  const baseLabelClass = "text-center font-['Roboto'] text-xs font-medium text-white";
+
   return (
-    <div className="self-stretch flex justify-end">
-      <div ref={wrapRef} className="relative">
+    <div className={rootClass}>
+      <div ref={wrapRef} className="flex flex-col items-end">
         <button
           type="button"
           onClick={toggle}
-          className={`w-24 h-8 px-2 py-[5px] rounded-[10px] inline-flex justify-center items-center gap-2.5 ${
-            isOpen ? 'bg-gray-400' : 'bg-orange-500'
-          }`}
+          className={`${baseTriggerClass} ${triggerBgClass} ${triggerClassName ?? ''}`}
         >
-          <span className="text-center text-white text-xs font-medium font-['Roboto']">
-            문서 추가
-          </span>
+          <span className={`${baseLabelClass} ${labelClassName ?? ''}`}>문서 추가</span>
         </button>
 
         {isOpen && (
-          <div className="absolute right-0 top-10 z-50">
-            <div className="h-40 p-3 bg-white rounded-[10px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.15)] inline-flex justify-start items-center gap-2.5">
-              <div className="w-20 inline-flex flex-col justify-start items-start gap-1.5">
+          <div ref={panelRef} className="mt-2">
+            <div className="inline-flex h-40 items-center justify-start gap-2.5 rounded-[10px] bg-white p-3 shadow-[0px_4px_4px_0px_rgba(0,0,0,0.15)]">
+              <div className="inline-flex w-20 flex-col items-start justify-start gap-1.5">
                 <button
                   type="button"
                   onClick={() => {
                     close();
                     onPickFile('pdf');
                   }}
-                  className="self-stretch h-7 px-3.5 py-1.5 bg-zinc-200 rounded-[5px] inline-flex justify-center items-center gap-2.5"
+                  className="inline-flex h-7 items-center justify-center gap-2.5 self-stretch rounded-[5px] bg-zinc-200 px-3.5 py-1.5"
                 >
-                  <span className="text-center text-neutral-600 text-xs font-medium font-['Roboto']">
+                  <span className="text-center font-['Roboto'] text-xs font-medium text-neutral-600">
                     PDF
                   </span>
                 </button>
@@ -53,9 +85,9 @@ const DocumentAddDropdown = ({ onPickFile, onClickText }: Props) => {
                     close();
                     onPickFile('docx');
                   }}
-                  className="self-stretch h-7 px-3.5 py-1.5 bg-zinc-200 rounded-[5px] inline-flex justify-center items-center gap-2.5"
+                  className="inline-flex h-7 items-center justify-center gap-2.5 self-stretch rounded-[5px] bg-zinc-200 px-3.5 py-1.5"
                 >
-                  <span className="text-center text-neutral-600 text-xs font-medium font-['Roboto']">
+                  <span className="text-center font-['Roboto'] text-xs font-medium text-neutral-600">
                     docx
                   </span>
                 </button>
@@ -66,9 +98,9 @@ const DocumentAddDropdown = ({ onPickFile, onClickText }: Props) => {
                     close();
                     onPickFile('image');
                   }}
-                  className="self-stretch h-7 px-3.5 py-1.5 bg-zinc-200 rounded-[5px] inline-flex justify-center items-center gap-2.5"
+                  className="inline-flex h-7 items-center justify-center gap-2.5 self-stretch rounded-[5px] bg-zinc-200 px-3.5 py-1.5"
                 >
-                  <span className="text-center text-neutral-600 text-xs font-medium font-['Roboto']">
+                  <span className="text-center font-['Roboto'] text-xs font-medium text-neutral-600">
                     이미지
                   </span>
                 </button>
@@ -79,9 +111,9 @@ const DocumentAddDropdown = ({ onPickFile, onClickText }: Props) => {
                     close();
                     onClickText();
                   }}
-                  className="self-stretch h-7 px-3.5 py-1.5 bg-zinc-200 rounded-[5px] inline-flex justify-center items-center gap-2.5"
+                  className="inline-flex h-7 items-center justify-center gap-2.5 self-stretch rounded-[5px] bg-zinc-200 px-3.5 py-1.5"
                 >
-                  <span className="text-center text-neutral-600 text-xs font-medium font-['Roboto']">
+                  <span className="text-center font-['Roboto'] text-xs font-medium text-neutral-600">
                     텍스트
                   </span>
                 </button>

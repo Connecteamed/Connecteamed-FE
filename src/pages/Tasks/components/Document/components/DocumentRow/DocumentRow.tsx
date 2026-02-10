@@ -48,8 +48,12 @@ const DocumentRow = ({ doc, onDelete, onDownload, onEditText }: Props) => {
           </div>
         </div>
       </div>
-
-      <DocumentPreviewModal isOpen={isPreviewOpen} onClose={closePreview} />
+      <DocumentPreviewModal
+        isOpen={isPreviewOpen}
+        onClose={closePreview}
+        documentId={doc.id}
+        title={doc.name}
+      />{' '}
     </>
   );
 };

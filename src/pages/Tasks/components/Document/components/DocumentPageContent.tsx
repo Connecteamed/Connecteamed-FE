@@ -39,7 +39,6 @@ const DocumentPageContent: React.FC<Props> = ({
   editingContent,
   onBackToList,
   onSaveText,
-  onPickAnyFile,
   onPickFileByType,
   onClickText,
   onEditText,
@@ -62,7 +61,7 @@ const DocumentPageContent: React.FC<Props> = ({
   if (isEmpty) {
     return (
       <div className="flex min-h-0 flex-1">
-        <EmptyDocument onAdd={onPickAnyFile} />
+        <EmptyDocument onPickFile={onPickFileByType} onClickText={onClickText} />
       </div>
     );
   }

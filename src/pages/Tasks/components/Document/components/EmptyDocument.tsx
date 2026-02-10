@@ -1,26 +1,36 @@
 import documentAddIcon from '@assets/icon-document-add-orange.svg';
 
+import DocumentAddDropdown from './DocumentList/DocumentAddDropdown';
+
 type Props = {
-  onAdd: () => void;
+  onPickFile: (type: 'pdf' | 'docx' | 'image') => void;
+  onClickText: () => void;
 };
 
-const EmptyDocument = ({ onAdd }: Props) => {
+const EmptyDocument = ({ onPickFile, onClickText }: Props) => {
   return (
-    <section className="w-full flex-1 min-h-0 flex flex-col items-center justify-center translate-y-[-8px]">
-      <div className="w-48 h-48 bg-orange-100 rounded-full flex items-center justify-center">
-        <img src={documentAddIcon} alt="문서 추가 아이콘" className="w-30 h-30" />
+    <div className="flex flex-1 flex-col items-center justify-center py-20">
+      <div className="mb-6 flex h-48 w-48 items-center justify-center rounded-full bg-orange-100">
+        <img src={documentAddIcon} alt="문서 추가 아이콘" className="h-32 w-32" />
       </div>
 
-      <p className="mt-6 text-2xl font-medium">아직 등록된 문서가 없어요</p>
+      <div className="mb-4 text-2xl font-medium">아직 등록된 문서가 없어요</div>
 
-      <p className="mt-2 text-black text-sm text-center leading-5 font-normal font-['Roboto']">
-        팀원들과 필요한 문서를 한곳에서 <br /> 관리할 수 있어요
-      </p>
+      <div className="mb-6 h-10 justify-center self-stretch text-center font-['Roboto'] text-sm font-normal text-gray-500">
+        팀원들과 필요한 문서를 한 곳에서
+        <br />
+        관리할 수 있어요
+      </div>
 
-      <button onClick={onAdd} className="mt-6 w-36 h-12 bg-orange-500 text-white rounded-lg">
-        문서 추가
-      </button>
-    </section>
+      {/* ✅ Empty 전용: 중앙정렬 + 버튼만 살짝 크게 */}
+      <DocumentAddDropdown
+        onPickFile={onPickFile}
+        onClickText={onClickText}
+        containerClassName="flex justify-center self-stretch"
+        triggerClassName="h-12 w-auto rounded-xl px-10 py-4" // 버튼 크기 ↑ (원하면 px-10로)
+        labelClassName="text-sm" // 글자 크기 ↑
+      />
+    </div>
   );
 };
 
