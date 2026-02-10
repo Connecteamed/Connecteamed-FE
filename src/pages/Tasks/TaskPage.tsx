@@ -25,6 +25,7 @@ import useGetProjectRoleList from '@/hooks/MakeProject/Query/useGetProjectRoleLi
 import usePatchMemberRoles from '@/hooks/TaskPage/Mutate/usePatchMemberRole';
 import useGetProjectMemberList from '@/hooks/TaskPage/Query/useGetProjectMemberList';
 
+import AIReview from './components/AIReview/AIReview';
 import InviteModal from './components/InviteModal';
 import MeetingNote from './components/MeetingNote/MeetingNote';
 import NotificationModal from './components/NotificationModal';
@@ -258,7 +259,11 @@ const TaskPage = () => {
             </div>
           )}
           {selectedTask === '4' && <div>완료한 업무 컴포넌트</div>}
-          {selectedTask === '5' && <div>AI 회고 컴포넌트</div>}
+          {selectedTask === '5' && (
+            <div>
+              <AIReview />
+            </div>
+          )}
         </div>
 
         {isRoleModalOpen && roleModalPos && (
