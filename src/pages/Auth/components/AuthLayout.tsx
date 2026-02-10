@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 
+import mobileBackground from '@/assets/image-background-mobile.png';
 import loginBackground from '@/assets/image-background.png';
 
 interface AuthLayoutProps {
@@ -11,20 +12,24 @@ const AuthLayout = ({ children, mode }: AuthLayoutProps) => {
   const isLogin = mode === 'login';
 
   return (
-    <div
-      className="relative flex min-h-screen w-full items-start justify-end bg-cover bg-center bg-no-repeat pr-11.75"
-      style={{ backgroundImage: `url(${loginBackground})` }}
-    >
-      {/*
-         - 로그인일 때는 위에서 144px 띄우고 나머지를 채움
-         - 회원가입일 때는 전체 높이 차지
-      */}
+    <div className="relative flex min-h-screen w-full items-start justify-center md:justify-end md:pr-11.75">
       <div
-        className={`relative z-10 flex w-156 flex-col bg-white shadow-sm ${isLogin ? 'mt-36 h-[calc(100vh-144px)] rounded-tr-[20px]' : 'h-screen'} `}
+        className="absolute inset-0 z-0 block bg-cover bg-center md:hidden"
+        style={{ backgroundImage: `url(${mobileBackground})` }}
+      />
+      <div
+        className="absolute inset-0 z-0 hidden bg-cover bg-center md:block"
+        style={{ backgroundImage: `url(${loginBackground})` }}
+      />
+
+      <div
+        className={`relative z-10 flex w-full flex-col items-center bg-transparent px-8 pt-[303px] md:w-156 md:bg-white md:px-16 md:shadow-sm ${
+          isLogin
+            ? 'md:mt-36 md:min-h-[calc(100vh-144px)] md:rounded-tr-[20px] md:pt-[155px]'
+            : 'md:min-h-screen md:pt-[155px]'
+        } `}
       >
-        <div className="flex h-full w-full flex-col items-center justify-center px-16 pt-[155px]">
-          {children}
-        </div>
+        <div className="flex w-full flex-col items-center">{children}</div>
       </div>
     </div>
   );

@@ -4,45 +4,32 @@ import type {
   DeleteMinuteResponse,
   GetMinuteDetailResponse,
   GetMinutesResponse,
+  UpdateMinuteRequest,
+  UpdateMinuteResponse,
 } from '@/types/minutes';
-import axios from 'axios';
+import { instance } from './axios';
 
-const API_URL = 'https://api.connecteamed.shop';
-
-const authHeaders = () => {
-  const token = localStorage.getItem('accessToken');
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
-
-// 목록 조회
 export const getMinutes = async (projectId: number) => {
-  const res = await axios.get<GetMinutesResponse>(`${API_URL}/api/projects/${projectId}/meetings`, {
-    headers: authHeaders(),
-  });
+  const res = await instance.get<GetMinutesResponse>(`/projects/${projectId}/meetings`);
   return res.data;
 };
 
-// 생성
 export const postMinute = async (projectId: number, payload: CreateMinuteRequest) => {
-  const res = await axios.post<CreateMinuteResponse>(
-    `${API_URL}/api/projects/${projectId}/meetings`,
-    payload,
-    { headers: authHeaders() },
-  );
-  return res.data;
-};
-// 상세 조회
-export const getMinuteDetail = async (meetingId: number) => {
-  const res = await axios.get<GetMinuteDetailResponse>(`${API_URL}/api/meetings/${meetingId}`, {
-    headers: authHeaders(),
-  });
+  const res = await instance.post<CreateMinuteResponse>(`/projects/${projectId}/meetings`, payload);
   return res.data;
 };
 
-// 삭제
+export const getMinuteDetail = async (meetingId: number) => {
+  const res = await instance.get<GetMinuteDetailResponse>(`/meetings/${meetingId}`);
+  return res.data;
+};
+
+export const patchMinute = async (meetingId: number, payload: UpdateMinuteRequest) => {
+  const res = await instance.patch<UpdateMinuteResponse>(`/meetings/${meetingId}`, payload);
+  return res.data;
+};
+
 export const deleteMinute = async (meetingId: number) => {
-  const res = await axios.delete<DeleteMinuteResponse>(`${API_URL}/api/meetings/${meetingId}`, {
-    headers: authHeaders(),
-  });
+  const res = await instance.delete<DeleteMinuteResponse>(`/meetings/${meetingId}`);
   return res.data;
 };

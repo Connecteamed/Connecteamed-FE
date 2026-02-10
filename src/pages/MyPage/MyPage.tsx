@@ -29,6 +29,7 @@ type DeleteTarget =
 
 const MyPage = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [target, setTarget] = useState<DeleteTarget | null>(null);
 
   const [projects, setProjects] = useState<Project[]>([]);
@@ -45,6 +46,14 @@ const MyPage = () => {
   const closeModal = () => {
     setIsOpen(false);
     setTarget(null);
+  };
+
+  const openLogoutModal = () => {
+    setIsLogoutModalOpen(true);
+  };
+
+  const closeLogoutModal = () => {
+    setIsLogoutModalOpen(false);
   };
 
   const fetchAll = async () => {
@@ -106,6 +115,8 @@ const MyPage = () => {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
+    closeLogoutModal();
+
     try {
       const res = await postLogout();
       if (res.status !== 'success') {
@@ -206,7 +217,7 @@ const MyPage = () => {
           </div>
         )}
       </section>
-      <h2 className="text-primary-500 mt-20 text-[24px] font-bold" onClick={handleLogout}>
+      <h2 className="text-primary-500 mt-20 text-[24px] font-bold" onClick={openLogoutModal}>
         로그아웃
       </h2>
 
@@ -216,6 +227,14 @@ const MyPage = () => {
         onConfirm={handleDelete}
         title="항목 삭제"
         description={modalDescription}
+      ></DeleteModal>
+
+      <DeleteModal
+        isOpen={isLogoutModalOpen}
+        onClose={closeLogoutModal}
+        onConfirm={handleLogout}
+        title="로그아웃"
+        description="로그아웃 하시겠습니까?"
       ></DeleteModal>
     </div>
   );
