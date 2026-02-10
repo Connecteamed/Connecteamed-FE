@@ -25,7 +25,6 @@ export const TeamGraph = ({ projectId }: Props) => {
     return `${month}/${day}`;
   };
 
-  console.log('팀 전체 업무 통계 데이터:', contributionsData, error);
   return (
     <div className="bg-neutral-0 hidden w-full max-w-[980px] min-w-[700px] rounded-[20px] px-[30px] pt-[16px] pb-[26px] shadow-[0_4px_4px_rgba(0,0,0,0.25)] min-[540px]:block">
       <h2 className="text-neutral-90 mb-[16px] text-[18px] font-medium">팀 전체 업무 통계</h2>
