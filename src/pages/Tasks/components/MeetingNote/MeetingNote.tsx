@@ -44,15 +44,19 @@ const MeetingNote = ({ memberOptions = [] }: MeetingNoteProps) => {
       setLoading(true);
       setErrorMessage('');
       const res = await getMinutes(projectId);
+      const sourceMeetings = res.data?.meetings ?? res.data?.minutes ?? [];
 
       const nextMeetings =
         res.status === 'success'
-          ? (res.data?.minutes ?? []).map((minute) => ({
-              id: minute.minuteId,
+          ? sourceMeetings.map((minute) => ({
+              id: minute.meetingId ?? minute.minuteId ?? 0,
               title: minute.title,
-              members: (minute.attendees ?? []).join(', '),
+              members: (minute.attendees ?? [])
+                .map((attendee) => (typeof attendee === 'string' ? attendee : attendee.name))
+                .join(', '),
               date: formatDate(minute.meetingDate),
             }))
+              .filter((meeting) => meeting.id !== 0)
           : [];
       setMeetings(nextMeetings);
     } catch {
@@ -75,6 +79,13 @@ const MeetingNote = ({ memberOptions = [] }: MeetingNoteProps) => {
   const handleDelete = (id: Meeting['id']) => {
     setMeetingIdToDelete(id);
     setIsDeleteModalOpen(true);
+  };
+
+  const handleOpen = (id: Meeting['id']) => {
+    if (!Number.isFinite(projectId)) return;
+    navigate(`/team/${projectId}/minutes`, {
+      state: { memberOptions, meetingId: Number(id) },
+    });
   };
 
   const confirmDelete = async () => {
@@ -110,7 +121,12 @@ const MeetingNote = ({ memberOptions = [] }: MeetingNoteProps) => {
       ) : (
         <>
           {errorMessage && <div className="pb-3 text-sm text-red-500">{errorMessage}</div>}
-          <MeetingList meetings={meetings} onCreate={handleCreateClick} onDelete={handleDelete} />
+          <MeetingList
+            meetings={meetings}
+            onCreate={handleCreateClick}
+            onOpen={handleOpen}
+            onDelete={handleDelete}
+          />
           <DeleteModal
             isOpen={isDeleteModalOpen}
             onClose={cancelDelete}

@@ -30,6 +30,7 @@ import InviteModal from './components/InviteModal';
 import MeetingNote from './components/MeetingNote/MeetingNote';
 import NotificationModal from './components/NotificationModal';
 import TaskManagement from './components/TaskManagement/TaskManagement';
+import TaskStatistic from './components/TaskStatistic/TaskStatistic';
 
 type Member = { id?: number; name: string; roles: string[] };
 
@@ -90,7 +91,8 @@ const TaskPage = () => {
     { id: '2', title: '문서' },
     { id: '3', title: '회의록' },
     { id: '4', title: '완료한 업무' },
-    { id: '5', title: 'AI 회고' },
+    { id: '5', title: '업무 통계' },
+    { id: '6', title: 'AI 회고' },
   ];
 
   const handleOpenRoleModal = (event: MouseEvent<HTMLButtonElement>, memberIndex: number) => {
@@ -260,6 +262,11 @@ const TaskPage = () => {
           )}
           {selectedTask === '4' && <div>완료한 업무 컴포넌트</div>}
           {selectedTask === '5' && (
+            <div>
+              <TaskStatistic />
+            </div>
+          )}
+          {selectedTask === '6' && (
             <div>
               <AIReview />
             </div>
