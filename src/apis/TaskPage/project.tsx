@@ -38,10 +38,12 @@ export const getProjectRoleList = async (projectId: number) => {
   return data;
 };
 
-export const getProjectMemberList = async (projectId: number) => {
-  const { data } = await instance.get<ApiResponse<{ members: ResponseProjectMemberDTO }>>(
+export const getProjectMemberList = async (projectId: number): Promise<ResponseProjectMemberDTO> => {
+  // API returns ApiResponse<ResponseProjectMemberDTO> where data is an array of members
+  const { data } = await instance.get<ApiResponse<ResponseProjectMemberDTO>>(
     `/projects/${projectId}/members`,
   );
+
   return data.data ?? [];
 };
 
