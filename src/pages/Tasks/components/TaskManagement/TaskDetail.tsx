@@ -8,6 +8,7 @@ import usePatchTask from '@/hooks/TaskPage/Mutate/usePatchTask';
 import usePatchTaskStatus from '@/hooks/TaskPage/Mutate/usePatchTaskStatus';
 import useGetProjectMemberList from '@/hooks/TaskPage/Query/useGetProjectMemberList';
 import useGetTaskList from '@/hooks/TaskPage/Query/useGetTaskList';
+import type { TaskStatusApi, TaskStatusLabel } from '@/types/TaskManagement/task';
 import logo from '@assets/icon-mobile-loo.png';
 import backButton from '@assets/icon-mobile-leftArrow.svg';
 import { toIsoString } from './utils/dateUtils';
@@ -48,7 +49,7 @@ const TaskDetail = () => {
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [status, setStatus] = useState<'시작 전' | '진행 중' | '완료'>('시작 전');
+  const [status, setStatus] = useState<TaskStatusLabel>('시작 전');
   const [assigneeIds, setAssigneeIds] = useState<number[]>([]);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -79,11 +80,11 @@ const TaskDetail = () => {
     setTitle(targetTask.name ?? '');
     setContent(targetTask.content ?? '');
     setStatus(
-      (targetTask.status === 'IN_PROGRESS'
+      targetTask.status === 'IN_PROGRESS'
         ? '진행 중'
         : targetTask.status === 'DONE'
           ? '완료'
-          : '시작 전') as '시작 전' | '진행 중' | '완료',
+          : '시작 전',
     );
     setStartDate(targetTask.startDate ? targetTask.startDate.replaceAll('.', '-') : '');
     setEndDate(targetTask.dueDate ? targetTask.dueDate.replaceAll('.', '-') : '');
@@ -161,6 +162,12 @@ const TaskDetail = () => {
   const handleSubmit = () => {
     if (!isValid || !taskId) return;
 
+    const statusApiMap: Record<TaskStatusLabel, TaskStatusApi> = {
+      '시작 전': 'NOT_STARTED',
+      '진행 중': 'IN_PROGRESS',
+      완료: 'DONE',
+    };
+
     patchTask(
       {
         name: title.trim(),
@@ -171,7 +178,7 @@ const TaskDetail = () => {
       },
       {
         onSuccess: () => {
-          patchStatus({ taskId: String(taskId), status });
+          patchStatus({ taskId: String(taskId), status: statusApiMap[status] });
           navigate(-1);
         },
       },

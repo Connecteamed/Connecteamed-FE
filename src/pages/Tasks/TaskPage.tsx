@@ -61,7 +61,10 @@ const TaskPage = () => {
   const [members, setMembers] = useState<Member[]>([]);
   const location = useLocation();
   const projectNameFromNav = (location.state as { projectName?: string } | null)?.projectName;
-  const teamName = projectNameFromNav || memberList[0]?.projectName || '팀 이름';
+  const teamName =
+    projectNameFromNav ||
+    (memberList[0] as { projectName?: string } | undefined)?.projectName ||
+    '팀 이름';
   const roleIdMap = useMemo(
     () =>
       projectRoles?.reduce<Record<string, number>>((acc, role) => {
