@@ -11,6 +11,7 @@ import { QUERY_KEY } from '@/constants/key';
 
 import CreateReviewModal from './CreateReviewModal';
 import EmptyAIReview from './EmptyAIReview';
+import ReviewDetailModal from './ReviewDetailModal';
 
 type TaskForReview = CompleteTask & { included: boolean };
 
@@ -33,6 +34,7 @@ const AIReview = ({ projectId }: { projectId: number }) => {
   const [excludedTaskIds, setExcludedTaskIds] = useState<number[]>([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+  const [selectedReviewId, setSelectedReviewId] = useState<number | null>(null);
 
   const tasksForReview = useMemo<TaskForReview[]>(() => {
     if (!completedTasks) return [];
@@ -162,10 +164,15 @@ const AIReview = ({ projectId }: { projectId: number }) => {
           <div className="mb-12 flex justify-center">
             <button
               onClick={() => setIsCreateModalOpen(true)}
-              disabled={isLoadingTasks || isLoadingReviews} // Use global loading states
+              disabled={isLoadingTasks || isLoadingReviews || selectedTasksForAI.length === 0}
               className="h-12 w-96 rounded-md bg-orange-500 text-white disabled:bg-neutral-400"
             >
-              {isLoadingTasks || isLoadingReviews ? '로딩 중...' : 'AI로 프로젝트 회고하기'}
+              {isLoadingTasks || isLoadingReviews 
+                ? '로딩 중...' 
+                : selectedTasksForAI.length === 0 
+                  ? '회고할 업무를 선택해주세요' 
+                  : 'AI로 프로젝트 회고하기'
+              }
             </button>
           </div>
         </>
@@ -194,7 +201,12 @@ const AIReview = ({ projectId }: { projectId: number }) => {
                 key={review.retrospectiveId}
                 className="border-neutral-30 flex h-15 items-center border-b px-5 py-3 text-xs last:border-b-0"
               >
-                <div className="line-clamp-1 flex-1 font-medium">{review.title}</div>
+                <div 
+                  className="line-clamp-1 flex-1 font-medium cursor-pointer hover:text-orange-500"
+                  onClick={() => setSelectedReviewId(review.retrospectiveId)}
+                >
+                  {review.title}
+                </div>
                 <div className="w-40 text-center">{formatDate(review.createdAt) || '-'}</div>
                 <div className="w-16 text-center">
                   <button
@@ -225,6 +237,15 @@ const AIReview = ({ projectId }: { projectId: number }) => {
           onCreate={handleCreateSuccess}
           selectedTasks={selectedTasksForAI}
           projectId={projectId}
+        />
+      )}
+
+      {selectedReviewId !== null && (
+        <ReviewDetailModal
+          isOpen={selectedReviewId !== null}
+          onClose={() => setSelectedReviewId(null)}
+          projectId={projectId}
+          retrospectiveId={selectedReviewId}
         />
       )}
     </div>

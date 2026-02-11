@@ -9,6 +9,7 @@ import deleteIcon from '@/assets/icon-delete.svg';
 
 import { usePostAIRetrospective } from '@/hooks/TaskPage/Mutate/usePostAIRetrospective';
 import { useGetRetrospectiveDetail } from '@/hooks/TaskPage/Query/useGetRetrospectiveDetail';
+import { usePatchRetrospective } from '@/hooks/TaskPage/Mutate/usePatchRetrospective';
 
 type TaskForReview = CompleteTask & { included: boolean };
 
@@ -30,18 +31,43 @@ const CreateReviewModal = ({
   const [title, setTitle] = useState<string>('');
   const [achievements, setAchievements] = useState<string>('');
   const [createdRetrospectiveId, setCreatedRetrospectiveId] = useState<number | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedResult, setEditedResult] = useState('');
+
   const { mutate: createAIRetro, isPending: isCreatingAIRetro } = usePostAIRetrospective({
     projectId,
   });
 
-  const {
-    data: fetchedRetrospectiveDetail,
-    isSuccess: isRetrospectiveDetailFetched,
-    isError: isErrorDetail,
-    refetch: refetchDetail,
-  } = useGetRetrospectiveDetail(projectId, createdRetrospectiveId, createdRetrospectiveId !== null);
+  const { mutate: patchRetro, isPending: isSaving } = usePatchRetrospective({
+    projectId,
+  });
 
   const WAITING_PLACEHOLDER = 'AI 분석이 진행 중입니다. 잠시만 기다려 주세요.';
+
+  const {
+    data: fetchedRetrospectiveDetail,
+    isFetching: isFetchingDetail,
+    isError: isErrorDetail,
+  } = useGetRetrospectiveDetail(
+    projectId,
+    createdRetrospectiveId,
+    createdRetrospectiveId !== null,
+    {
+      refetchInterval: (query) => {
+        const data = query.state.data;
+        if (data?.projectResult === WAITING_PLACEHOLDER) {
+          return 3000;
+        }
+        return false;
+      },
+    },
+  );
+
+  useEffect(() => {
+    if (fetchedRetrospectiveDetail?.projectResult && fetchedRetrospectiveDetail.projectResult !== WAITING_PLACEHOLDER) {
+      setEditedResult(fetchedRetrospectiveDetail.projectResult);
+    }
+  }, [fetchedRetrospectiveDetail]);
 
   const handleCreate = () => {
     if (!title.trim() || !achievements.trim()) {
@@ -49,11 +75,13 @@ const CreateReviewModal = ({
       return;
     }
 
+    const taskIds = selectedTasks.filter((task) => task.included).map((task) => task.taskId);
+
     createAIRetro(
       {
         title,
         projectResult: achievements,
-        taskIds: selectedTasks.filter((task) => task.included).map((task) => task.taskId),
+        taskIds,
       },
       {
         onSuccess: (postResponse) => {
@@ -75,68 +103,104 @@ const CreateReviewModal = ({
     );
   };
 
-  useEffect(() => {
-    if (!isRetrospectiveDetailFetched || !fetchedRetrospectiveDetail) return;
+  const handleSave = () => {
+    if (createdRetrospectiveId === null) return;
+    
+    patchRetro({
+      retrospectiveId: createdRetrospectiveId,
+      body: {
+        title: fetchedRetrospectiveDetail?.title || title,
+        projectResult: editedResult,
+      }
+    }, {
+      onSuccess: () => {
+        setIsEditing(false);
+        alert('회고가 저장되었습니다.');
+      },
+      onError: () => {
+        alert('저장에 실패했습니다.');
+      }
+    });
+  };
 
-    if (fetchedRetrospectiveDetail.projectResult === WAITING_PLACEHOLDER) {
-      const timer = setTimeout(() => {
-        refetchDetail();
-      }, 3000);
+  const handleClose = () => {
+    setTitle('');
+    setAchievements('');
+    setCreatedRetrospectiveId(null);
+    setIsEditing(false);
+    setEditedResult('');
+    onClose();
+  };
 
-      return () => clearTimeout(timer);
-    }
-  }, [
-    isRetrospectiveDetailFetched,
-    fetchedRetrospectiveDetail,
-    refetchDetail,
-    WAITING_PLACEHOLDER,
-  ]);
-
-  useEffect(() => {
-    if (!isErrorDetail) return;
+  if (isErrorDetail) {
     alert('회고 결과를 불러오는데 실패했습니다.');
-  }, [isErrorDetail]);
-
-  useEffect(() => {
-    if (!isOpen) {
-      queueMicrotask(() => {
-        setTitle('');
-      });
-    }
-  }, [isOpen]);
+    return null;
+  }
 
   const detailedResult: RetrospectiveDetailData | null =
     fetchedRetrospectiveDetail?.projectResult === WAITING_PLACEHOLDER
       ? null
       : (fetchedRetrospectiveDetail ?? null);
 
-  const isFetchingResult = createdRetrospectiveId !== null && !detailedResult;
+  const isFetchingResult =
+    createdRetrospectiveId !== null &&
+    (!detailedResult || detailedResult.projectResult === WAITING_PLACEHOLDER || isFetchingDetail);
 
   const isLoading = isCreatingAIRetro || isFetchingResult;
 
+  const selectedTaskCount = selectedTasks.filter((task) => task.included).length;
+  const isCreateDisabled = isLoading || selectedTaskCount === 0;
+
   if (detailedResult) {
     return (
-      <Modal isOpen={isOpen} onClose={onClose}>
+      <Modal isOpen={isOpen} onClose={handleClose}>
         <div
           className="w-162.5 rounded-[20px] bg-white px-11 py-12"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="mb-6 flex items-center justify-between">
             <h2 className="text-3xl leading-none font-bold">AI 회고 생성 완료</h2>
-            <button onClick={onClose}>
+            <button onClick={handleClose}>
               <img src={deleteIcon} alt="close" className="h-6 w-6" />
             </button>
           </div>
 
           <div className="mb-6">
-            <label className="mb-3 block text-lg font-medium">회고 결과</label>
-            <div className="flex min-h-30 w-full items-center rounded-md bg-slate-100 px-4 py-3 text-sm whitespace-pre-wrap">
-              {detailedResult.projectResult}
+            <div className="mb-3 flex items-center justify-between">
+              <label className="text-lg font-medium">회고 결과</label>
+              {!isEditing ? (
+                <button 
+                  onClick={() => setIsEditing(true)}
+                  className="text-primary-500 text-sm font-medium"
+                >
+                  수정하기
+                </button>
+              ) : (
+                <button 
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  className="text-primary-500 text-sm font-medium"
+                >
+                  {isSaving ? '저장 중...' : '저장하기'}
+                </button>
+              )}
             </div>
+            {isEditing ? (
+              <textarea
+                value={editedResult}
+                onChange={(e) => setEditedResult(e.target.value)}
+                rows={10}
+                className="w-full resize-none rounded-md bg-slate-100 px-4 py-3 text-sm font-normal outline-none focus:ring-2 focus:ring-orange-500"
+              />
+            ) : (
+              <div className="flex min-h-30 max-h-80 overflow-y-auto w-full items-start rounded-md bg-slate-100 px-4 py-3 text-sm whitespace-pre-wrap text-left">
+                {editedResult}
+              </div>
+            )}
           </div>
 
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="w-full rounded-[5px] bg-orange-500 px-6 py-4 text-lg font-medium text-white"
           >
             확인
@@ -188,10 +252,15 @@ const CreateReviewModal = ({
 
         <button
           onClick={handleCreate}
-          disabled={isLoading}
-          className="w-full rounded-[5px] bg-orange-500 px-6 py-4 text-lg font-medium text-white disabled:bg-neutral-50"
+          disabled={isCreateDisabled}
+          className="w-full rounded-[5px] bg-orange-500 px-6 py-4 text-lg font-medium text-white disabled:bg-neutral-50 disabled:text-neutral-400"
         >
-          {isLoading ? 'AI가 회고를 생성하고 있습니다... (최대 1-2분 소요)' : '생성하기'}
+          {isLoading 
+            ? 'AI가 회고를 생성하고 있습니다... (최대 1-2분 소요)' 
+            : selectedTaskCount === 0 
+              ? '업무를 선택해주세요' 
+              : '생성하기'
+          }
         </button>
       </div>
     </Modal>

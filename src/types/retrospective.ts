@@ -43,3 +43,12 @@ export interface GetRetrospectivesData {
 
 // 회고 목록 조회 전체 응답 타입
 export type GetRetrospectivesResponse = ApiResponse<GetRetrospectivesData>;
+
+// 회고 수정 요청 타입
+export interface UpdateRetrospectiveRequest {
+  title: string;
+  projectResult: string;
+}
+
+// 회고 수정 응답 타입
+export type UpdateRetrospectiveResponse = ApiResponse<RetrospectiveDetailData>;

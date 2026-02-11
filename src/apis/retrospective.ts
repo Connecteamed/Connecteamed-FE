@@ -5,6 +5,8 @@ import type {
   GetRetrospectivesResponse,
   RetrospectiveDetailData,
   RetrospectiveSummary,
+  UpdateRetrospectiveRequest,
+  UpdateRetrospectiveResponse,
 } from '@/types/retrospective';
 
 import { instance } from './axios';
@@ -32,4 +34,16 @@ export const getRetrospectives = async (projectId: number): Promise<Retrospectiv
     `/projects/${projectId}/retrospectives`,
   );
   return data.data.retrospectives ?? [];
+};
+
+export const patchRetrospective = async (
+  projectId: number,
+  retrospectiveId: number,
+  body: UpdateRetrospectiveRequest,
+): Promise<UpdateRetrospectiveResponse> => {
+  const { data } = await instance.patch(
+    `/projects/${projectId}/retrospectives/${retrospectiveId}`,
+    body,
+  );
+  return data;
 };
