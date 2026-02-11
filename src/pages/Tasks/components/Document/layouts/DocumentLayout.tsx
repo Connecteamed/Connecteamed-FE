@@ -3,7 +3,9 @@ type Props = {
 };
 
 const DocumentLayout = ({ children }: Props) => {
-  return <div className="w-full bg-white rounded-2xl shadow p-8">{children}</div>;
+  return (
+    <div className="w-full overflow-visible rounded-2xl bg-white p-8 pb-16 shadow">{children}</div>
+  );
 };
 
 export default DocumentLayout;

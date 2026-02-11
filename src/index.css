@@ -8,6 +8,12 @@
   --color-primary-500: #fe7318;
   --color-primary-700: #e25e0e;
   --color-primary-900: #b84800;
+  /* Orange Color */
+  --color-oorange-100: #ffe3d0ff;
+  --color-oorange-300: #ffc9a7ff;
+  --color-oorange-500: #fba273ff;
+  --color-oorange-700: #ff8f4eff;
+  --color-oorange-900: #ff7b39;
 
   /* Secondary Color */
   --color-secondary-100: #d6e2ff;
