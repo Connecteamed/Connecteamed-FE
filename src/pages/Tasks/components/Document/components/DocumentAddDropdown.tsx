@@ -28,11 +28,7 @@ const DocumentAddDropdown = ({
   const [isOpen, setIsOpen] = useState(false);
   const [pos, setPos] = useState<Pos | null>(null);
 
-<<<<<<< HEAD
   const triggerRef = useRef<HTMLDivElement | null>(null);
-=======
-  const triggerRef = useRef<HTMLButtonElement | null>(null);
->>>>>>> 3db6db272a395f7bfc9aedfd9c15a90128338b71
   const panelRef = useRef<HTMLDivElement | null>(null);
 
   const close = useCallback(() => setIsOpen(false), []);
