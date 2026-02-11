@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import iconArrowLeftBlack from '@assets/icon-arrow-left-black.svg';
 import Link from '@tiptap/extension-link';
@@ -9,7 +9,6 @@ import StarterKit from '@tiptap/starter-kit';
 
 import EditorToolbar from '../components/EditorToolbar';
 import { useSidebarWidth } from '../hooks/useSidebarWidth';
-import { useTextEditorForm } from '../hooks/useTextEditorForm';
 
 type TextEditorProps = {
   onBack: () => void;
@@ -27,10 +26,8 @@ function ensureHtmlContent(content: string) {
   const c = content?.trim() ?? '';
   if (!c) return '<p></p>';
 
-  // 매우 러프하지만: "<tag"가 있으면 html로 간주
   if (c.startsWith('<') && c.includes('>')) return c;
 
-  // plain text면 p로 감싸서 저장(서식 적용 가능한 형태로)
   const escaped = c
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -39,7 +36,17 @@ function ensureHtmlContent(content: string) {
   return `<p>${escaped}</p>`;
 }
 
-const TextEditor: React.FC<TextEditorProps> = ({
+function stripHtmlToText(html: string) {
+  return html
+    .replace(/<style[\s\S]*?<\/style>/gi, '')
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+const TextEditorInner: React.FC<TextEditorProps> = ({
   onBack,
   initialTitle = '',
   initialContent = '',
@@ -50,11 +57,21 @@ const TextEditor: React.FC<TextEditorProps> = ({
 }) => {
   const sidebarWidth = useSidebarWidth({ sidebarSelector, fallbackSidebarWidth });
 
-  const { title, setTitle, content, setContent, canSubmit, submit } = useTextEditorForm({
-    initialTitle,
-    initialContent: ensureHtmlContent(initialContent),
-    onSave,
-  });
+  const [title, setTitle] = useState(initialTitle);
+  const [content, setContent] = useState(() => ensureHtmlContent(initialContent));
+
+  const trimmedTitle = useMemo(() => title.trim(), [title]);
+  const contentText = useMemo(() => stripHtmlToText(content), [content]);
+
+  const canSubmit = useMemo(
+    () => trimmedTitle.length > 0 && contentText.length > 0,
+    [trimmedTitle, contentText],
+  );
+
+  const submit = useCallback(() => {
+    if (!canSubmit) return;
+    onSave({ title: trimmedTitle, content });
+  }, [canSubmit, onSave, trimmedTitle, content]);
 
   const editor = useEditor({
     editable: true,
@@ -82,15 +99,6 @@ const TextEditor: React.FC<TextEditorProps> = ({
       },
     },
   });
-
-  // 외부에서 initialContent가 바뀌는 케이스(수정 진입 등) 동기화
-  useEffect(() => {
-    if (!editor) return;
-    const next = ensureHtmlContent(initialContent);
-    editor.commands.setContent(next, false);
-    setContent(next);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialContent, editor]);
 
   return (
     <div
@@ -160,8 +168,6 @@ const TextEditor: React.FC<TextEditorProps> = ({
         </div>
       </div>
 
-      {/* (선택) 링크 기본 스타일 조금 주고 싶으면 전역 CSS가 베스트인데,
-          tailwind만으로도 최소한은 가능 */}
       <style>
         {`
           .ProseMirror { min-height: 100%; }
@@ -173,6 +179,11 @@ const TextEditor: React.FC<TextEditorProps> = ({
       </style>
     </div>
   );
+};
+
+const TextEditor: React.FC<TextEditorProps> = (props) => {
+  const key = `${props.initialTitle ?? ''}__${props.initialContent ?? ''}`;
+  return <TextEditorInner key={key} {...props} />;
 };
 
 export default TextEditor;

@@ -20,7 +20,6 @@ const DocumentPage = () => {
     editingDocContent,
     isDeleteOpen,
     onPickFiles,
-    triggerPickAnyFile,
     triggerPickFileByType,
     openTextCreate,
     openTextEdit,
@@ -34,15 +33,9 @@ const DocumentPage = () => {
 
   return (
     <>
-      <input
-        ref={fileInputRef}
-        type="file"
-        hidden
-        multiple
-        onChange={(e) => onPickFiles(e)} // AnyFile 선택 시
-      />
+      <input ref={fileInputRef} type="file" hidden multiple onChange={onPickFiles} />
 
-      <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex flex-1 flex-col">
         <DocumentPageContent
           view={view}
           isEmpty={isEmpty}
@@ -52,13 +45,11 @@ const DocumentPage = () => {
           editingContent={editingDocContent}
           onBackToList={goList}
           onSaveText={handleSaveText}
-          onPickAnyFile={triggerPickAnyFile}
           onPickFileByType={triggerPickFileByType}
           onClickText={openTextCreate}
           onEditText={openTextEdit}
           onDelete={onRequestDelete}
           onDownload={download}
-          onPickFiles={onPickFiles}
         />
       </div>
 

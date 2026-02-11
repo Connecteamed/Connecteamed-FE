@@ -1,6 +1,6 @@
 import documentAddIcon from '@assets/icon-document-add-orange.svg';
 
-import DocumentAddDropdown from './DocumentList/DocumentAddDropdown';
+import DocumentAddDropdown from './DocumentAddDropdown';
 
 type Props = {
   onPickFile: (type: 'pdf' | 'docx' | 'image') => void;
@@ -22,13 +22,12 @@ const EmptyDocument = ({ onPickFile, onClickText }: Props) => {
         관리할 수 있어요
       </div>
 
-      {/* ✅ Empty 전용: 중앙정렬 + 버튼만 살짝 크게 */}
       <DocumentAddDropdown
         onPickFile={onPickFile}
         onClickText={onClickText}
         containerClassName="flex justify-center self-stretch"
-        triggerClassName="h-12 w-auto rounded-xl px-10 py-4" // 버튼 크기 ↑ (원하면 px-10로)
-        labelClassName="text-sm" // 글자 크기 ↑
+        triggerClassName="w-36 h-12 px-2 py-[5px] rounded-[10px]"
+        labelClassName="text-sm font-['Inter']"
       />
     </div>
   );
