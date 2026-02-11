@@ -1,7 +1,5 @@
-import React from 'react';
-
 import type { DocumentItem, ViewMode } from '../types/document';
-import DocumentList from './DocumentList/DocumentList';
+import DocumentList from './DocumentList';
 import EmptyDocument from './EmptyDocument';
 import TextEditor from './TextEditor';
 
@@ -19,18 +17,15 @@ type Props = {
   onBackToList: () => void;
   onSaveText: (payload: { title: string; content: string }) => void;
 
-  onPickAnyFile: () => void;
   onPickFileByType: (type: PickFileType) => void;
   onClickText: () => void;
   onEditText: (id: number) => void;
 
   onDelete: (id: number) => void;
   onDownload: (doc: DocumentItem) => void;
-
-  onPickFiles: (e: React.ChangeEvent<HTMLInputElement>, forcedType?: PickFileType) => void;
 };
 
-const DocumentPageContent: React.FC<Props> = ({
+const DocumentPageContent = ({
   view,
   isEmpty,
   documents,
@@ -39,14 +34,12 @@ const DocumentPageContent: React.FC<Props> = ({
   editingContent,
   onBackToList,
   onSaveText,
-  onPickAnyFile,
   onPickFileByType,
   onClickText,
   onEditText,
   onDelete,
   onDownload,
-  onPickFiles,
-}) => {
+}: Props) => {
   if (view === 'TEXT_EDITOR') {
     return (
       <TextEditor
@@ -62,7 +55,7 @@ const DocumentPageContent: React.FC<Props> = ({
   if (isEmpty) {
     return (
       <div className="flex min-h-0 flex-1">
-        <EmptyDocument onAdd={onPickAnyFile} />
+        <EmptyDocument onPickFile={onPickFileByType} onClickText={onClickText} />
       </div>
     );
   }
@@ -76,7 +69,6 @@ const DocumentPageContent: React.FC<Props> = ({
         onPickFile={onPickFileByType}
         onClickText={onClickText}
         onEditText={onEditText}
-        onPickFiles={onPickFiles}
       />
     </div>
   );
