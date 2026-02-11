@@ -1,130 +1,118 @@
 import { useMemo, useState } from 'react';
 
+import type { CompleteTask } from '@/types/TaskManagement/taskComplete';
+
 import DeleteModal from '@/components/DeleteModal';
+
+import { usePostAIRetrospective } from '@/hooks/TaskPage/Mutate/usePostAIRetrospective';
+import useGetCompletedTasks from '@/hooks/TaskPage/Query/useGetCompletedTasks';
+import { useGetRetrospectives } from '@/hooks/TaskPage/Query/useGetRetrospectives';
 
 import CreateReviewModal from './CreateReviewModal';
 import EmptyAIReview from './EmptyAIReview';
 
-interface CompletedTask {
-  id: number;
-  name: string;
-  content: string;
-  status: '완료' | '진행중' | '대기';
-  startDate: string;
-  dueDate: string;
-  assignees: string[];
-  included: boolean;
-}
+// API 응답 데이터에 UI 상태(included)를 추가한 타입
+type TaskForReview = CompleteTask & { included: boolean };
 
-interface Review {
-  id: number;
-  title: string;
-  content: string;
-  achievements: string;
-  createdAt: string;
-}
+const AIReview = ({ projectId }: { projectId: number }) => {
+  // --- Data Fetching ---
+  const {
+    data: completedTasks,
+    isLoading: isLoadingTasks,
+    isError: isErrorTasks,
+  } = useGetCompletedTasks(projectId);
 
-const INITIAL_TASKS: CompletedTask[] = [
-  {
-    id: 1,
-    name: '와이어프레임 제작',
-    content: 'UI 디자인을 위한 와이어프레임 제작 후 디자이너에게 연락',
-    status: '완료',
-    startDate: '2025.11.13',
-    dueDate: '2025.11.24',
-    assignees: ['팀원1'],
-    included: true,
-  },
-  {
-    id: 2,
-    name: 'API 명세서 작성',
-    content: '와이어프레임 보고 서비스에 기능별 API 제작 : 스웨거로 관리할 거고 REST API 형식...',
-    status: '완료',
-    startDate: '2025.11.13',
-    dueDate: '2025.11.30',
-    assignees: ['팀원1', '팀원2', '팀원3', '팀원4'],
-    included: true,
-  },
-  {
-    id: 3,
-    name: 'ERD 작성',
-    content: '데이터베이스 ERD 작성',
-    status: '완료',
-    startDate: '2025.11.13',
-    dueDate: '2025.11.30',
-    assignees: ['팀원1', '팀원2'],
-    included: false,
-  },
-];
+  const {
+    data: reviews,
+    isLoading: isLoadingReviews,
+    isError: isErrorReviews,
+  } = useGetRetrospectives(projectId);
 
-const INITIAL_REVIEWS: Review[] = [
-  {
-    id: 1,
-    title: '회고임',
-    content: '예시 회고 내용입니다.',
-    achievements: '공모전 대상 수상, DAU 10,000달성',
-    createdAt: '2025.11.30',
-  },
-  {
-    id: 2,
-    title: '회고임',
-    content: '예시 회고 내용입니다.',
-    achievements: '공모전 대상 수상, DAU 10,000달성',
-    createdAt: '2025.11.30',
-  },
-];
-const AIReview = () => {
+  // --- Mutations ---
+  const { mutate: createAIRetro, isPending: isGenerating } = usePostAIRetrospective({
+    projectId,
+  });
+
+  // --- UI State ---
   const [showMyTasksOnly, setShowMyTasksOnly] = useState(false);
-  const [tasks, setTasks] = useState<CompletedTask[]>(INITIAL_TASKS);
-  const [reviews, setReviews] = useState<Review[]>(INITIAL_REVIEWS);
-
+  const [excludedTaskIds, setExcludedTaskIds] = useState<number[]>([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
 
-  const filteredTasks = useMemo(() => {
-    if (!showMyTasksOnly) return tasks;
-    return tasks.filter((t) => t.included);
-  }, [showMyTasksOnly, tasks]);
+  // --- Memoized Derived State ---
+  const tasksForReview = useMemo<TaskForReview[]>(() => {
+    if (!completedTasks) return [];
+    return completedTasks.map((task) => ({
+      ...task,
+      included: !excludedTaskIds.includes(task.taskId),
+    }));
+  }, [completedTasks, excludedTaskIds]);
 
+  const filteredTasks = useMemo(() => {
+    if (!showMyTasksOnly) return tasksForReview;
+    return tasksForReview.filter((t) => t.isMine);
+  }, [showMyTasksOnly, tasksForReview]);
+
+  const selectedTasksForAI = useMemo(() => {
+    return tasksForReview.filter((task) => task.included);
+  }, [tasksForReview]);
+
+  // --- Handlers ---
   const handleToggleTaskInclusion = (taskId: number) => {
-    setTasks((prev) =>
-      prev.map((task) => (task.id === taskId ? { ...task, included: !task.included } : task)),
+    setExcludedTaskIds((prev) =>
+      prev.includes(taskId) ? prev.filter((id) => id !== taskId) : [...prev, taskId],
     );
   };
 
-  const handleCreateFromModal = (title: string, achievements: string) => {
-    setIsGenerating(true);
-
-    const newReview: Review = {
-      id: Date.now(),
-      title,
-      content: 'AI가 생성한 회고 내용',
-      achievements,
-      createdAt: '',
-    };
-
-    setReviews((prev) => [...prev, newReview]);
-    setIsGenerating(false);
-    setIsCreateModalOpen(false);
+  const handleCreateFromModal = (
+    title: string,
+    achievements: string,
+    selectedTasks: TaskForReview[],
+  ) => {
+    createAIRetro(
+      {
+        title,
+        projectResult: achievements,
+        taskIds: selectedTasks.map((task) => task.taskId),
+      },
+      {
+        onSuccess: () => {
+          setIsCreateModalOpen(false);
+        },
+      },
+    );
   };
 
   const handleConfirmDelete = () => {
     if (deleteTargetId === null) return;
-    setReviews((prev) => prev.filter((r) => r.id !== deleteTargetId));
+    // TODO: 회고 삭제 mutation 구현 필요
+    console.log('Deleting review with id:', deleteTargetId);
     setDeleteTargetId(null);
   };
 
-  if (tasks.length === 0 && reviews.length === 0) {
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return '-';
+    return dateStr.split('T')[0].replace(/-/g, '.');
+  };
+
+  // --- Render Logic ---
+  if (isLoadingTasks || isLoadingReviews) {
+    return <div className="py-10 text-center">로딩 중...</div>;
+  }
+
+  if (isErrorTasks || isErrorReviews) {
+    return <div className="py-10 text-center text-red-500">에러가 발생했습니다.</div>;
+  }
+
+  if (tasksForReview.length === 0 && (!reviews || reviews.length === 0)) {
     return <EmptyAIReview />;
   }
 
   return (
     <div className="w-full">
       {/* ================= 업무 영역 ================= */}
-      {tasks.length > 0 && (
+      {tasksForReview.length > 0 && (
         <>
-          {/* 내 업무만 보기 */}
           <div className="mb-4 flex justify-end">
             <label className="flex items-center gap-2 text-[10px] text-neutral-800">
               <input
@@ -137,7 +125,6 @@ const AIReview = () => {
             </label>
           </div>
 
-          {/* 업무 테이블 */}
           <div className="mb-10">
             <div className="bg-neutral-10 border-neutral-30 flex h-12 items-center border px-5 text-sm font-medium">
               <div className="w-28">업무명</div>
@@ -152,15 +139,15 @@ const AIReview = () => {
             <div className="border-neutral-30 border-x border-b">
               {filteredTasks.map((task) => (
                 <div
-                  key={task.id}
-                  className={`border-neutral-30 flex items-center border-b px-5 py-3 text-xs last:border-b-0 ${
+                  key={task.taskId}
+                  className={`border-neutral-30 flex h-15 items-center border-b px-5 py-3 text-xs last:border-b-0 ${
                     task.included ? 'text-neutral-90' : 'text-neutral-60'
                   }`}
                 >
                   <div className="line-clamp-2 w-28 pr-4 text-xs leading-snug font-medium">
-                    {task.name}
+                    {task.title}
                   </div>
-                  <div className="flex-1 pr-4">{task.content}</div>
+                  <div className="flex-1 pr-4">{task.contents}</div>
 
                   <span
                     className={`rounded-full px-3 py-1 text-xs font-medium ${
@@ -169,18 +156,18 @@ const AIReview = () => {
                         : 'bg-neutral-200 text-gray-400'
                     }`}
                   >
-                    {task.status}
+                    {task.status === 'DONE' ? '완료' : task.status}
                   </span>
 
-                  <div className="w-28 text-center">{task.startDate}</div>
-                  <div className="w-28 text-center">{task.dueDate}</div>
+                  <div className="w-28 text-center">{formatDate(task.startDate)}</div>
+                  <div className="w-28 text-center">{formatDate(task.endDate)}</div>
                   <div className="w-25 px-2 text-center text-xs leading-snug whitespace-normal">
-                    {task.assignees.join(', ')}
+                    {task.assignees.map((a) => a.nickname).join(', ')}
                   </div>
 
                   <div className="w-8 text-center">
                     <button
-                      onClick={() => handleToggleTaskInclusion(task.id)}
+                      onClick={() => handleToggleTaskInclusion(task.taskId)}
                       className={`text-xs font-medium ${
                         task.included ? 'text-neutral-70' : 'text-neutral-60'
                       }`}
@@ -193,14 +180,13 @@ const AIReview = () => {
             </div>
           </div>
 
-          {/* AI 회고 생성 버튼 */}
           <div className="mb-12 flex justify-center">
             <button
               onClick={() => setIsCreateModalOpen(true)}
               disabled={isGenerating}
-              className="h-12 w-96 rounded-md bg-orange-500 text-white"
+              className="h-12 w-96 rounded-md bg-orange-500 text-white disabled:bg-neutral-400"
             >
-              AI로 프로젝트 회고하기
+              {isGenerating ? 'AI 회고 생성 중...' : 'AI로 프로젝트 회고하기'}
             </button>
           </div>
         </>
@@ -208,7 +194,7 @@ const AIReview = () => {
 
       {/* ================= 회고 영역 ================= */}
       <div className="text-secondary-900 mb-4 text-2xl font-medium">회고 목록</div>
-      {reviews.length === 0 ? (
+      {!reviews || reviews.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-6">
           <div className="mb-3 text-2xl font-medium text-black">저장된 회고가 없어요</div>
           <div className="text-sm font-normal text-black">
@@ -217,24 +203,20 @@ const AIReview = () => {
         </div>
       ) : (
         <div className="mb-10">
-          {/* 회고 테이블 헤더 */}
           <div className="bg-neutral-10 border-neutral-30 flex h-12 items-center border px-5 text-sm font-medium">
             <div className="flex-1">제목</div>
             <div className="w-40 text-center">만든 날짜</div>
             <div className="w-16" />
           </div>
 
-          {/* 회고 테이블 바디 */}
           <div className="border-neutral-30 border-x border-b">
             {reviews.map((review) => (
               <div
                 key={review.id}
-                className="border-neutral-30 flex items-center border-b px-5 py-3 text-xs last:border-b-0"
+                className="border-neutral-30 flex h-15 items-center border-b px-5 py-3 text-xs last:border-b-0"
               >
                 <div className="line-clamp-1 flex-1 font-medium">{review.title}</div>
-
-                <div className="w-40 text-center">{review.createdAt || '-'}</div>
-
+                <div className="w-40 text-center">{review.writtenDate || '-'}</div>
                 <div className="w-16 text-center">
                   <button
                     onClick={() => setDeleteTargetId(review.id)}
@@ -249,7 +231,6 @@ const AIReview = () => {
         </div>
       )}
 
-      {/* 모달 */}
       <DeleteModal
         isOpen={deleteTargetId !== null}
         onClose={() => setDeleteTargetId(null)}
@@ -263,6 +244,7 @@ const AIReview = () => {
           isOpen
           onClose={() => setIsCreateModalOpen(false)}
           onCreate={handleCreateFromModal}
+          selectedTasks={selectedTasksForAI}
         />
       )}
     </div>

@@ -275,7 +275,7 @@ const TaskPage = () => {
           )}
           {selectedTask === '6' && (
             <div>
-              <AIReview />
+              <AIReview projectId={parsedProjectId} />
             </div>
           )}
         </div>

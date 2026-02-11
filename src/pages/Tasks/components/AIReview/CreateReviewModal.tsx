@@ -3,20 +3,25 @@ import { useState } from 'react';
 import Modal from '@/components/Modal';
 
 import deleteIcon from '@/assets/icon-delete.svg';
+import type { CompleteTask } from '@/types/TaskManagement/taskComplete';
+
+// AIReview.tsx에서 정의된 TaskForReview 타입을 그대로 사용
+type TaskForReview = CompleteTask & { included: boolean };
 
 interface CreateReviewModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onCreate: (title: string, achievements: string) => void;
+  onCreate: (title: string, achievements: string, selectedTasks: TaskForReview[]) => void;
+  selectedTasks: TaskForReview[]; // 추가: 선택된 업무 목록
 }
 
-const CreateReviewModal = ({ isOpen, onClose, onCreate }: CreateReviewModalProps) => {
+const CreateReviewModal = ({ isOpen, onClose, onCreate, selectedTasks }: CreateReviewModalProps) => {
   const [title, setTitle] = useState('');
   const [achievements, setAchievements] = useState('');
 
   const handleCreate = () => {
     if (title.trim() && achievements.trim()) {
-      onCreate(title, achievements);
+      onCreate(title, achievements, selectedTasks); // 선택된 업무 목록을 함께 전달
     }
   };
 
