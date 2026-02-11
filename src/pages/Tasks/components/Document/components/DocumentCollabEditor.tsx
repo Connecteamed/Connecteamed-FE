@@ -1,11 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 
+import { CollabClient } from '@/lib/collab/collabClient';
 import Quill from 'quill';
 import QuillCursors from 'quill-cursors';
 import 'quill/dist/quill.snow.css';
-
-import { CollabClient } from '@/lib/collab/collabClient';
-import type { PresenceUser } from '@/lib/collab/types';
 
 type QuillSelection = { index: number; length: number } | null;
 
@@ -37,18 +35,6 @@ const toInitialHtml = (value: string) => {
   return `<p>${escaped}</p>`;
 };
 
-const toDisplayName = (user: PresenceUser) => {
-  const raw =
-    user.userName ??
-    user.memberName ??
-    user.name ??
-    user.loginId ??
-    user.userId ??
-    user.memberId;
-  if (raw === null || raw === undefined) return '';
-  return String(raw).trim();
-};
-
 const DocumentCollabEditor = ({
   value,
   onChange,
@@ -65,9 +51,6 @@ const DocumentCollabEditor = ({
   const isSyncingFromValueRef = useRef(false);
   const onChangeRef = useRef(onChange);
   const valueRef = useRef(value);
-  const [connected, setConnected] = useState(false);
-  const [presence, setPresence] = useState<PresenceUser[]>([]);
-  const [statusLog, setStatusLog] = useState('');
 
   useEffect(() => {
     onChangeRef.current = onChange;
@@ -78,19 +61,39 @@ const DocumentCollabEditor = ({
   }, [value]);
 
   useEffect(() => {
-    if (!editorRef.current) return;
+    const host = editorRef.current;
+    if (!host) return;
     const client = clientRef.current;
 
-    const q = new Quill(editorRef.current, {
+    const clearStaleToolbars = () => {
+      const parent = host.parentElement;
+      if (!parent) return;
+
+      Array.from(parent.children).forEach((node) => {
+        if (
+          node !== host &&
+          node instanceof HTMLElement &&
+          node.classList.contains('ql-toolbar') &&
+          node.classList.contains('ql-snow')
+        ) {
+          node.remove();
+        }
+      });
+    };
+
+    clearStaleToolbars();
+    host.className = '';
+    host.removeAttribute('data-placeholder');
+    host.innerHTML = '';
+
+    const q = new Quill(host, {
       theme: 'snow',
       placeholder,
       modules: {
         toolbar: [
-          ['bold', 'italic', 'underline', 'strike'],
-          [{ color: [] }, { background: [] }],
-          [{ header: [1, 2, false] }],
+          ['bold', 'italic', 'underline', 'strike', 'link'],
           [{ list: 'ordered' }, { list: 'bullet' }],
-          ['clean'],
+          [{ align: '' }, { align: 'center' }, { align: 'right' }],
         ],
         cursors: {
           hideDelayMs: 600000,
@@ -100,7 +103,7 @@ const DocumentCollabEditor = ({
       },
     });
 
-    q.root.style.minHeight = '320px';
+    q.root.style.minHeight = '420px';
     q.root.style.fontSize = '16px';
     q.root.style.fontWeight = '500';
     q.clipboard.dangerouslyPasteHTML(toInitialHtml(valueRef.current || ''), 'silent');
@@ -127,8 +130,8 @@ const DocumentCollabEditor = ({
       client.disconnect({ quill: q, skipSnapshot: false, keepEditorEnabled: true });
       q.disable();
       quillRef.current = null;
-      setConnected(false);
-      setPresence([]);
+      host.innerHTML = '';
+      clearStaleToolbars();
     };
   }, [placeholder]);
 
@@ -197,63 +200,17 @@ const DocumentCollabEditor = ({
       userName: userName as string,
       quill: q,
       wsBase,
-      callbacks: {
-        onConnectedChange: setConnected,
-        onPresence: setPresence,
-        onLog: setStatusLog,
-      },
     });
 
     return () => {
       client.disconnect({ quill: q, skipSnapshot: false, keepEditorEnabled: true });
       q.enable(true);
-      setConnected(false);
-      setPresence([]);
     };
   }, [canCollab, docId, token, userName, wsBase]);
 
-  const presenceNames = useMemo(() => {
-    const names = presence
-      .map((user) => toDisplayName(user))
-      .filter((name): name is string => Boolean(name));
-    return Array.from(new Set(names));
-  }, [presence]);
-  const effectiveConnected = canCollab && connected;
-  const effectivePresenceNames = canCollab ? presenceNames : [];
-
   return (
-    <div className="space-y-2">
-      {collabEnabled && (
-        <div className="rounded-[10px] bg-neutral-10 px-3 py-2">
-          <div className="flex items-center gap-2 text-xs">
-            <span
-              className={`inline-block h-2 w-2 rounded-full ${effectiveConnected ? 'bg-success' : 'bg-neutral-60'}`}
-            />
-            <span className={effectiveConnected ? 'text-primary-500' : 'text-neutral-70'}>
-              {effectiveConnected ? '실시간 연결됨' : '연결 대기 중'}
-            </span>
-            <span className="text-neutral-70">({effectivePresenceNames.length}명)</span>
-          </div>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {effectivePresenceNames.length > 0 ? (
-              effectivePresenceNames.map((name) => (
-                <span
-                  key={name}
-                  className="rounded-full bg-white px-2.5 py-1 text-[11px] font-medium text-neutral-90 outline outline-1 outline-offset-[-1px] outline-gray-300"
-                >
-                  {name}
-                </span>
-              ))
-            ) : (
-              <span className="text-[11px] text-neutral-70">접속자 없음</span>
-            )}
-          </div>
-        </div>
-      )}
-      {collabEnabled && statusLog && <div className="text-[11px] text-neutral-60">{statusLog}</div>}
-      <div className="overflow-hidden rounded-[10px] bg-white outline outline-1 outline-offset-[-1px] outline-gray-300">
-        <div ref={editorRef} />
-      </div>
+    <div className="doc-collab-editor w-full flex-1 [&_.ql-container.ql-snow]:min-h-[240px] [&_.ql-container.ql-snow]:w-full [&_.ql-container.ql-snow]:rounded-[10px] [&_.ql-container.ql-snow]:border [&_.ql-container.ql-snow]:border-gray-300 [&_.ql-container.ql-snow]:bg-white [&_.ql-container.ql-snow]:shadow-none sm:[&_.ql-container.ql-snow]:min-h-[300px] lg:[&_.ql-container.ql-snow]:min-h-[340px] [&_.ql-editor]:min-h-[200px] [&_.ql-editor]:bg-white [&_.ql-editor]:px-[14px] [&_.ql-editor]:py-[10px] sm:[&_.ql-editor]:min-h-[260px] lg:[&_.ql-editor]:min-h-[300px] [&_.ql-editor.ql-blank::before]:right-[14px] [&_.ql-editor.ql-blank::before]:left-[14px] [&_.ql-editor.ql-blank::before]:text-gray-400 [&_.ql-editor.ql-blank::before]:not-italic [&_.ql-toolbar_.ql-formats]:mr-[6px] [&_.ql-toolbar_.ql-formats:last-child]:mr-0 [&_.ql-toolbar.ql-snow]:mb-8 [&_.ql-toolbar.ql-snow]:inline-flex [&_.ql-toolbar.ql-snow]:items-center [&_.ql-toolbar.ql-snow]:gap-1 [&_.ql-toolbar.ql-snow]:rounded-[8px] [&_.ql-toolbar.ql-snow]:border-0 [&_.ql-toolbar.ql-snow]:bg-[#d9dde3] [&_.ql-toolbar.ql-snow]:px-2 [&_.ql-toolbar.ql-snow]:py-1.5 [&_.ql-toolbar.ql-snow+_.ql-container.ql-snow]:!border-t [&_.ql-toolbar.ql-snow+_.ql-container.ql-snow]:!border-t-gray-300">
+      <div ref={editorRef} />
     </div>
   );
 };

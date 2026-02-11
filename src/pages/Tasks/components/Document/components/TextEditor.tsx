@@ -2,8 +2,8 @@
 
 import iconArrowLeftBlack from '@assets/icon-arrow-left-black.svg';
 
-import DocumentCollabEditor from './DocumentCollabEditor';
 import { useSidebarWidth } from '../hooks/useSidebarWidth';
+import DocumentCollabEditor from './DocumentCollabEditor';
 
 type TextEditorProps = {
   onBack: () => void;
@@ -58,12 +58,7 @@ const decodeJwtPayload = (token: string): Record<string, unknown> | null => {
 
 const readLoginIdFromClaims = (claims: Record<string, unknown> | null) => {
   if (!claims) return '';
-  const candidates = [
-    claims.loginId,
-    claims.preferred_username,
-    claims.userId,
-    claims.sub,
-  ];
+  const candidates = [claims.loginId, claims.preferred_username, claims.userId, claims.sub];
 
   for (const candidate of candidates) {
     if (typeof candidate === 'string' && candidate.trim().length > 0) {
@@ -96,7 +91,9 @@ const resolveWsBase = () => {
   );
   if (explicitWsBase) return normalizeWsScheme(explicitWsBase.replace(/\/$/, ''));
 
-  const apiBase = normalizeEnv(import.meta.env.VITE_SERVER_API_URL ?? import.meta.env.VITE_API_BASE_URL);
+  const apiBase = normalizeEnv(
+    import.meta.env.VITE_SERVER_API_URL ?? import.meta.env.VITE_API_BASE_URL,
+  );
   if (!apiBase) return undefined;
 
   const normalized = apiBase.replace(/\/api\/?$/, '').replace(/\/$/, '');
@@ -172,8 +169,8 @@ const TextEditorInner: React.FC<TextEditorProps> = ({
               />
             </button>
 
-            <div className="flex flex-col items-center justify-start gap-12 self-stretch">
-              <div className="flex flex-col items-start justify-start gap-8 self-stretch">
+            <div className="flex min-h-[calc(100vh-150px)] flex-col items-center justify-start gap-8 self-stretch">
+              <div className="flex flex-1 flex-col items-start justify-start gap-8 self-stretch">
                 <div className="inline-flex h-12 items-center justify-start gap-2.5 self-stretch rounded-[10px] bg-white px-3.5 py-2.5 outline outline-1 outline-offset-[-1px] outline-gray-300">
                   <input
                     value={title}
@@ -195,20 +192,22 @@ const TextEditorInner: React.FC<TextEditorProps> = ({
                 />
               </div>
 
-              <button
-                type="button"
-                disabled={!canSubmit}
-                onClick={submit}
-                className={`inline-flex h-14 w-96 items-center justify-center gap-2.5 rounded-[5px] px-10 py-3 outline outline-1 outline-offset-[-1px] ${
-                  canSubmit
-                    ? 'bg-orange-500 outline-orange-500 hover:brightness-95 active:brightness-90'
-                    : 'cursor-not-allowed bg-gray-300 outline-gray-200'
-                }`}
-              >
-                <span className="text-center font-['Roboto'] text-lg font-medium text-white">
-                  {submitLabel}
-                </span>
-              </button>
+              <div className="mt-40">
+                <button
+                  type="button"
+                  disabled={!canSubmit}
+                  onClick={submit}
+                  className={`inline-flex h-14 w-96 items-center justify-center gap-2.5 rounded-[5px] px-10 py-3 outline outline-1 outline-offset-[-1px] ${
+                    canSubmit
+                      ? 'bg-orange-500 outline-orange-500 hover:brightness-95 active:brightness-90'
+                      : 'cursor-not-allowed bg-gray-300 outline-gray-200'
+                  }`}
+                >
+                  <span className="text-center font-['Roboto'] text-lg font-medium text-white">
+                    {submitLabel}
+                  </span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
