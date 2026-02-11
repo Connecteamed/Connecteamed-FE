@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 
 import iconArrowDownBlack from '@assets/icon-arrow-down-black.svg';
 import iconFoldersBlack from '@assets/icon-folders-black.svg';
@@ -24,6 +24,7 @@ type Team = {
 const Sidebar = () => {
   const [isTeamOpen, setIsTeamOpen] = useState(true);
   const { data, isLoading, isError } = useGetTeamList();
+  const navigate = useNavigate();
 
   const teams: Team[] = useMemo(() => {
     if (!data?.data) return [];
@@ -116,6 +117,7 @@ const Sidebar = () => {
                   <NavLink
                     key={team.teamId ?? idx}
                     to={`/team/${team.teamId}`}
+                    state={{ projectName: team.name }}
                     className={({ isActive }) =>
                       `flex h-10 items-center rounded-md px-11 py-1.5 transition-colors ${
                         isActive ? 'text-primary-500 bg-slate-100' : 'text-black hover:bg-slate-50'

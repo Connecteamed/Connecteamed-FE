@@ -22,12 +22,14 @@ import Dropdown from '@/components/Dropdown';
 import Modal from '@/components/Modal';
 
 import useGetProjectRoleList from '@/hooks/MakeProject/Query/useGetProjectRoleList';
+import { useNotification } from '@/hooks/Notification/useNotification';
 import usePatchMemberRoles from '@/hooks/TaskPage/Mutate/usePatchMemberRole';
 import useGetProjectMemberList from '@/hooks/TaskPage/Query/useGetProjectMemberList';
 
 import AIReview from './components/AIReview/AIReview';
 import InviteModal from './components/InviteModal';
 import MeetingNote from './components/MeetingNote/MeetingNote';
+import MobileRoleBottomSheet from './components/MobileRoleBottomSheet';
 import NotificationModal from './components/NotificationModal';
 import TaskManagement from './components/TaskManagement/TaskManagement';
 import TaskStatistic from './components/TaskStatistic/TaskStatistic';
@@ -49,13 +51,28 @@ const TaskPage = () => {
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
   const [roleModalPos, setRoleModalPos] = useState<{ top: number; left: number } | null>(null);
   const [activeMemberIndex, setActiveMemberIndex] = useState<number | null>(null);
+  const [isMobileRoleSheetOpen, setIsMobileRoleSheetOpen] = useState(false);
+  const [mobileRoleDraft, setMobileRoleDraft] = useState<string[]>([]);
   const { data: projectRoles } = useGetProjectRoleList(parsedProjectId);
   const { data: memberList = [] } = useGetProjectMemberList(parsedProjectId);
 
   const { mutate: patchMemberRole } = usePatchMemberRoles(parsedProjectId);
 
   const [members, setMembers] = useState<Member[]>([]);
-  const teamName = useMemo(() => '팀원 목록', []);
+  const location = useLocation();
+  const projectNameFromNav = (location.state as { projectName?: string } | null)?.projectName;
+  const teamName =
+    projectNameFromNav ||
+    (memberList[0] as { projectName?: string } | undefined)?.projectName ||
+    '팀 이름';
+  const roleIdMap = useMemo(
+    () =>
+      projectRoles?.reduce<Record<string, number>>((acc, role) => {
+        acc[role.name] = role.roleId;
+        return acc;
+      }, {}) ?? {},
+    [projectRoles],
+  );
 
   useEffect(() => {
     if (!memberList) return;
@@ -83,10 +100,11 @@ const TaskPage = () => {
     });
     setMembers(normalized);
   }, [memberList]);
+
   const [settingDropdownIsOpen, setSettingDropdownIsOpen] = useState(false);
-  const location = useLocation();
   const [inviteModalIsOpen, setInviteModalIsOpen] = useState<boolean>(false);
   const [notificationModalIsOpen, setNotificationModalIsOpen] = useState<boolean>(false);
+  const { data: notificationData } = useNotification();
 
   const [isProjectEndModalOpen, setIsProjectEndModalOpen] = useState<boolean>(false);
 
@@ -99,7 +117,35 @@ const TaskPage = () => {
     { id: '6', title: 'AI 회고' },
   ];
 
+  const applyMemberRoles = (memberIndex: number, nextRoles: string[]) => {
+    const member = members[memberIndex];
+    if (!member?.id) return;
+
+    setMembers((prev) =>
+      prev.map((m, idx) => (idx === memberIndex ? { ...m, roles: nextRoles } : m)),
+    );
+
+    const roleIds = nextRoles
+      .map((r) => roleIdMap[r])
+      .filter((id): id is number => typeof id === 'number' && Number.isFinite(id));
+
+    patchMemberRole({ memberId: member.id, roleIds });
+  };
+
   const handleOpenRoleModal = (event: MouseEvent<HTMLButtonElement>, memberIndex: number) => {
+    const member = members[memberIndex];
+    if (!member) return;
+
+    const isMobile =
+      typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches;
+
+    if (isMobile) {
+      setActiveMemberIndex(memberIndex);
+      setMobileRoleDraft(member.roles ?? []);
+      setIsMobileRoleSheetOpen(true);
+      return;
+    }
+
     const rect = event.currentTarget.getBoundingClientRect();
     const modalWidth = 128; // w-32
     const offsetY = 8;
@@ -116,33 +162,37 @@ const TaskPage = () => {
     const member = members[activeMemberIndex];
     if (!member?.id) return;
 
-    // 현재 역할 배열
     const hasRole = member.roles.includes(roleName);
     const nextRoles = hasRole
       ? member.roles.filter((r) => r !== roleName)
       : [...member.roles, roleName];
 
-    // optimistic update를 위해 UI 즉시 반영
-    setMembers((prev) =>
-      prev.map((m, idx) => (idx === activeMemberIndex ? { ...m, roles: nextRoles } : m)),
-    );
-
-    const roleIdMap = projectRoles?.reduce<Record<string, number>>(
-      (acc, role) => ({ ...acc, [role.name]: role.roleId }),
-      {},
-    );
-
-    const roleIds = nextRoles.map((r) => roleIdMap?.[r]).filter(Boolean) as number[];
-
-    patchMemberRole({ memberId: member.id, roleIds });
+    applyMemberRoles(activeMemberIndex, nextRoles);
   };
 
+  const handleToggleMobileRoleDraft = (roleName: string) => {
+    setMobileRoleDraft((prev) => {
+      const hasRole = prev.includes(roleName);
+      return hasRole ? prev.filter((r) => r !== roleName) : [...prev, roleName];
+    });
+  };
+
+  const handleSaveMobileRole = () => {
+    if (activeMemberIndex === null) return;
+    applyMemberRoles(activeMemberIndex, mobileRoleDraft);
+    setIsMobileRoleSheetOpen(false);
+  };
+
+  const closeMobileRoleSheet = () => setIsMobileRoleSheetOpen(false);
+
   return (
-    <div>
-      <div className="mt-[50px] mr-[40px] ml-[80px] flex justify-between">
-        <div className="h-[61px] w-[453px] text-5xl font-bold text-black">{teamName}</div>
-        <div className="flex">
-          <div className="inline-flex items-center justify-start gap-6">
+    <div className="max-[767px]:bg-slate-50">
+      <div className="mt-[50px] mr-[40px] ml-[80px] flex justify-between max-[767px]:mx-4 max-[767px]:mt-6 max-[767px]:flex-col max-[767px]:items-start max-[767px]:gap-4">
+        <div className="h-[61px] w-[453px] text-5xl font-bold text-black max-[767px]:h-auto max-[767px]:w-full max-[767px]:text-3xl">
+          {teamName}
+        </div>
+        <div className="flex max-[767px]:w-full max-[767px]:justify-start">
+          <div className="inline-flex items-center justify-start gap-6 max-[767px]:flex-wrap max-[767px]:gap-4">
             <div
               className="flex h-8 w-24 cursor-pointer items-center justify-center gap-2.5 rounded-[10px] bg-orange-500 px-2 py-[5px]"
               onClick={() => setInviteModalIsOpen(!inviteModalIsOpen)}
@@ -165,7 +215,7 @@ const TaskPage = () => {
               <img src={bell} alt="notification" className="h-6 w-6" />
               <div className="h-2.5 w-2.5 bg-orange-500">
                 <div className="absolute top-[3px] left-[15px] h-1.5 w-1.5 justify-center bg-orange-500 text-center font-['Roboto'] text-[8px] font-normal text-white">
-                  <p>{profile.notification}</p>
+                  <p>{notificationData?.unreadCount ?? 0}</p>
                 </div>
               </div>
             </div>
@@ -174,7 +224,10 @@ const TaskPage = () => {
                 isOpen={notificationModalIsOpen}
                 onClose={() => setNotificationModalIsOpen(false)}
               >
-                <NotificationModal />
+                <NotificationModal
+                  unreadCount={notificationData?.unreadCount ?? 0}
+                  notifications={notificationData?.notifications ?? []}
+                />
               </Modal>
             )}
             <div
@@ -207,8 +260,8 @@ const TaskPage = () => {
           </div>
         </div>
       </div>
-      <div className="mx-[40px] mt-[31px] h-full w-[full-40px] rounded-2xl bg-white px-10 py-[43px]">
-        <div className="inline-flex flex-wrap items-start justify-start gap-7">
+      <div className="mx-[40px] mt-[31px] h-full w-[full-40px] rounded-2xl bg-white px-10 py-[43px] ">
+        <div className="inline-flex flex-wrap items-start justify-start gap-7 max-[767px]:hidden">
           {members.map((member, index) => (
             <div className="flex items-center gap-[30px]" key={member.id ?? member.name}>
               <div className="flex gap-2.5">
@@ -240,7 +293,37 @@ const TaskPage = () => {
           ))}
         </div>
 
-        <div className="mt-[30px] flex gap-[42px]">
+        {/* Mobile view */}
+        <div className="inline-flex w-full items-start gap-3 overflow-x-auto px-1 min-[768px]:hidden">
+          {members.map((member, index) => {
+            const rolesToRender = member.roles.length ? member.roles : ['역할 선택'];
+
+            return (
+              <div
+                key={member.id ?? member.name}
+                className="inline-flex items-start gap-1.5 max-[767px]:font-['Roboto'] max-[767px]:text-[8px] max-[767px]:font-medium"
+              >
+                <div className="flex items-start gap-1.5">
+                  <div className="text-[8px] font-medium text-black">{member.name}</div>
+                  <div className="flex flex-col items-start gap-1.5">
+                    {rolesToRender.map((role, roleIdx) => (
+                      <button
+                        key={`${member.name}-m-${role}-${roleIdx}`}
+                        type="button"
+                        onClick={(e) => handleOpenRoleModal(e, index)}
+                        className="flex h-3.5 w-10 items-center justify-center rounded bg-gray-400 px-1.5 py-1"
+                      >
+                        <div className="text-center text-[6px] font-medium text-white">{role}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="mt-[30px] flex gap-[42px] max-[767px]:hidden">
           {tasks.map((task) => (
             <div
               key={task.id}
@@ -250,6 +333,39 @@ const TaskPage = () => {
               {task.title}
             </div>
           ))}
+        </div>
+
+        <div className="hidden max-[767px]:mt-6 max-[767px]:flex max-[767px]:w-full max-[767px]:justify-start">
+          <div className="inline-flex w-full max-w-[18rem] flex-col items-start justify-center gap-1">
+            <div className="inline-flex items-center gap-4">
+              {tasks.map((task) => {
+                const isActive = selectedTask === task.id;
+                return (
+                  <button
+                    key={task.id}
+                    type="button"
+                    className="flex flex-col items-center gap-1"
+                    onClick={() => setSelectedTask(task.id)}
+                  >
+                    <span
+                      className={`text-center font-['Roboto'] text-xs font-medium ${
+                        isActive ? 'text-blue-900' : 'text-black'
+                      }`}
+                    >
+                      {task.title}
+                    </span>
+                    <span
+                      className={`${
+                        isActive
+                          ? 'w-11 border-b-2 border-blue-900'
+                          : 'w-0 border-b-2 border-transparent'
+                      }`}
+                    />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
         <div>
           {selectedTask === '1' && (
@@ -322,6 +438,15 @@ const TaskPage = () => {
             </div>
           </div>
         )}
+
+        <MobileRoleBottomSheet
+          isOpen={isMobileRoleSheetOpen}
+          roles={projectRoles}
+          selectedRoles={mobileRoleDraft}
+          onToggle={handleToggleMobileRoleDraft}
+          onSave={handleSaveMobileRole}
+          onClose={closeMobileRoleSheet}
+        />
 
         {isProjectEndModalOpen && (
           <Modal isOpen={isProjectEndModalOpen} onClose={() => setIsProjectEndModalOpen(false)}>
