@@ -128,54 +128,102 @@ const AIReview = ({ projectId }: { projectId: number }) => {
           </div>
 
           <div className="mb-10">
-            <div className="bg-neutral-10 border-neutral-30 flex h-12 items-center border px-5 text-sm font-medium">
-              <div className="w-28">업무명</div>
-              <div className="flex-1">업무내용</div>
-              <div className="w-15 text-center">상태</div>
-              <div className="w-28 text-center">시작일</div>
-              <div className="w-28 text-center">마감일</div>
-              <div className="w-25 text-center">담당자</div>
-              <div className="w-8" />
+            {/* 데스크톱 표 */}
+            <div className="hidden md:block">
+              <div className="bg-neutral-10 border-neutral-30 flex h-12 items-center border px-5 text-sm font-medium">
+                <div className="w-28">업무명</div>
+                <div className="flex-1">업무내용</div>
+                <div className="w-15 text-center">상태</div>
+                <div className="w-28 text-center">시작일</div>
+                <div className="w-28 text-center">마감일</div>
+                <div className="w-25 text-center">담당자</div>
+                <div className="w-8" />
+              </div>
+
+              <div className="border-neutral-30 border-x border-b">
+                {filteredTasks.map((task) => (
+                  <div
+                    key={task.taskId}
+                    className={`border-neutral-30 flex h-15 items-center border-b px-5 py-3 text-xs last:border-b-0 ${
+                      task.included ? 'text-neutral-90' : 'text-neutral-60'
+                    }`}
+                  >
+                    <div className="line-clamp-2 w-28 pr-4 text-xs leading-snug font-medium">
+                      {task.title}
+                    </div>
+                    <div className="line-clamp-1 flex-1 pr-4">{task.contents}</div>
+
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-medium ${
+                        task.included
+                          ? 'bg-primary-300 text-neutral-90'
+                          : 'text-neutral-60 bg-primary-300'
+                      }`}
+                    >
+                      {task.status === 'DONE' ? '완료' : task.status}
+                    </span>
+
+                    <div className="w-28 text-center">{formatDate(task.startDate)}</div>
+                    <div className="w-28 text-center">{formatDate(task.endDate)}</div>
+                    <div className="line-clamp-1 w-25 px-2 text-center text-xs leading-snug whitespace-normal">
+                      {task.assignees.map((a) => a.nickname).join(', ')}
+                    </div>
+
+                    <div className="w-8 text-center">
+                      <button
+                        onClick={() => handleToggleTaskInclusion(task.taskId)}
+                        className={`text-xs font-medium ${
+                          task.included ? 'text-neutral-70' : 'text-neutral-60'
+                        }`}
+                      >
+                        {task.included ? '제외' : '추가'}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            <div className="border-neutral-30 border-x border-b">
+            {/* 모바일 카드 목록 */}
+            <div className="mt-4 space-y-4 md:hidden">
               {filteredTasks.map((task) => (
                 <div
                   key={task.taskId}
-                  className={`border-neutral-30 flex h-15 items-center border-b px-5 py-3 text-xs last:border-b-0 ${
-                    task.included ? 'text-neutral-90' : 'text-neutral-60'
+                  className={`border-neutral-40 rounded-2xl border bg-white px-5 py-4 ${
+                    task.included ? 'text-neutral-900' : 'text-neutral-400'
                   }`}
                 >
-                  <div className="line-clamp-2 w-28 pr-4 text-xs leading-snug font-medium">
-                    {task.title}
-                  </div>
-                  <div className="flex-1 pr-4">{task.contents}</div>
-
-                  <span
-                    className={`rounded-full px-3 py-1 text-xs font-medium ${
-                      task.included
-                        ? 'bg-primary-300 text-neutral-600'
-                        : 'bg-neutral-200 text-gray-400'
-                    }`}
-                  >
-                    {task.status === 'DONE' ? '완료' : task.status}
-                  </span>
-
-                  <div className="w-28 text-center">{formatDate(task.startDate)}</div>
-                  <div className="w-28 text-center">{formatDate(task.endDate)}</div>
-                  <div className="w-25 px-2 text-center text-xs leading-snug whitespace-normal">
-                    {task.assignees.map((a) => a.nickname).join(', ')}
-                  </div>
-
-                  <div className="w-8 text-center">
+                  <div className="mb-2 flex items-start justify-between gap-4">
+                    <div className="min-w-0">
+                      <div className="line-clamp-2 text-base font-medium">{task.title}</div>
+                      <p className="mt-1 line-clamp-2 text-[10px] font-normal">{task.contents}</p>
+                    </div>
                     <button
                       onClick={() => handleToggleTaskInclusion(task.taskId)}
-                      className={`text-xs font-medium ${
-                        task.included ? 'text-neutral-70' : 'text-neutral-60'
-                      }`}
+                      className="text-neutral-70 shrink-0 text-xs font-medium"
                     >
                       {task.included ? '제외' : '추가'}
                     </button>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-3 text-xs">
+                    <span
+                      className={`rounded-full px-3 py-1 font-medium ${
+                        task.included
+                          ? 'bg-primary-300 text-neutral-90'
+                          : 'text-neutral-60 bg-primary-300'
+                      }`}
+                    >
+                      {task.status === 'DONE' ? '완료' : task.status}
+                    </span>
+                    <span className={task.included ? 'text-neutral-700' : 'text-neutral-400'}>
+                      {task.assignees.map((a) => a.nickname).join(', ')}
+                    </span>
+                    <span
+                      className={`ml-auto ${task.included ? 'text-neutral-700' : 'text-neutral-400'}`}
+                    >
+                      {formatDate(task.endDate)}
+                    </span>
                   </div>
                 </div>
               ))}
@@ -186,7 +234,7 @@ const AIReview = ({ projectId }: { projectId: number }) => {
             <button
               onClick={() => setIsCreateModalOpen(true)}
               disabled={isLoadingTasks || isLoadingReviews || selectedTasksForAI.length === 0}
-              className="h-12 w-96 rounded-md bg-orange-500 text-white disabled:bg-neutral-400"
+              className="bg-primary-500 h-12 w-full max-w-105 rounded-md text-white disabled:bg-neutral-400"
             >
               {isLoadingTasks || isLoadingReviews
                 ? '로딩 중...'
@@ -202,36 +250,70 @@ const AIReview = ({ projectId }: { projectId: number }) => {
       <div className="text-secondary-900 mb-4 text-2xl font-medium">회고 목록</div>
       {!reviews || reviews.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-6">
-          <div className="mb-3 text-2xl font-medium text-black">저장된 회고가 없어요</div>
-          <div className="text-sm font-normal text-black">
+          <div className="mb-3 text-2xl font-medium">저장된 회고가 없어요</div>
+          <div className="text-sm font-normal">
             프로젝트를 완료한 뒤 회고를 작성하면 이곳에서 모아볼 수 있어요
           </div>
         </div>
       ) : (
         <div className="mb-10">
-          <div className="bg-neutral-10 border-neutral-30 flex h-12 items-center border px-5 text-sm font-medium">
-            <div className="flex-1">제목</div>
-            <div className="w-40 text-center">만든 날짜</div>
-            <div className="w-16" />
+          {/* Desktop 리스트 */}
+          <div className="hidden md:block">
+            <div className="bg-neutral-10 border-neutral-30 flex h-12 items-center border px-5 text-sm font-medium">
+              <div className="flex-1">제목</div>
+              <div className="w-40 text-center">만든 날짜</div>
+              <div className="w-16" />
+            </div>
+
+            <div className="border-neutral-30 border-x border-b">
+              {reviews.map((review) => (
+                <div
+                  key={review.retrospectiveId}
+                  className="border-neutral-30 flex h-15 items-center border-b px-5 py-3 text-xs last:border-b-0"
+                >
+                  <div
+                    className="line-clamp-1 flex-1 cursor-pointer font-medium hover:text-orange-500"
+                    onClick={() => setSelectedReviewId(review.retrospectiveId)}
+                  >
+                    {review.title}
+                  </div>
+                  <div className="w-40 text-center">{formatDate(review.createdAt) || '-'}</div>
+                  <div className="w-16 text-center">
+                    <button
+                      onClick={() => setDeleteTargetId(review.retrospectiveId)}
+                      className="text-neutral-70 text-xs"
+                    >
+                      삭제
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
-          <div className="border-neutral-30 border-x border-b">
+          {/* Mobile 카드 리스트 */}
+          <div className="space-y-3 md:hidden">
             {reviews.map((review) => (
               <div
                 key={review.retrospectiveId}
-                className="border-neutral-30 flex h-15 items-center border-b px-5 py-3 text-xs last:border-b-0"
+                className="border-neutral-40 rounded-xl border bg-white px-4 py-3"
               >
-                <div
-                  className="line-clamp-1 flex-1 cursor-pointer font-medium hover:text-orange-500"
-                  onClick={() => setSelectedReviewId(review.retrospectiveId)}
-                >
-                  {review.title}
-                </div>
-                <div className="w-40 text-center">{formatDate(review.createdAt) || '-'}</div>
-                <div className="w-16 text-center">
+                <div className="flex items-start gap-3">
+                  <div className="flex flex-1 flex-col">
+                    <div
+                      className="line-clamp-1 cursor-pointer text-base font-medium text-neutral-900 hover:text-orange-500"
+                      onClick={() => setSelectedReviewId(review.retrospectiveId)}
+                    >
+                      {review.title}
+                    </div>
+                    <span className="text-neutral-90 mt-1 text-[8px] font-normal">
+                      {formatDate(review.createdAt) || '-'}
+                    </span>
+                  </div>
+
                   <button
                     onClick={() => setDeleteTargetId(review.retrospectiveId)}
-                    className="text-neutral-70 text-xs"
+                    className="text-xs font-medium text-neutral-500 hover:text-neutral-700"
                   >
                     삭제
                   </button>
