@@ -1,16 +1,7 @@
-/**
- *
- * @author 곽도윤
- *
- * @description
- * 팀 페이지입니다.
- * 하단 selectedTask에 따라 각 컴포넌트로 변경되도록 설정해두었고
- * 컴포넌트 작업 이후 연결 부탁드립니다.
- */
 import { useEffect, useMemo, useState } from 'react';
 import type { MouseEvent } from 'react';
 
-import { useLocation, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import DocumentPage from '@/pages/Tasks/components/Document/DocumentPage';
 import bell from '@assets/icon-bell-black.svg';
@@ -36,18 +27,27 @@ import TaskStatistic from './components/TaskStatistic/TaskStatistic';
 
 type Member = { id?: number; name: string; roles: string[] };
 
-const profile = {
-  name: '홍길동',
-  notification: 9,
-};
-
 const TaskPage = () => {
   const { teamId: projectId } = useParams();
   const parsedProjectId = Number(projectId);
 
-  console.log(Number.isFinite(parsedProjectId));
+  // console.log(Number.isFinite(parsedProjectId));
 
-  const [selectedTask, setSelectedTask] = useState<string | null>('1');
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const initialSelectedTask = (() => {
+    const state = location.state as { selectedTask?: string } | null;
+    return state?.selectedTask ?? '1';
+  })();
+
+  const [selectedTask, setSelectedTask] = useState<string | null>(initialSelectedTask);
+
+  useEffect(() => {
+    if (location.state && Object.keys(location.state as Record<string, unknown>).length > 0) {
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.pathname, location.state, navigate]);
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
   const [roleModalPos, setRoleModalPos] = useState<{ top: number; left: number } | null>(null);
   const [activeMemberIndex, setActiveMemberIndex] = useState<number | null>(null);
@@ -59,7 +59,6 @@ const TaskPage = () => {
   const { mutate: patchMemberRole } = usePatchMemberRoles(parsedProjectId);
 
   const [members, setMembers] = useState<Member[]>([]);
-  const location = useLocation();
   const projectNameFromNav = (location.state as { projectName?: string } | null)?.projectName;
   const teamName =
     projectNameFromNav ||
@@ -260,7 +259,7 @@ const TaskPage = () => {
           </div>
         </div>
       </div>
-      <div className="mx-[40px] mt-[31px] h-full w-[full-40px] rounded-2xl bg-white px-10 py-[43px] ">
+      <div className="mx-[40px] mt-[31px] h-full w-[full-40px] rounded-2xl bg-white px-10 py-[43px]">
         <div className="inline-flex flex-wrap items-start justify-start gap-7 max-[767px]:hidden">
           {members.map((member, index) => (
             <div className="flex items-center gap-[30px]" key={member.id ?? member.name}>
@@ -391,7 +390,7 @@ const TaskPage = () => {
           )}
           {selectedTask === '6' && (
             <div>
-              <AIReview />
+              <AIReview projectId={parsedProjectId} />
             </div>
           )}
         </div>

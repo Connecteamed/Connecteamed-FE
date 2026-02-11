@@ -6,15 +6,15 @@ interface Props {
 
 export const TeamGraph = ({ projectId }: Props) => {
   const MAX_Y = 10;
-  const { data: contributionsData} = useGetProjectContributions(projectId);
+  const { data: contributionsData } = useGetProjectContributions(projectId);
   // 업무 완료 수에 따른 색상 결정 함수
   const getBarColor = (count: number) => {
     if (count === 0) return 'bg-gray-100';
-    if (count <= 2) return 'bg-primary-100';
-    if (count <= 4) return 'bg-primary-300';
-    if (count <= 6) return 'bg-primary-500';
-    if (count <= 8) return 'bg-primary-700';
-    return 'bg-primary-900';
+    if (count <= 2) return 'bg-oorange-100';
+    if (count <= 4) return 'bg-oorange-300';
+    if (count <= 6) return 'bg-oorange-500';
+    if (count <= 8) return 'bg-oorange-700';
+    return 'bg-oorange-900';
   };
 
   // 날짜 포맷 처리 함수
@@ -26,7 +26,8 @@ export const TeamGraph = ({ projectId }: Props) => {
   };
 
   return (
-    <div className="bg-neutral-0 hidden w-full max-w-[980px] min-w-[700px] rounded-[20px] px-[30px] pt-[16px] pb-[26px] shadow-[0_4px_4px_rgba(0,0,0,0.25)] min-[540px]:block">
+    // <div className="bg-neutral-0 hidden w-full max-w-[980px] min-w-[700px] rounded-[20px] px-[30px] pt-[16px] pb-[26px] shadow-[0_4px_4px_rgba(0,0,0,0.25)] min-[540px]:block">
+    <div className="bg-neutral-0 border-neutral-30 hidden w-full max-w-[980px] min-w-[700px] rounded-[20px] border px-[30px] pt-[16px] pb-[26px] min-[540px]:block">
       <h2 className="text-neutral-90 mb-[16px] text-[18px] font-medium">팀 전체 업무 통계</h2>
 
       <div className="flex">
