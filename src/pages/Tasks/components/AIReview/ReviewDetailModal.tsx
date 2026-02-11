@@ -65,7 +65,7 @@ const ReviewDetailModal = ({
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <div
-        className="w-162.5 rounded-[20px] bg-white px-11 py-12"
+        className="max-h-[90vh] w-full max-w-130 overflow-y-auto rounded-[20px] bg-white px-5 py-6 md:max-w-162.5 md:px-11 md:py-12"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-6 flex items-center justify-between">
@@ -91,7 +91,7 @@ const ReviewDetailModal = ({
                   className="h-12 w-full bg-slate-100 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-orange-500"
                 />
               ) : (
-                <div className="flex h-12 w-full items-center bg-slate-100 px-4 py-3 text-sm">
+                <div className="flex h-12 w-full items-center rounded-md bg-slate-100 px-4 py-3 text-sm">
                   {detail.title}
                 </div>
               )}
@@ -124,7 +124,7 @@ const ReviewDetailModal = ({
                   className="w-full resize-none rounded-md bg-slate-100 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-orange-500"
                 />
               ) : (
-                <div className="flex max-h-80 min-h-30 w-full items-start overflow-y-auto rounded-md bg-slate-100 px-4 py-3 text-left text-sm whitespace-pre-wrap">
+                <div className="flex max-h-[60vh] min-h-40 w-full items-start overflow-y-auto rounded-md bg-slate-100 px-4 py-3 text-left text-sm whitespace-pre-wrap">
                   {detail.projectResult}
                 </div>
               )}
