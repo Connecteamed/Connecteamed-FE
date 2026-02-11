@@ -15,7 +15,7 @@ type AwarenessChanges = {
 
 type WsInboundMessage = {
   type: string;
-  payload?: string;
+  payload?: unknown;
 };
 
 export class CollabClient {
@@ -27,6 +27,7 @@ export class CollabClient {
   private onAwarenessUpdate:
     | ((changes: AwarenessChanges, origin: unknown) => void)
     | null = null;
+  private onAwarenessRender: ((changes: AwarenessChanges, origin: unknown) => void) | null = null;
   private onYDocUpdate: ((update: Uint8Array, origin: unknown) => void) | null = null;
   private docId = '';
   private messageDocId: string | number = '';
@@ -84,6 +85,11 @@ export class CollabClient {
         this.safeSend({ type: 'AWARENESS', docId: this.messageDocId, payload: toBase64(encoded) });
       };
       this.awareness?.on('update', this.onAwarenessUpdate);
+      this.onAwarenessRender = () => {
+        if (!this.awareness) return;
+        renderRemoteCursors(quill, this.awareness);
+      };
+      this.awareness?.on('update', this.onAwarenessRender);
 
       this.onYDocUpdate = (update, origin) => {
         if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
@@ -106,31 +112,23 @@ export class CollabClient {
       if (!this.ydoc || !this.awareness) return;
 
       if (msg.type === 'INITIAL_LOAD') {
-        const payload = msg.payload ?? '[]';
-        try {
-          const parsed = JSON.parse(payload) as unknown;
-          this.ydoc.transact(() => {
-            if (Array.isArray(parsed)) {
-              parsed.forEach((item) => {
-                if (typeof item === 'string' && item.length > 0) {
-                  Y.applyUpdate(this.ydoc as Y.Doc, fromBase64(item), 'ws');
-                }
-              });
-              return;
-            }
+        const updates = this.parseInitialUpdates(msg.payload);
+        if (!updates.length) return;
 
-            if (typeof parsed === 'string' && parsed.length > 0) {
-              Y.applyUpdate(this.ydoc as Y.Doc, fromBase64(parsed), 'ws');
+        this.ydoc.transact(() => {
+          updates.forEach((item) => {
+            try {
+              Y.applyUpdate(this.ydoc as Y.Doc, fromBase64(item), 'ws');
+            } catch {
+              // ignore invalid update
             }
-          }, 'ws');
-        } catch {
-          // ignore invalid payload
-        }
+          });
+        }, 'ws');
         return;
       }
 
       if (msg.type === 'UPDATE') {
-        if (!msg.payload) return;
+        if (typeof msg.payload !== 'string' || !msg.payload) return;
         try {
           Y.applyUpdate(this.ydoc, fromBase64(msg.payload), 'ws');
         } catch {
@@ -140,9 +138,10 @@ export class CollabClient {
       }
 
       if (msg.type === 'AWARENESS') {
-        if (!msg.payload) return;
+        const encoded = this.extractEncodedPayload(msg.payload);
+        if (!encoded) return;
         try {
-          awarenessProtocol.applyAwarenessUpdate(this.awareness, fromBase64(msg.payload), 'ws');
+          awarenessProtocol.applyAwarenessUpdate(this.awareness, fromBase64(encoded), 'ws');
           renderRemoteCursors(quill, this.awareness);
         } catch {
           // ignore invalid payload
@@ -151,11 +150,7 @@ export class CollabClient {
       }
 
       if (msg.type === 'PRESENCE_UPDATE') {
-        try {
-          callbacks?.onPresence?.(JSON.parse(msg.payload || '[]') as PresenceUser[]);
-        } catch {
-          callbacks?.onPresence?.([]);
-        }
+        callbacks?.onPresence?.(this.parsePresencePayload(msg.payload));
       }
     };
 
@@ -229,6 +224,14 @@ export class CollabClient {
       // ignore cleanup error
     }
     this.onAwarenessUpdate = null;
+    try {
+      if (this.awareness && this.onAwarenessRender) {
+        this.awareness.off('update', this.onAwarenessRender);
+      }
+    } catch {
+      // ignore cleanup error
+    }
+    this.onAwarenessRender = null;
 
     try {
       if (this.ydoc && this.onYDocUpdate) {
@@ -298,6 +301,85 @@ export class CollabClient {
     } catch {
       // ignore close error
     }
+  }
+
+  private parseInitialUpdates(payload: unknown): string[] {
+    const updates: string[] = [];
+
+    const collect = (value: unknown) => {
+      if (typeof value === 'string' && value.length > 0) {
+        updates.push(value);
+      }
+    };
+
+    if (Array.isArray(payload)) {
+      payload.forEach(collect);
+      return updates;
+    }
+
+    if (typeof payload !== 'string') return updates;
+    const trimmed = payload.trim();
+    if (!trimmed) return updates;
+
+    try {
+      const parsed = JSON.parse(trimmed) as unknown;
+      if (Array.isArray(parsed)) {
+        parsed.forEach(collect);
+      } else {
+        collect(parsed);
+      }
+    } catch {
+      collect(trimmed);
+    }
+
+    return updates;
+  }
+
+  private parsePresencePayload(payload: unknown): PresenceUser[] {
+    const toUsers = (value: unknown): PresenceUser[] => {
+      if (Array.isArray(value)) {
+        return value.filter(
+          (user): user is PresenceUser => Boolean(user) && typeof user === 'object',
+        );
+      }
+
+      if (value && typeof value === 'object') {
+        const users = (value as Record<string, unknown>).users;
+        if (Array.isArray(users)) {
+          return users.filter(
+            (user): user is PresenceUser => Boolean(user) && typeof user === 'object',
+          );
+        }
+      }
+
+      return [];
+    };
+
+    if (typeof payload === 'string') {
+      const trimmed = payload.trim();
+      if (!trimmed) return [];
+      try {
+        return toUsers(JSON.parse(trimmed) as unknown);
+      } catch {
+        return [];
+      }
+    }
+
+    return toUsers(payload);
+  }
+
+  private extractEncodedPayload(payload: unknown): string | null {
+    if (typeof payload === 'string') {
+      const trimmed = payload.trim();
+      return trimmed.length ? trimmed : null;
+    }
+
+    if (!payload || typeof payload !== 'object') return null;
+    const record = payload as Record<string, unknown>;
+    const candidate = record.payload ?? record.content ?? record.update;
+    if (typeof candidate !== 'string') return null;
+    const trimmed = candidate.trim();
+    return trimmed.length ? trimmed : null;
   }
 
   private safeSend(obj: Record<string, unknown>) {

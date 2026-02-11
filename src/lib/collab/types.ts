@@ -1,6 +1,13 @@
 import type QuillType from 'quill';
 
-export type PresenceUser = { userId?: string; userName?: string };
+export type PresenceUser = {
+  userId?: string | number;
+  userName?: string;
+  memberId?: string | number;
+  memberName?: string;
+  name?: string;
+  loginId?: string;
+};
 
 export type CollabCallbacks = {
   onLog?: (msg: string) => void;
