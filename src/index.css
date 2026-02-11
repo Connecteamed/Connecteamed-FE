@@ -229,3 +229,66 @@
     font-weight: 500;
   }
 }
+
+/* quill-cursors */
+.ql-cursor {
+  position: absolute;
+  z-index: 100;
+}
+
+.ql-cursors {
+  position: absolute;
+  inset: 0;
+  z-index: 120;
+  pointer-events: none;
+}
+
+.ql-cursor-flag {
+  position: absolute;
+  top: -15px;
+  left: 0;
+  white-space: nowrap;
+  font-size: 16px;
+  padding: 1px 6px;
+  color: #374151;
+  background-color: #fff;
+  pointer-events: none;
+  font-weight: 500;
+  line-height: 1.2;
+  opacity: 0.96;
+  z-index: 121;
+}
+
+.ql-cursor-caret {
+  position: absolute;
+  width: 2px;
+  height: 100%;
+  top: 0;
+  left: 0;
+  background-color: currentColor;
+}
+
+.ql-cursor-selections .ql-cursor-selection-block {
+  opacity: 0.18;
+}
+
+.ql-cursor .ql-cursor-caret-container {
+  margin-left: 0 !important;
+  padding: 0 !important;
+}
+
+.ql-cursor .ql-cursor-caret-container .ql-cursor-caret {
+  margin-left: 0 !important;
+}
+
+/* quill-cursors v4 기본값(opacity:0/visibility:hidden)을 덮어써서 이름 배지를 항상 표시 */
+.ql-cursor .ql-cursor-flag {
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: translate3d(-1px, calc(-100% + 2px), 0) !important;
+  transition: none !important;
+}
+
+.ql-cursor .ql-cursor-flag.flag-flipped {
+  transform: translate3d(calc(-100% + 1px), calc(-100% + 2px), 0) !important;
+}
