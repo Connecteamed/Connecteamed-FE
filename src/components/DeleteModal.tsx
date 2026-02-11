@@ -17,20 +17,22 @@ const DeleteModal = ({
 }: DeleteModalProps) => {
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
-      <div className="flex h-64 w-96 flex-col justify-between overflow-hidden rounded-xl bg-white p-6">
-        <h2 className="pt-4 text-center text-3xl font-bold">{title}</h2>
-        <div className="text-center text-base font-normal">{description}</div>
+      <div className="flex h-[152px] w-[250px] flex-col justify-between overflow-hidden rounded-xl bg-white p-6 md:h-64 md:w-96">
+        <h2 className="text-center text-[18px] font-medium md:pt-4 md:text-3xl md:font-bold">
+          {title}
+        </h2>
+        <div className="text-center text-[12px] font-normal md:text-base">{description}</div>
 
         <div className="my-2 flex gap-3">
           <button
             onClick={onClose}
-            className="bg-neutral-30 flex-1 rounded-md py-3 text-center text-base font-medium"
+            className="bg-neutral-30 h-6 flex-1 rounded-[5px] text-center text-[10px] md:h-12 md:rounded-md md:text-base md:font-medium"
           >
             아니요
           </button>
           <button
             onClick={onConfirm}
-            className="bg-secondary-500 flex-1 rounded-md py-3 text-center text-base font-medium text-white"
+            className="bg-secondary-500 h-6 flex-1 rounded-[5px] text-center text-[10px] text-white md:h-12 md:rounded-md md:text-base md:font-medium"
           >
             예
           </button>

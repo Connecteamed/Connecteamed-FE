@@ -1,7 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 
-import type { ViewMode } from '../types/document';
-import type { DocumentItem } from '../types/document';
+import type { DocumentItem, ViewMode } from '../types/document';
 import { useDocuments } from './useDocuments';
 
 export type PickFileType = 'pdf' | 'docx' | 'image';
@@ -66,13 +65,6 @@ export const useDocumentPageController = (projectId: number | undefined) => {
     image: 'image/*',
   };
 
-  const triggerPickAnyFile = () => {
-    const input = fileInputRef.current;
-    if (!input) return;
-    input.accept = '';
-    input.click();
-  };
-
   const triggerPickFileByType = (type: PickFileType) => {
     const input = fileInputRef.current;
     if (!input) return;
@@ -131,12 +123,11 @@ export const useDocumentPageController = (projectId: number | undefined) => {
 
     editingTextId,
     editingDocTitle: editingDetail?.title ?? editingDoc?.name ?? '',
-    editingDocContent: editingDetail?.content ?? editingDoc?.content ?? '',
+    editingDocContent: editingDetail?.content ?? (editingDoc as any)?.content ?? '',
 
     isDeleteOpen,
 
     onPickFiles,
-    triggerPickAnyFile,
     triggerPickFileByType,
 
     openTextCreate,
