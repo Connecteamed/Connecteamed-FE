@@ -118,10 +118,12 @@ export const useMinutesForm = ({
           projectId,
           title: title.trim(),
           meetingDate: selectedDate.toISOString(),
-          attendeeIds: normalizedAttendeeIds,
-          agendas: normalizedAgendas.map((a) =>
-            a.title && a.content ? `${a.title}\n${a.content}` : a.title || a.content,
-          ),
+          attendeeMemberIds: normalizedAttendeeIds,
+          agendas: normalizedAgendas.map((a, index) => ({
+            title: a.title,
+            content: a.content,
+            sortOrder: index,
+          })),
         };
 
         const res = await postMinute(projectId, createPayload);
