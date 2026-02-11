@@ -1,21 +1,22 @@
 import { useMemo, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 
 import type { CompleteTask } from '@/types/TaskManagement/taskComplete';
 
 import DeleteModal from '@/components/DeleteModal';
 
-import { usePostAIRetrospective } from '@/hooks/TaskPage/Mutate/usePostAIRetrospective';
 import useGetCompletedTasks from '@/hooks/TaskPage/Query/useGetCompletedTasks';
 import { useGetRetrospectives } from '@/hooks/TaskPage/Query/useGetRetrospectives';
+import { QUERY_KEY } from '@/constants/key';
 
 import CreateReviewModal from './CreateReviewModal';
 import EmptyAIReview from './EmptyAIReview';
 
-// API 응답 데이터에 UI 상태(included)를 추가한 타입
 type TaskForReview = CompleteTask & { included: boolean };
 
 const AIReview = ({ projectId }: { projectId: number }) => {
-  // --- Data Fetching ---
+  const queryClient = useQueryClient();
+
   const {
     data: completedTasks,
     isLoading: isLoadingTasks,
@@ -28,18 +29,11 @@ const AIReview = ({ projectId }: { projectId: number }) => {
     isError: isErrorReviews,
   } = useGetRetrospectives(projectId);
 
-  // --- Mutations ---
-  const { mutate: createAIRetro, isPending: isGenerating } = usePostAIRetrospective({
-    projectId,
-  });
-
-  // --- UI State ---
   const [showMyTasksOnly, setShowMyTasksOnly] = useState(false);
   const [excludedTaskIds, setExcludedTaskIds] = useState<number[]>([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
 
-  // --- Memoized Derived State ---
   const tasksForReview = useMemo<TaskForReview[]>(() => {
     if (!completedTasks) return [];
     return completedTasks.map((task) => ({
@@ -57,36 +51,18 @@ const AIReview = ({ projectId }: { projectId: number }) => {
     return tasksForReview.filter((task) => task.included);
   }, [tasksForReview]);
 
-  // --- Handlers ---
   const handleToggleTaskInclusion = (taskId: number) => {
     setExcludedTaskIds((prev) =>
       prev.includes(taskId) ? prev.filter((id) => id !== taskId) : [...prev, taskId],
     );
   };
 
-  const handleCreateFromModal = (
-    title: string,
-    achievements: string,
-    selectedTasks: TaskForReview[],
-  ) => {
-    createAIRetro(
-      {
-        title,
-        projectResult: achievements,
-        taskIds: selectedTasks.map((task) => task.taskId),
-      },
-      {
-        onSuccess: () => {
-          setIsCreateModalOpen(false);
-        },
-      },
-    );
+  const handleCreateSuccess = () => {
+    queryClient.invalidateQueries({ queryKey: [QUERY_KEY.retrospectiveList, projectId] });
   };
 
   const handleConfirmDelete = () => {
     if (deleteTargetId === null) return;
-    // TODO: 회고 삭제 mutation 구현 필요
-    console.log('Deleting review with id:', deleteTargetId);
     setDeleteTargetId(null);
   };
 
@@ -95,7 +71,10 @@ const AIReview = ({ projectId }: { projectId: number }) => {
     return dateStr.split('T')[0].replace(/-/g, '.');
   };
 
-  // --- Render Logic ---
+  const handleCloseCreateModal = () => {
+    setIsCreateModalOpen(false);
+  };
+
   if (isLoadingTasks || isLoadingReviews) {
     return <div className="py-10 text-center">로딩 중...</div>;
   }
@@ -183,10 +162,10 @@ const AIReview = ({ projectId }: { projectId: number }) => {
           <div className="mb-12 flex justify-center">
             <button
               onClick={() => setIsCreateModalOpen(true)}
-              disabled={isGenerating}
+              disabled={isLoadingTasks || isLoadingReviews} // Use global loading states
               className="h-12 w-96 rounded-md bg-orange-500 text-white disabled:bg-neutral-400"
             >
-              {isGenerating ? 'AI 회고 생성 중...' : 'AI로 프로젝트 회고하기'}
+              {isLoadingTasks || isLoadingReviews ? '로딩 중...' : 'AI로 프로젝트 회고하기'}
             </button>
           </div>
         </>
@@ -212,14 +191,14 @@ const AIReview = ({ projectId }: { projectId: number }) => {
           <div className="border-neutral-30 border-x border-b">
             {reviews.map((review) => (
               <div
-                key={review.id}
+                key={review.retrospectiveId}
                 className="border-neutral-30 flex h-15 items-center border-b px-5 py-3 text-xs last:border-b-0"
               >
                 <div className="line-clamp-1 flex-1 font-medium">{review.title}</div>
-                <div className="w-40 text-center">{review.writtenDate || '-'}</div>
+                <div className="w-40 text-center">{formatDate(review.createdAt) || '-'}</div>
                 <div className="w-16 text-center">
                   <button
-                    onClick={() => setDeleteTargetId(review.id)}
+                    onClick={() => setDeleteTargetId(review.retrospectiveId)}
                     className="text-neutral-70 text-xs"
                   >
                     삭제
@@ -242,9 +221,10 @@ const AIReview = ({ projectId }: { projectId: number }) => {
       {isCreateModalOpen && (
         <CreateReviewModal
           isOpen
-          onClose={() => setIsCreateModalOpen(false)}
-          onCreate={handleCreateFromModal}
+          onClose={handleCloseCreateModal}
+          onCreate={handleCreateSuccess}
           selectedTasks={selectedTasksForAI}
+          projectId={projectId}
         />
       )}
     </div>

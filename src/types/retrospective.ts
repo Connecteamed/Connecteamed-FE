@@ -16,12 +16,24 @@ export interface CreateAIRetroData {
 // AI 회고 생성 전체 응답 타입
 export type CreateAIRetroResponse = ApiResponse<CreateAIRetroData>;
 
-// 회고 목록 아이템 타입
-export interface RetrospectiveSummary {
+// 상세 회고 데이터 타입
+export interface RetrospectiveDetailData {
   id: number;
   title: string;
-  teamName: string;
+  projectResult: string;
   writtenDate: string;
+  teamName: string;
+}
+
+// 상세 회고 응답 타입
+export type GetRetrospectiveDetailResponse = ApiResponse<RetrospectiveDetailData>;
+
+// 회고 목록 아이템 타입
+export interface RetrospectiveSummary {
+  retrospectiveId: number;
+  title: string;
+  teamName?: string;
+  createdAt: string;
 }
 
 // 회고 목록 조회 응답 데이터 타입

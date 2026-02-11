@@ -6,4 +6,5 @@ export const QUERY_KEY = {
   taskList: 'taskList',
   completeTaskList: 'completeTaskList',
   retrospectiveList: 'retrospectiveList',
+  retrospectiveDetail: 'retrospectiveDetail',
 };
