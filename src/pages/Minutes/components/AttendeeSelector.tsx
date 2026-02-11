@@ -7,13 +7,6 @@ export interface AttendeeOption {
   name: string;
 }
 
-const DEFAULT_MEMBERS: AttendeeOption[] = [
-  { id: 1, name: '팀원1' },
-  { id: 2, name: '팀원2' },
-  { id: 3, name: '팀원3' },
-  { id: 4, name: '팀원4' },
-];
-
 interface AttendeeSelectorProps {
   options?: AttendeeOption[];
   selectedAttendeeIds: number[];
@@ -21,14 +14,14 @@ interface AttendeeSelectorProps {
 }
 
 const AttendeeSelector = ({
-  options = DEFAULT_MEMBERS,
+  options = [],
   selectedAttendeeIds,
   onSelectionChange,
 }: AttendeeSelectorProps) => {
   const [isAttendeeListOpen, setIsAttendeeListOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
-  const memberOptions = useMemo(() => (options.length > 0 ? options : DEFAULT_MEMBERS), [options]);
+  const memberOptions = useMemo(() => options, [options]);
 
   const selectedMembers = useMemo(
     () => memberOptions.filter((member) => selectedAttendeeIds.includes(member.id)),
@@ -82,31 +75,35 @@ const AttendeeSelector = ({
       </div>
 
       {isAttendeeListOpen && (
-        <div className="absolute top-24 left-0 z-20 w-fit rounded-xl bg-white p-4 shadow-xl">
+        <div className="absolute top-24 left-0 z-20 min-w-50 rounded-xl bg-white p-4 shadow-xl">
           <div className="flex flex-col gap-2">
-            {memberOptions.map((member) => {
-              const isSelected = selectedAttendeeIds.includes(member.id);
+            {memberOptions.length === 0 ? (
+              <div className="text-center text-sm text-gray-500">참석자 목록이 없습니다</div>
+            ) : (
+              memberOptions.map((member) => {
+                const isSelected = selectedAttendeeIds.includes(member.id);
 
-              return (
-                <div
-                  key={member.id}
-                  className="flex items-center gap-3"
-                  onClick={() => toggleAttendee(member.id)}
-                >
-                  <div className="bg-neutral-60 flex h-7.5 min-w-20 items-center justify-center rounded-md px-2 text-sm font-medium text-white">
-                    <span className="w-full truncate px-1 text-center">{member.name}</span>
-                  </div>
+                return (
+                  <div
+                    key={member.id}
+                    className="flex cursor-pointer items-center gap-3"
+                    onClick={() => toggleAttendee(member.id)}
+                  >
+                    <div className="bg-neutral-60 flex h-7.5 min-w-20 items-center justify-center rounded-md px-2 text-sm font-medium text-white">
+                      <span className="w-full truncate px-1 text-center">{member.name}</span>
+                    </div>
 
-                  <div className="flex h-6 w-6 items-center justify-center">
-                    {isSelected ? (
-                      <img src={checkIcon} alt="selected" className="h-6 w-6" />
-                    ) : (
-                      <div className="h-6 w-6 rounded-full bg-orange-500" />
-                    )}
+                    <div className="flex h-6 w-6 items-center justify-center">
+                      {isSelected ? (
+                        <img src={checkIcon} alt="selected" className="h-6 w-6" />
+                      ) : (
+                        <div className="h-6 w-6 rounded-full bg-orange-500" />
+                      )}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         </div>
       )}

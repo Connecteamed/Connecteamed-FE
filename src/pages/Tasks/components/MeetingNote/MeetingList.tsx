@@ -10,9 +10,9 @@ interface MeetingListProps {
 const MeetingList = ({ meetings, onCreate, onOpen, onDelete }: MeetingListProps) => {
   return (
     <div className="w-full">
-      <div>
+      <div className="border-neutral-30 border">
         {/* 테이블 헤더*/}
-        <div className="bg-neutral-10 flex h-12 px-5 py-3.5 text-sm font-medium">
+        <div className="bg-neutral-10 border-neutral-30 flex h-12 border-b px-5 py-3.5 text-sm font-medium">
           <div className="flex-1">회의명</div>
           <div className="w-32 text-center">참석자</div>
           <div className="w-32 text-center">회의 날짜</div>
@@ -20,7 +20,7 @@ const MeetingList = ({ meetings, onCreate, onOpen, onDelete }: MeetingListProps)
         </div>
 
         {/* 리스트 */}
-        <div className="border-neutral-30 border">
+        <div className="divide-neutral-30 divide-y">
           {meetings.map((meeting) => (
             <div key={meeting.id} className="flex items-center px-4 py-3">
               <button

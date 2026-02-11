@@ -43,10 +43,22 @@ export const useMinuteDetail = (isEditMode: boolean, meetingId: number, setters:
 
         setters.setTitle(detail.title ?? '');
 
-        const date = new Date(detail.meetingDate);
+        let date = new Date(detail.meetingDate);
+
+        if (Number.isNaN(date.getTime()) && typeof detail.meetingDate === 'string') {
+          date = new Date(detail.meetingDate.replace(' ', 'T'));
+        }
+
         if (!Number.isNaN(date.getTime())) {
           setters.setSelectedDate(date);
           setters.setDateStr(formatDisplayDate(date));
+        } else if (typeof detail.meetingDate === 'string') {
+          const match = detail.meetingDate.match(/^(\d{4})[-.](\d{2})[-.](\d{2})/);
+          if (match) {
+            const [, y, m, d] = match;
+            setters.setDateStr(`${y}.${m}.${d}`);
+            setters.setSelectedDate(new Date(Number(y), Number(m) - 1, Number(d)));
+          }
         }
 
         const attendees: MinuteAttendee[] = detail.attendees ?? [];

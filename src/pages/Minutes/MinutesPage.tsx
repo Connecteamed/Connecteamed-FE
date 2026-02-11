@@ -52,7 +52,7 @@ const MinutesPage = () => {
 
       <div className="w-full space-y-6">
         {isDetailLoading && (
-          <div className="rounded-md bg-neutral-100 px-4 py-2 text-sm text-neutral-700">
+          <div className="rounded-md px-4 py-2 text-sm text-neutral-700">
             회의록 상세를 불러오는 중입니다...
           </div>
         )}

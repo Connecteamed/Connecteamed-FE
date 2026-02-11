@@ -13,17 +13,22 @@ export const formatDisplayDate = (date: Date) => {
   return `${yyyy}.${mm}.${dd}`;
 };
 
-// PATCH /meetings/{meetingId} uses IDs that match detail.attendees[].id.
-export const getAttendeeId = (attendee: MinuteAttendee) => attendee.id ?? attendee.attendeeId ?? 0;
+// PATCH /meetings/{meetingId} uses IDs that match detail.attendees[].attendeeId (ProjectMemberId).
+export const getAttendeeId = (attendee: MinuteAttendee) => attendee.attendeeId ?? attendee.id ?? 0;
 export const getAttendeeName = (attendee: MinuteAttendee) =>
   attendee.name ?? attendee.nickname ?? '';
+
+export const formatDateForApi = (date: Date) => {
+  const offset = date.getTimezoneOffset() * 60000;
+  const localDate = new Date(date.getTime() - offset);
+  return localDate.toISOString();
+};
 
 export const mapDetailAgendasToForm = (detailAgendas: MinuteAgenda[] = []): AgendaFormItem[] => {
   const mapped = detailAgendas.map((agenda) => {
     const rawTitle = agenda.title ?? '';
     const rawContent = agenda.content ?? '';
 
-    // Legacy-created meetings may store "title\ncontent" in title with empty content.
     if (!rawContent && rawTitle.includes('\n')) {
       const [nextTitle, ...contentParts] = rawTitle.split('\n');
       return {
