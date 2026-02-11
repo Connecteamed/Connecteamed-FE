@@ -57,20 +57,21 @@ export const IndividualContribution = ({ name, contributions }: PersonalContribu
   const getLevelColor = (level: number) => {
     switch (level) {
       case 4:
-        return 'bg-primary-700';
+        return 'bg-oorange-700';
       case 3:
-        return 'bg-primary-500';
+        return 'bg-oorange-500';
       case 2:
-        return 'bg-primary-300';
+        return 'bg-oorange-300';
       case 1:
-        return 'bg-primary-100';
+        return 'bg-oorange-100';
       default:
         return 'bg-neutral-20';
     }
   };
 
   return (
-    <div className="bg-neutral-0 relative w-[478px] rounded-[20px] px-[50px] py-[28px] shadow-[0_4px_4px_rgba(0,0,0,0.25)]">
+    // <div className="bg-neutral-0 relative w-[478px] rounded-[20px] px-[50px] py-[28px] shadow-[0_4px_4px_rgba(0,0,0,0.25)]">
+    <div className="bg-neutral-0 border-neutral-30 relative w-[478px] rounded-[20px] border px-[50px] py-[28px]">
       <p className="text-neutral-90 mb-[24px] text-[18px] font-medium">{name} 님의 업무기록</p>
 
       <div className="flex">
