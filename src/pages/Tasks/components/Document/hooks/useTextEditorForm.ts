@@ -1,32 +1,38 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 
 type SavePayload = { title: string; content: string };
 
 type Options = {
-  initialTitle?: string;
-  initialContent?: string;
+  title: string;
+  setTitle: (v: string) => void;
+  content: string;
+  setContent: (v: string) => void;
   onSave: (payload: SavePayload) => void;
 };
 
-export const useTextEditorForm = ({ initialTitle = '', initialContent = '', onSave }: Options) => {
-  const [title, setTitle] = useState(initialTitle);
-  const [content, setContent] = useState(initialContent);
+function stripHtmlToText(html: string) {
+  return html
+    .replace(/<style[\s\S]*?<\/style>/gi, '')
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
 
-  useEffect(() => setTitle(initialTitle), [initialTitle]);
-  useEffect(() => setContent(initialContent), [initialContent]);
-
+export const useTextEditorForm = ({ title, content, onSave }: Options) => {
   const trimmedTitle = useMemo(() => title.trim(), [title]);
-  const trimmedContent = useMemo(() => content.trim(), [content]);
+  const contentText = useMemo(() => stripHtmlToText(content), [content]);
 
   const canSubmit = useMemo(
-    () => trimmedTitle.length > 0 && trimmedContent.length > 0,
-    [trimmedTitle, trimmedContent],
+    () => trimmedTitle.length > 0 && contentText.length > 0,
+    [trimmedTitle, contentText],
   );
 
   const submit = useCallback(() => {
     if (!canSubmit) return;
-    onSave({ title: trimmedTitle, content: trimmedContent });
-  }, [canSubmit, onSave, trimmedTitle, trimmedContent]);
+    onSave({ title: trimmedTitle, content });
+  }, [canSubmit, onSave, trimmedTitle, content]);
 
-  return { title, setTitle, content, setContent, canSubmit, submit };
+  return { canSubmit, submit };
 };

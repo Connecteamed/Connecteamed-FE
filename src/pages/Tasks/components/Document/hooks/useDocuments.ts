@@ -12,19 +12,30 @@ import {
   patchTextDocument,
   uploadDocumentFile,
 } from '../apis/document';
+import type { DocumentDetailRes } from '../apis/document';
 import type { DocumentItem } from '../types/document';
 import { formatDotDate, toDisplayExt } from '../types/document';
+
+type RawDocument = {
+  documentId: number;
+  title: string;
+  type: ServerDocumentType;
+  uploaderName: string;
+  uploadDate: string;
+  canEdit: boolean;
+  downloadUrl?: string | null;
+};
 
 const qk = {
   list: (projectId: number) => ['documents', projectId] as const,
   detail: (documentId: number) => ['document', documentId] as const,
 };
 
-const toItem = (x: any): DocumentItem => ({
+const toItem = (x: RawDocument): DocumentItem => ({
   id: x.documentId,
   name: x.title,
-  type: x.type as ServerDocumentType,
-  ext: toDisplayExt(x.type as ServerDocumentType),
+  type: x.type,
+  ext: toDisplayExt(x.type),
   uploader: x.uploaderName,
   uploadedAt: formatDotDate(x.uploadDate),
   canEdit: Boolean(x.canEdit),
@@ -70,7 +81,7 @@ export const useDocuments = (projectId: number | undefined) => {
     mutationFn: async (args: { documentId: number; title: string; content: string }) =>
       patchTextDocument(args.documentId, { title: args.title, content: args.content }),
     onSuccess: (_data, vars) => {
-      qc.setQueryData(qk.detail(vars.documentId), (prev: any) =>
+      qc.setQueryData<DocumentDetailRes | undefined>(qk.detail(vars.documentId), (prev) =>
         prev ? { ...prev, title: vars.title, content: vars.content } : prev,
       );
       if (projectId) qc.invalidateQueries({ queryKey: qk.list(projectId) });
@@ -85,9 +96,10 @@ export const useDocuments = (projectId: number | undefined) => {
   });
 
   const getDetail = async (documentId: number) => {
-    const cached = qc.getQueryData(qk.detail(documentId)) as any | undefined;
+    const cached = qc.getQueryData<DocumentDetailRes>(qk.detail(documentId));
     if (cached) return cached;
-    const detail = await qc.fetchQuery({
+
+    const detail = await qc.fetchQuery<DocumentDetailRes>({
       queryKey: qk.detail(documentId),
       queryFn: () => getDocumentDetail(documentId),
     });
@@ -102,7 +114,6 @@ export const useDocuments = (projectId: number | undefined) => {
     };
     const serverType = typeMap[uiType];
 
-    // 여러 개 업로드 지원
     for (const file of files) {
       await uploadMutation.mutateAsync({ file, type: serverType });
     }
@@ -121,6 +132,8 @@ export const useDocuments = (projectId: number | undefined) => {
   };
 
   const download = async (doc: DocumentItem) => {
+    // 텍스트 문서는 다운로드 기능을 사용하지 않음
+    if (doc.type === 'TEXT') return;
     const blob = await downloadDocumentBlob(doc.id);
     const url = URL.createObjectURL(blob);
 
@@ -128,16 +141,20 @@ export const useDocuments = (projectId: number | undefined) => {
       const a = document.createElement('a');
       a.href = url;
 
-      const ext =
-        doc.type === 'TEXT'
-          ? 'txt'
-          : doc.type === 'PDF'
-            ? 'pdf'
-            : doc.type === 'DOCX'
-              ? 'docx'
-              : 'file';
+      const ext = doc.type === 'PDF' ? 'pdf' : doc.type === 'DOCX' ? 'docx' : undefined;
 
-      a.download = `${doc.name}.${ext}`;
+      const rawName = doc.name ?? 'document';
+      const nameWithoutTrailingFile = rawName.replace(/\.file$/i, '');
+      const hasExt = /\.[a-z0-9]{1,8}$/i.test(nameWithoutTrailingFile);
+
+      let filename = nameWithoutTrailingFile;
+
+      if (ext && !hasExt) {
+        filename = `${nameWithoutTrailingFile}.${ext}`;
+      }
+
+      a.download = filename;
+
       document.body.appendChild(a);
       a.click();
       a.remove();
