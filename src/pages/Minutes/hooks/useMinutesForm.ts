@@ -75,6 +75,13 @@ export const useMinutesForm = ({
 
   const handleAddAgenda = () => setAgendas((prev) => [...prev, { title: '', content: '' }]);
 
+  const handleDeleteAgenda = (index: number) => {
+    setAgendas((prev) => {
+      if (prev.length <= 1) return prev;
+      return prev.filter((_, i) => i !== index);
+    });
+  };
+
   const handleAgendaChange = (index: number, field: keyof AgendaFormItem, value: string) => {
     setAgendas((prev) => prev.map((a, i) => (i === index ? { ...a, [field]: value } : a)));
   };
@@ -174,6 +181,22 @@ export const useMinutesForm = ({
     }
   };
 
+  const isLastAgendaFilled = useMemo(() => {
+    if (agendas.length === 0) return true;
+    const lastAgenda = agendas[agendas.length - 1];
+    return lastAgenda.title.trim() !== '' && lastAgenda.content.trim() !== '';
+  }, [agendas]);
+
+  const canSave = useMemo(() => {
+    return (
+      title.trim() !== '' &&
+      dateStr !== '' &&
+      selectedAttendeeIds.length > 0 &&
+      agendas.length > 0 &&
+      agendas.every((a) => a.title.trim() !== '' && a.content.trim() !== '')
+    );
+  }, [title, dateStr, selectedAttendeeIds, agendas]);
+
   return {
     // state
     title,
@@ -186,6 +209,8 @@ export const useMinutesForm = ({
     agendas,
     isSaving,
     errorMessage,
+    isLastAgendaFilled,
+    canSave,
 
     setTitle,
     setSelectedAttendeeIds,
@@ -197,6 +222,7 @@ export const useMinutesForm = ({
     setErrorMessage,
 
     handleAddAgenda,
+    handleDeleteAgenda,
     handleAgendaChange,
     handleDateSelect,
     handleSave,

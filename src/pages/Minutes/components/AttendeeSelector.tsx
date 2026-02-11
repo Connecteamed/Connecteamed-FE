@@ -58,7 +58,9 @@ const AttendeeSelector = ({
 
       <div
         onClick={() => setIsAttendeeListOpen((prev) => !prev)}
-        className="flex min-h-12 w-full flex-wrap items-center gap-2 rounded-xl bg-white px-3.5 py-1.5 text-lg font-medium outline-1 -outline-offset-1 outline-gray-300"
+        className={`flex min-h-12 w-full flex-wrap items-center gap-2 rounded-xl bg-white px-3.5 py-1.5 text-lg font-medium outline-1 -outline-offset-1 transition-all cursor-pointer ${
+          isAttendeeListOpen ? 'outline-orange-500' : 'outline-gray-300'
+        }`}
       >
         {selectedMembers.length === 0 ? (
           <span className="text-neutral-60">참석자를 선택하세요</span>

@@ -45,7 +45,10 @@ const TaskPage = () => {
 
   console.log(Number.isFinite(parsedProjectId));
 
-  const [selectedTask, setSelectedTask] = useState<string | null>('1');
+  const location = useLocation();
+  const [selectedTask, setSelectedTask] = useState<string | null>(
+    (location.state as { selectedTask?: string })?.selectedTask ?? '1',
+  );
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
   const [roleModalPos, setRoleModalPos] = useState<{ top: number; left: number } | null>(null);
   const [activeMemberIndex, setActiveMemberIndex] = useState<number | null>(null);
@@ -84,7 +87,6 @@ const TaskPage = () => {
     setMembers(normalized);
   }, [memberList]);
   const [settingDropdownIsOpen, setSettingDropdownIsOpen] = useState(false);
-  const location = useLocation();
   const [inviteModalIsOpen, setInviteModalIsOpen] = useState<boolean>(false);
   const [notificationModalIsOpen, setNotificationModalIsOpen] = useState<boolean>(false);
 

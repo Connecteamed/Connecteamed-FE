@@ -22,7 +22,7 @@ const MeetingList = ({ meetings, onCreate, onOpen, onDelete }: MeetingListProps)
         {/* 리스트 */}
         <div className="divide-neutral-30 divide-y">
           {meetings.map((meeting) => (
-            <div key={meeting.id} className="flex items-center px-4 py-3">
+            <div key={meeting.id} className="flex h-15 items-center px-4 py-3">
               <button
                 type="button"
                 className="text-neutral-90 flex h-14 flex-1 items-center truncate text-left font-medium"
