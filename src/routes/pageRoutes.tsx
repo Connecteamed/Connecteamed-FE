@@ -72,6 +72,22 @@ export const publicRoutes: RouteObject[] = [
         ),
       },
       {
+        path: 'team/:teamId/task/new',
+        element: (
+          <Suspense fallback={null}>
+            <lazyRoutes.MobileAddTask />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'team/:teamId/task/:taskId',
+        element: (
+          <Suspense fallback={null}>
+            <lazyRoutes.TaskDetail />
+          </Suspense>
+        ),
+      },
+      {
         path: 'team/:teamId/minutes',
         element: (
           <Suspense fallback={null}>
