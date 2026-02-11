@@ -1,10 +1,12 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 
 type SavePayload = { title: string; content: string };
 
 type Options = {
-  initialTitle?: string;
-  initialContent?: string;
+  title: string;
+  setTitle: (v: string) => void;
+  content: string;
+  setContent: (v: string) => void;
   onSave: (payload: SavePayload) => void;
 };
 
@@ -18,13 +20,7 @@ function stripHtmlToText(html: string) {
     .trim();
 }
 
-export const useTextEditorForm = ({ initialTitle = '', initialContent = '', onSave }: Options) => {
-  const [title, setTitle] = useState(initialTitle);
-  const [content, setContent] = useState(initialContent);
-
-  useEffect(() => setTitle(initialTitle), [initialTitle]);
-  useEffect(() => setContent(initialContent), [initialContent]);
-
+export const useTextEditorForm = ({ title, content, onSave }: Options) => {
   const trimmedTitle = useMemo(() => title.trim(), [title]);
   const contentText = useMemo(() => stripHtmlToText(content), [content]);
 
@@ -35,8 +31,8 @@ export const useTextEditorForm = ({ initialTitle = '', initialContent = '', onSa
 
   const submit = useCallback(() => {
     if (!canSubmit) return;
-    onSave({ title: trimmedTitle, content }); // content는 HTML 그대로 저장(서식 유지)
+    onSave({ title: trimmedTitle, content });
   }, [canSubmit, onSave, trimmedTitle, content]);
 
-  return { title, setTitle, content, setContent, canSubmit, submit };
+  return { canSubmit, submit };
 };

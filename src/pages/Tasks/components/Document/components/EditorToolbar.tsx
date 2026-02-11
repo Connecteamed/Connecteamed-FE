@@ -102,7 +102,6 @@ const EditorToolbar = ({ editor }: Props) => {
       return;
     }
 
-    // 선택이 없으면 링크 적용이 애매하니 UX상 막아도 되는데, 일단 입력 받게 처리
     const url = window.prompt('링크 URL을 입력하세요', prevUrl ?? 'https://');
     if (!url) return;
 
