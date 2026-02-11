@@ -1,13 +1,14 @@
 import { useMemo, useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
 
+import { QUERY_KEY } from '@/constants/key';
 import type { CompleteTask } from '@/types/TaskManagement/taskComplete';
+import { useQueryClient } from '@tanstack/react-query';
 
 import DeleteModal from '@/components/DeleteModal';
 
+import { useDeleteRetrospective } from '@/hooks/TaskPage/Mutate/useDeleteRetrospective';
 import useGetCompletedTasks from '@/hooks/TaskPage/Query/useGetCompletedTasks';
 import { useGetRetrospectives } from '@/hooks/TaskPage/Query/useGetRetrospectives';
-import { QUERY_KEY } from '@/constants/key';
 
 import CreateReviewModal from './CreateReviewModal';
 import EmptyAIReview from './EmptyAIReview';
@@ -29,6 +30,8 @@ const AIReview = ({ projectId }: { projectId: number }) => {
     isLoading: isLoadingReviews,
     isError: isErrorReviews,
   } = useGetRetrospectives(projectId);
+
+  const { mutate: deleteRetro } = useDeleteRetrospective({ projectId });
 
   const [showMyTasksOnly, setShowMyTasksOnly] = useState(false);
   const [excludedTaskIds, setExcludedTaskIds] = useState<number[]>([]);
@@ -65,7 +68,25 @@ const AIReview = ({ projectId }: { projectId: number }) => {
 
   const handleConfirmDelete = () => {
     if (deleteTargetId === null) return;
-    setDeleteTargetId(null);
+
+    deleteRetro(deleteTargetId, {
+      onSuccess: () => {
+        setDeleteTargetId(null);
+      },
+      onError: (error) => {
+        const status =
+          (error as { response?: { status?: number } }).response?.status ??
+          (error as { status?: number }).status;
+
+        // 서버에서 권한 에러(403 등)를 보낼 때의 처리
+        if (status === 403) {
+          alert('본인이 작성한 회고만 지울 수 있습니다.');
+        } else {
+          alert('삭제에 실패했습니다. 본인이 작성한 회고인지 확인해주세요.');
+        }
+        setDeleteTargetId(null);
+      },
+    });
   };
 
   const formatDate = (dateStr: string) => {
@@ -167,12 +188,11 @@ const AIReview = ({ projectId }: { projectId: number }) => {
               disabled={isLoadingTasks || isLoadingReviews || selectedTasksForAI.length === 0}
               className="h-12 w-96 rounded-md bg-orange-500 text-white disabled:bg-neutral-400"
             >
-              {isLoadingTasks || isLoadingReviews 
-                ? '로딩 중...' 
-                : selectedTasksForAI.length === 0 
-                  ? '회고할 업무를 선택해주세요' 
-                  : 'AI로 프로젝트 회고하기'
-              }
+              {isLoadingTasks || isLoadingReviews
+                ? '로딩 중...'
+                : selectedTasksForAI.length === 0
+                  ? '회고할 업무를 선택해주세요'
+                  : 'AI로 프로젝트 회고하기'}
             </button>
           </div>
         </>
@@ -201,8 +221,8 @@ const AIReview = ({ projectId }: { projectId: number }) => {
                 key={review.retrospectiveId}
                 className="border-neutral-30 flex h-15 items-center border-b px-5 py-3 text-xs last:border-b-0"
               >
-                <div 
-                  className="line-clamp-1 flex-1 font-medium cursor-pointer hover:text-orange-500"
+                <div
+                  className="line-clamp-1 flex-1 cursor-pointer font-medium hover:text-orange-500"
                   onClick={() => setSelectedReviewId(review.retrospectiveId)}
                 >
                   {review.title}

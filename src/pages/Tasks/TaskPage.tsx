@@ -10,7 +10,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { MouseEvent } from 'react';
 
-import { useLocation, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import DocumentPage from '@/pages/Tasks/components/Document/DocumentPage';
 import bell from '@assets/icon-bell-black.svg';
@@ -43,12 +43,23 @@ const TaskPage = () => {
   const { teamId: projectId } = useParams();
   const parsedProjectId = Number(projectId);
 
-  console.log(Number.isFinite(parsedProjectId));
+  // console.log(Number.isFinite(parsedProjectId));
 
+  const navigate = useNavigate();
   const location = useLocation();
-  const [selectedTask, setSelectedTask] = useState<string | null>(
-    (location.state as { selectedTask?: string })?.selectedTask ?? '1',
-  );
+
+  const initialSelectedTask = (() => {
+    const state = location.state as { selectedTask?: string } | null;
+    return state?.selectedTask ?? '1';
+  })();
+
+  const [selectedTask, setSelectedTask] = useState<string | null>(initialSelectedTask);
+
+  useEffect(() => {
+    if (location.state) {
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.pathname, location.state, navigate]);
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
   const [roleModalPos, setRoleModalPos] = useState<{ top: number; left: number } | null>(null);
   const [activeMemberIndex, setActiveMemberIndex] = useState<number | null>(null);
@@ -86,6 +97,7 @@ const TaskPage = () => {
     });
     setMembers(normalized);
   }, [memberList]);
+
   const [settingDropdownIsOpen, setSettingDropdownIsOpen] = useState(false);
   const [inviteModalIsOpen, setInviteModalIsOpen] = useState<boolean>(false);
   const [notificationModalIsOpen, setNotificationModalIsOpen] = useState<boolean>(false);

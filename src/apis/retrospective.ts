@@ -47,3 +47,10 @@ export const patchRetrospective = async (
   );
   return data;
 };
+
+export const deleteRetrospective = async (
+  projectId: number,
+  retrospectiveId: number,
+): Promise<void> => {
+  await instance.delete(`/projects/${projectId}/retrospectives/${retrospectiveId}`);
+};

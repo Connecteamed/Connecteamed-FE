@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react';
-import type { RetrospectiveDetailData } from '@/types/retrospective';
+import { useState } from 'react';
+
 import Modal from '@/components/Modal';
+
 import deleteIcon from '@/assets/icon-delete.svg';
-import { useGetRetrospectiveDetail } from '@/hooks/TaskPage/Query/useGetRetrospectiveDetail';
+
 import { usePatchRetrospective } from '@/hooks/TaskPage/Mutate/usePatchRetrospective';
+import { useGetRetrospectiveDetail } from '@/hooks/TaskPage/Query/useGetRetrospectiveDetail';
 
 interface ReviewDetailModalProps {
   isOpen: boolean;
@@ -28,16 +30,14 @@ const ReviewDetailModal = ({
     isError,
   } = useGetRetrospectiveDetail(projectId, retrospectiveId, isOpen);
 
-  const { mutate: patchRetro, isPending: isSaving } = usePatchRetrospective({
-    projectId,
-  });
+  const { mutate: patchRetro, isPending: isSaving } = usePatchRetrospective({ projectId });
 
-  useEffect(() => {
-    if (detail) {
-      setEditedTitle(detail.title);
-      setEditedResult(detail.projectResult);
-    }
-  }, [detail]);
+  const handleEditStart = () => {
+    if (!detail) return;
+    setEditedTitle(detail.title);
+    setEditedResult(detail.projectResult);
+    setIsEditing(true);
+  };
 
   const handleSave = () => {
     patchRetro(
@@ -69,7 +69,7 @@ const ReviewDetailModal = ({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-3xl leading-none font-bold">회고 상세 보기</h2>
+          <h2 className="text-3xl font-bold">회고 상세 보기</h2>
           <button onClick={onClose}>
             <img src={deleteIcon} alt="close" className="h-6 w-6" />
           </button>
@@ -83,15 +83,15 @@ const ReviewDetailModal = ({
           <>
             <div className="mb-6">
               <label className="mb-3 block text-lg font-medium">제목</label>
+
               {isEditing ? (
                 <input
-                  type="text"
                   value={editedTitle}
                   onChange={(e) => setEditedTitle(e.target.value)}
                   className="h-12 w-full bg-slate-100 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-orange-500"
                 />
               ) : (
-                <div className="h-12 w-full bg-slate-100 px-4 py-3 text-sm flex items-center">
+                <div className="flex h-12 w-full items-center bg-slate-100 px-4 py-3 text-sm">
                   {detail.title}
                 </div>
               )}
@@ -100,32 +100,31 @@ const ReviewDetailModal = ({
             <div className="mb-6">
               <div className="mb-3 flex items-center justify-between">
                 <label className="text-lg font-medium">회고 결과</label>
+
                 {!isEditing ? (
-                  <button
-                    onClick={() => setIsEditing(true)}
-                    className="text-primary-500 text-sm font-medium text-orange-500"
-                  >
+                  <button onClick={handleEditStart} className="text-sm font-medium text-orange-500">
                     수정하기
                   </button>
                 ) : (
                   <button
                     onClick={handleSave}
                     disabled={isSaving}
-                    className="text-primary-500 text-sm font-medium text-orange-500"
+                    className="text-sm font-medium text-orange-500"
                   >
                     {isSaving ? '저장 중...' : '저장하기'}
                   </button>
                 )}
               </div>
+
               {isEditing ? (
                 <textarea
                   value={editedResult}
                   onChange={(e) => setEditedResult(e.target.value)}
                   rows={10}
-                  className="w-full resize-none rounded-md bg-slate-100 px-4 py-3 text-sm font-normal outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full resize-none rounded-md bg-slate-100 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-orange-500"
                 />
               ) : (
-                <div className="flex min-h-30 max-h-80 overflow-y-auto w-full items-start rounded-md bg-slate-100 px-4 py-3 text-sm whitespace-pre-wrap text-left">
+                <div className="flex max-h-80 min-h-30 w-full items-start overflow-y-auto rounded-md bg-slate-100 px-4 py-3 text-left text-sm whitespace-pre-wrap">
                   {detail.projectResult}
                 </div>
               )}
