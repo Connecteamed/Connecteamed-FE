@@ -1,12 +1,14 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { useNavigate } from 'react-router-dom';
 
 import { patchMinute, postMinute } from '@/apis/minutes';
 import type { CreateMinuteRequest, UpdateMinuteRequest } from '@/types/minutes';
 
+import useGetProjectMemberList from '@/hooks/TaskPage/Query/useGetProjectMemberList';
+
 import type { AttendeeOption } from '../components/AttendeeSelector';
-import { type AgendaFormItem, formatDisplayDate } from './minutes.utils';
+import { type AgendaFormItem, formatDateForApi, formatDisplayDate } from './minutes.utils';
 
 type Params = {
   projectId: number;
@@ -23,6 +25,8 @@ export const useMinutesForm = ({
 }: Params) => {
   const navigate = useNavigate();
 
+  const { data: projectMembers } = useGetProjectMemberList(projectId);
+
   const [title, setTitle] = useState('');
   const [selectedAttendeeIds, setSelectedAttendeeIds] = useState<number[]>([]);
   const [detailAttendeeOptions, setDetailAttendeeOptions] = useState<AttendeeOption[]>([]);
@@ -33,14 +37,50 @@ export const useMinutesForm = ({
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
+  useEffect(() => {
+    if (!projectMembers || projectMembers.length === 0) return;
+
+    let needsUpdate = false;
+    const idMap = new Map<number, number>();
+
+    const newDetailOptions = detailAttendeeOptions.map((option) => {
+      const matched = projectMembers.find((pm) => pm.memberName === option.name);
+      // 이름이 같고 ID가 다른 경우 업데이트 필요
+      if (matched && matched.projectMemberId !== option.id) {
+        idMap.set(option.id, matched.projectMemberId);
+        needsUpdate = true;
+        return { ...option, id: matched.projectMemberId };
+      }
+      return option;
+    });
+
+    if (needsUpdate) {
+      setDetailAttendeeOptions(newDetailOptions);
+      setSelectedAttendeeIds((prev) => {
+        // 선택된 ID들도 새로운 ID로 매핑, 매핑 안 되면 그대로 유지
+        // 중복 선택 방지를 위해 Set 사용
+        const newIds = prev.map((id) => idMap.get(id) ?? id);
+        return Array.from(new Set(newIds));
+      });
+    }
+  }, [projectMembers, detailAttendeeOptions]);
+
   const memberOptions = useMemo(() => {
     const map = new Map<number, string>();
     memberOptionsFromState.forEach((item) => map.set(item.id, item.name));
     detailAttendeeOptions.forEach((item) => map.set(item.id, item.name));
+    projectMembers?.forEach((member) => map.set(member.projectMemberId, member.memberName));
     return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
-  }, [detailAttendeeOptions, memberOptionsFromState]);
+  }, [detailAttendeeOptions, memberOptionsFromState, projectMembers]);
 
   const handleAddAgenda = () => setAgendas((prev) => [...prev, { title: '', content: '' }]);
+
+  const handleDeleteAgenda = (index: number) => {
+    setAgendas((prev) => {
+      if (prev.length <= 1) return prev;
+      return prev.filter((_, i) => i !== index);
+    });
+  };
 
   const handleAgendaChange = (index: number, field: keyof AgendaFormItem, value: string) => {
     setAgendas((prev) => prev.map((a, i) => (i === index ? { ...a, [field]: value } : a)));
@@ -98,7 +138,7 @@ export const useMinutesForm = ({
       if (isEditMode) {
         const updatePayload: UpdateMinuteRequest = {
           title: title.trim(),
-          meetingDate: selectedDate.toISOString(),
+          meetingDate: formatDateForApi(selectedDate),
           attendeeIds: normalizedAttendeeIds,
           agendas: normalizedAgendas.map((a, index) => ({
             id: Number(a.id) > 0 ? Number(a.id) : 0,
@@ -117,7 +157,7 @@ export const useMinutesForm = ({
         const createPayload: CreateMinuteRequest = {
           projectId,
           title: title.trim(),
-          meetingDate: selectedDate.toISOString(),
+          meetingDate: formatDateForApi(selectedDate),
           attendeeMemberIds: normalizedAttendeeIds,
           agendas: normalizedAgendas.map((a, index) => ({
             title: a.title,
@@ -141,6 +181,22 @@ export const useMinutesForm = ({
     }
   };
 
+  const isLastAgendaFilled = useMemo(() => {
+    if (agendas.length === 0) return true;
+    const lastAgenda = agendas[agendas.length - 1];
+    return lastAgenda.title.trim() !== '' && lastAgenda.content.trim() !== '';
+  }, [agendas]);
+
+  const canSave = useMemo(() => {
+    return (
+      title.trim() !== '' &&
+      dateStr !== '' &&
+      selectedAttendeeIds.length > 0 &&
+      agendas.length > 0 &&
+      agendas.every((a) => a.title.trim() !== '' && a.content.trim() !== '')
+    );
+  }, [title, dateStr, selectedAttendeeIds, agendas]);
+
   return {
     // state
     title,
@@ -153,6 +209,8 @@ export const useMinutesForm = ({
     agendas,
     isSaving,
     errorMessage,
+    isLastAgendaFilled,
+    canSave,
 
     setTitle,
     setSelectedAttendeeIds,
@@ -164,6 +222,7 @@ export const useMinutesForm = ({
     setErrorMessage,
 
     handleAddAgenda,
+    handleDeleteAgenda,
     handleAgendaChange,
     handleDateSelect,
     handleSave,

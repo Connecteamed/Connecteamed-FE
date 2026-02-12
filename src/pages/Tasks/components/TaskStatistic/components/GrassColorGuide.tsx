@@ -4,10 +4,10 @@ export const GrassColorGuide = () => {
       <span className="mr-[2px]">적음</span>
       <div className="flex gap-1">
         <div className="bg-neutral-20 h-[14px] w-[14px] rounded-[3px]" title="level 0"></div>
-        <div className="bg-primary-100 h-[14px] w-[14px] rounded-[3px]" title="level 1"></div>
-        <div className="bg-primary-300 h-[14px] w-[14px] rounded-[3px]" title="level 2"></div>
-        <div className="bg-primary-500 h-[14px] w-[14px] rounded-[3px]" title="level 3"></div>
-        <div className="bg-primary-700 h-[14px] w-[14px] rounded-[3px]" title="level 4"></div>
+        <div className="bg-oorange-100 h-[14px] w-[14px] rounded-[3px]" title="level 1"></div>
+        <div className="bg-oorange-300 h-[14px] w-[14px] rounded-[3px]" title="level 2"></div>
+        <div className="bg-oorange-500 h-[14px] w-[14px] rounded-[3px]" title="level 3"></div>
+        <div className="bg-oorange-700 h-[14px] w-[14px] rounded-[3px]" title="level 4"></div>
       </div>
       <span className="ml-[2px]">많음</span>
     </div>

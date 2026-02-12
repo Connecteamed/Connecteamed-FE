@@ -15,6 +15,7 @@ function usePatchTaskStatus(projectId: number) {
     mutationFn: ({ taskId, status }: Params) => patchTaskStatus(taskId, { status }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY.taskList, projectId] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY.completeTaskList, projectId] });
     },
   });
 }

@@ -5,4 +5,7 @@ export const QUERY_KEY = {
   inviteCode: 'inviteCode',
   taskList: 'taskList',
   completeTaskList: 'completeTaskList',
+  retrospectiveList: 'retrospectiveList',
+  retrospectiveDetail: 'retrospectiveDetail',
+  myCompletedProjects: 'myCompletedProjects',
 };

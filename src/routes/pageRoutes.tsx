@@ -4,6 +4,7 @@ import { lazyRoutes } from './routes';
 // import HomeLayout from '@/layouts/HomeLayout';
 
 import SideBarLayout from '@/layouts/SideBarLayout';
+import SplashLayout from '@/layouts/SplashLayout';
 
 // 로그인, 회원가입 등 사이드바 없는 페이지
 export const authRoutes: RouteObject[] = [
@@ -37,7 +38,7 @@ export const authRoutes: RouteObject[] = [
 export const publicRoutes: RouteObject[] = [
   {
     path: '/',
-    element: <SideBarLayout />,
+    element: <SplashLayout />,
     children: [
       {
         index: true,
@@ -92,6 +93,14 @@ export const publicRoutes: RouteObject[] = [
         element: (
           <Suspense fallback={null}>
             <lazyRoutes.Minutes />
+          </Suspense>
+        ),
+      },
+      {
+        path: '*',
+        element: (
+          <Suspense fallback={null}>
+            <lazyRoutes.NotFoundPage />
           </Suspense>
         ),
       },

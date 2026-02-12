@@ -47,6 +47,7 @@ const DocumentPageContent = ({
         initialTitle={editingTitle}
         initialContent={editingContent}
         submitLabel={editingTextId ? '수정하기' : '저장하기'}
+        collabDocId={editingTextId}
         onSave={onSaveText}
       />
     );

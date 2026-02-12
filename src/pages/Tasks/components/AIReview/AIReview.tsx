@@ -1,130 +1,139 @@
 import { useMemo, useState } from 'react';
 
+import { getMyProjects } from '@/apis/mypage';
+import { QUERY_KEY } from '@/constants/key';
+import type { CompleteTask } from '@/types/TaskManagement/taskComplete';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+
 import DeleteModal from '@/components/DeleteModal';
+
+import { useDeleteRetrospective } from '@/hooks/TaskPage/Mutate/useDeleteRetrospective';
+import useGetCompletedTasks from '@/hooks/TaskPage/Query/useGetCompletedTasks';
+import { useGetRetrospectives } from '@/hooks/TaskPage/Query/useGetRetrospectives';
 
 import CreateReviewModal from './CreateReviewModal';
 import EmptyAIReview from './EmptyAIReview';
+import ReviewDetailModal from './ReviewDetailModal';
 
-interface CompletedTask {
-  id: number;
-  name: string;
-  content: string;
-  status: '완료' | '진행중' | '대기';
-  startDate: string;
-  dueDate: string;
-  assignees: string[];
-  included: boolean;
-}
+type TaskForReview = CompleteTask & { included: boolean };
 
-interface Review {
-  id: number;
-  title: string;
-  content: string;
-  achievements: string;
-  createdAt: string;
-}
+const AIReview = ({ projectId }: { projectId: number }) => {
+  const queryClient = useQueryClient();
 
-const INITIAL_TASKS: CompletedTask[] = [
-  {
-    id: 1,
-    name: '와이어프레임 제작',
-    content: 'UI 디자인을 위한 와이어프레임 제작 후 디자이너에게 연락',
-    status: '완료',
-    startDate: '2025.11.13',
-    dueDate: '2025.11.24',
-    assignees: ['팀원1'],
-    included: true,
-  },
-  {
-    id: 2,
-    name: 'API 명세서 작성',
-    content: '와이어프레임 보고 서비스에 기능별 API 제작 : 스웨거로 관리할 거고 REST API 형식...',
-    status: '완료',
-    startDate: '2025.11.13',
-    dueDate: '2025.11.30',
-    assignees: ['팀원1', '팀원2', '팀원3', '팀원4'],
-    included: true,
-  },
-  {
-    id: 3,
-    name: 'ERD 작성',
-    content: '데이터베이스 ERD 작성',
-    status: '완료',
-    startDate: '2025.11.13',
-    dueDate: '2025.11.30',
-    assignees: ['팀원1', '팀원2'],
-    included: false,
-  },
-];
+  const {
+    data: completedTasks,
+    isLoading: isLoadingTasks,
+    isError: isErrorTasks,
+  } = useGetCompletedTasks(projectId);
 
-const INITIAL_REVIEWS: Review[] = [
-  {
-    id: 1,
-    title: '회고임',
-    content: '예시 회고 내용입니다.',
-    achievements: '공모전 대상 수상, DAU 10,000달성',
-    createdAt: '2025.11.30',
-  },
-  {
-    id: 2,
-    title: '회고임',
-    content: '예시 회고 내용입니다.',
-    achievements: '공모전 대상 수상, DAU 10,000달성',
-    createdAt: '2025.11.30',
-  },
-];
-const AIReview = () => {
+  const {
+    data: reviews,
+    isLoading: isLoadingReviews,
+    isError: isErrorReviews,
+  } = useGetRetrospectives(projectId);
+
+  const { mutate: deleteRetro } = useDeleteRetrospective({ projectId });
+
   const [showMyTasksOnly, setShowMyTasksOnly] = useState(false);
-  const [tasks, setTasks] = useState<CompletedTask[]>(INITIAL_TASKS);
-  const [reviews, setReviews] = useState<Review[]>(INITIAL_REVIEWS);
-
+  const [excludedTaskIds, setExcludedTaskIds] = useState<number[]>([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+  const [selectedReviewId, setSelectedReviewId] = useState<number | null>(null);
+
+  const tasksForReview = useMemo<TaskForReview[]>(() => {
+    if (!completedTasks) return [];
+    return completedTasks.map((task) => ({
+      ...task,
+      included: !excludedTaskIds.includes(task.taskId),
+    }));
+  }, [completedTasks, excludedTaskIds]);
 
   const filteredTasks = useMemo(() => {
-    if (!showMyTasksOnly) return tasks;
-    return tasks.filter((t) => t.included);
-  }, [showMyTasksOnly, tasks]);
+    if (!showMyTasksOnly) return tasksForReview;
+    return tasksForReview.filter((t) => t.isMine);
+  }, [showMyTasksOnly, tasksForReview]);
+
+  const selectedTasksForAI = useMemo(() => {
+    return tasksForReview.filter((task) => task.included);
+  }, [tasksForReview]);
 
   const handleToggleTaskInclusion = (taskId: number) => {
-    setTasks((prev) =>
-      prev.map((task) => (task.id === taskId ? { ...task, included: !task.included } : task)),
+    setExcludedTaskIds((prev) =>
+      prev.includes(taskId) ? prev.filter((id) => id !== taskId) : [...prev, taskId],
     );
   };
 
-  const handleCreateFromModal = (title: string, achievements: string) => {
-    setIsGenerating(true);
-
-    const newReview: Review = {
-      id: Date.now(),
-      title,
-      content: 'AI가 생성한 회고 내용',
-      achievements,
-      createdAt: '',
-    };
-
-    setReviews((prev) => [...prev, newReview]);
-    setIsGenerating(false);
-    setIsCreateModalOpen(false);
+  const handleCreateSuccess = () => {
+    queryClient.invalidateQueries({ queryKey: [QUERY_KEY.retrospectiveList, projectId] });
   };
 
   const handleConfirmDelete = () => {
     if (deleteTargetId === null) return;
-    setReviews((prev) => prev.filter((r) => r.id !== deleteTargetId));
-    setDeleteTargetId(null);
+
+    deleteRetro(deleteTargetId, {
+      onSuccess: () => {
+        setDeleteTargetId(null);
+      },
+      onError: (error) => {
+        const status =
+          (error as { response?: { status?: number } }).response?.status ??
+          (error as { status?: number }).status;
+
+        // 서버에서 권한 에러(403 등)를 보낼 때의 처리
+        if (status === 403) {
+          alert('본인이 작성한 회고만 지울 수 있습니다.');
+        } else {
+          alert('삭제에 실패했습니다. 본인이 작성한 회고인지 확인해주세요.');
+        }
+        setDeleteTargetId(null);
+      },
+    });
   };
 
-  if (tasks.length === 0 && reviews.length === 0) {
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return '-';
+    return dateStr.split('T')[0].replace(/-/g, '.');
+  };
+
+  const handleCloseCreateModal = () => {
+    setIsCreateModalOpen(false);
+  };
+
+  const { data: myProjectsRes, isLoading: isLoadingProjects } = useQuery({
+    queryKey: [QUERY_KEY.myCompletedProjects],
+    queryFn: getMyProjects,
+  });
+
+  const isProjectCompleted = useMemo(() => {
+    const projects = myProjectsRes?.data?.projects ?? [];
+    return projects.some((p) => p.id === projectId);
+  }, [myProjectsRes, projectId]);
+
+  if (isLoadingTasks || isLoadingReviews || isLoadingProjects) {
+    return <div className="py-10 text-center">로딩 중...</div>;
+  }
+
+  if (isErrorTasks || isErrorReviews) {
+    return <div className="py-10 text-center text-red-500">에러가 발생했습니다.</div>;
+  }
+
+  if (!isProjectCompleted) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center px-4 text-center text-2xl font-medium">
+        AI 회고는 프로젝트 종료 후 가능해요
+      </div>
+    );
+  }
+
+  if (tasksForReview.length === 0 && (!reviews || reviews.length === 0)) {
     return <EmptyAIReview />;
   }
 
   return (
     <div className="w-full">
       {/* ================= 업무 영역 ================= */}
-      {tasks.length > 0 && (
+      {tasksForReview.length > 0 && (
         <>
-          {/* 내 업무만 보기 */}
           <div className="mb-4 flex justify-end">
             <label className="flex items-center gap-2 text-[10px] text-neutral-800">
               <input
@@ -137,70 +146,120 @@ const AIReview = () => {
             </label>
           </div>
 
-          {/* 업무 테이블 */}
           <div className="mb-10">
-            <div className="bg-neutral-10 border-neutral-30 flex h-12 items-center border px-5 text-sm font-medium">
-              <div className="w-28">업무명</div>
-              <div className="flex-1">업무내용</div>
-              <div className="w-15 text-center">상태</div>
-              <div className="w-28 text-center">시작일</div>
-              <div className="w-28 text-center">마감일</div>
-              <div className="w-25 text-center">담당자</div>
-              <div className="w-8" />
-            </div>
+            {/* 데스크톱 표 */}
+            <div className="hidden md:block">
+              <div className="bg-neutral-10 border-neutral-30 flex h-12 items-center border px-5 text-sm font-medium">
+                <div className="w-28">업무명</div>
+                <div className="flex-1">업무내용</div>
+                <div className="w-15 text-center">상태</div>
+                <div className="w-28 text-center">시작일</div>
+                <div className="w-28 text-center">마감일</div>
+                <div className="w-25 text-center">담당자</div>
+                <div className="w-8" />
+              </div>
 
-            <div className="border-neutral-30 border-x border-b">
-              {filteredTasks.map((task) => (
-                <div
-                  key={task.id}
-                  className={`border-neutral-30 flex items-center border-b px-5 py-3 text-xs last:border-b-0 ${
-                    task.included ? 'text-neutral-90' : 'text-neutral-60'
-                  }`}
-                >
-                  <div className="line-clamp-2 w-28 pr-4 text-xs leading-snug font-medium">
-                    {task.name}
-                  </div>
-                  <div className="flex-1 pr-4">{task.content}</div>
-
-                  <span
-                    className={`rounded-full px-3 py-1 text-xs font-medium ${
-                      task.included
-                        ? 'bg-primary-300 text-neutral-600'
-                        : 'bg-neutral-200 text-gray-400'
+              <div className="border-neutral-30 border-x border-b">
+                {filteredTasks.map((task) => (
+                  <div
+                    key={task.taskId}
+                    className={`border-neutral-30 flex h-15 items-center border-b px-5 py-3 text-xs last:border-b-0 ${
+                      task.included ? 'text-neutral-90' : 'text-neutral-60'
                     }`}
                   >
-                    {task.status}
-                  </span>
+                    <div className="line-clamp-2 w-28 pr-4 text-xs leading-snug font-medium">
+                      {task.title}
+                    </div>
+                    <div className="line-clamp-1 flex-1 pr-4">{task.contents}</div>
 
-                  <div className="w-28 text-center">{task.startDate}</div>
-                  <div className="w-28 text-center">{task.dueDate}</div>
-                  <div className="w-25 px-2 text-center text-xs leading-snug whitespace-normal">
-                    {task.assignees.join(', ')}
-                  </div>
-
-                  <div className="w-8 text-center">
-                    <button
-                      onClick={() => handleToggleTaskInclusion(task.id)}
-                      className={`text-xs font-medium ${
-                        task.included ? 'text-neutral-70' : 'text-neutral-60'
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-medium ${
+                        task.included
+                          ? 'bg-primary-300 text-neutral-90'
+                          : 'text-neutral-60 bg-primary-300'
                       }`}
+                    >
+                      {task.status === 'DONE' ? '완료' : task.status}
+                    </span>
+
+                    <div className="w-28 text-center">{formatDate(task.startDate)}</div>
+                    <div className="w-28 text-center">{formatDate(task.endDate)}</div>
+                    <div className="line-clamp-1 w-25 px-2 text-center text-xs leading-snug whitespace-normal">
+                      {task.assignees.map((a) => a.nickname).join(', ')}
+                    </div>
+
+                    <div className="w-8 text-center">
+                      <button
+                        onClick={() => handleToggleTaskInclusion(task.taskId)}
+                        className={`text-xs font-medium ${
+                          task.included ? 'text-neutral-70' : 'text-neutral-60'
+                        }`}
+                      >
+                        {task.included ? '제외' : '추가'}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 모바일 카드 목록 */}
+            <div className="mt-4 space-y-4 md:hidden">
+              {filteredTasks.map((task) => (
+                <div
+                  key={task.taskId}
+                  className={`border-neutral-40 rounded-2xl border bg-white px-5 py-4 ${
+                    task.included ? 'text-neutral-900' : 'text-neutral-400'
+                  }`}
+                >
+                  <div className="mb-2 flex items-start justify-between gap-4">
+                    <div className="min-w-0">
+                      <div className="line-clamp-2 text-base font-medium">{task.title}</div>
+                      <p className="mt-1 line-clamp-2 text-[10px] font-normal">{task.contents}</p>
+                    </div>
+                    <button
+                      onClick={() => handleToggleTaskInclusion(task.taskId)}
+                      className="text-neutral-70 shrink-0 text-xs font-medium"
                     >
                       {task.included ? '제외' : '추가'}
                     </button>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-3 text-xs">
+                    <span
+                      className={`rounded-full px-3 py-1 font-medium ${
+                        task.included
+                          ? 'bg-primary-300 text-neutral-90'
+                          : 'text-neutral-60 bg-primary-300'
+                      }`}
+                    >
+                      {task.status === 'DONE' ? '완료' : task.status}
+                    </span>
+                    <span className={task.included ? 'text-neutral-700' : 'text-neutral-400'}>
+                      {task.assignees.map((a) => a.nickname).join(', ')}
+                    </span>
+                    <span
+                      className={`ml-auto ${task.included ? 'text-neutral-700' : 'text-neutral-400'}`}
+                    >
+                      {formatDate(task.endDate)}
+                    </span>
                   </div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* AI 회고 생성 버튼 */}
           <div className="mb-12 flex justify-center">
             <button
               onClick={() => setIsCreateModalOpen(true)}
-              disabled={isGenerating}
-              className="h-12 w-96 rounded-md bg-orange-500 text-white"
+              disabled={isLoadingTasks || isLoadingReviews || selectedTasksForAI.length === 0}
+              className="bg-primary-500 h-12 w-full max-w-105 rounded-md text-white disabled:bg-neutral-400"
             >
-              AI로 프로젝트 회고하기
+              {isLoadingTasks || isLoadingReviews
+                ? '로딩 중...'
+                : selectedTasksForAI.length === 0
+                  ? '회고할 업무를 선택해주세요'
+                  : 'AI로 프로젝트 회고하기'}
             </button>
           </div>
         </>
@@ -208,37 +267,72 @@ const AIReview = () => {
 
       {/* ================= 회고 영역 ================= */}
       <div className="text-secondary-900 mb-4 text-2xl font-medium">회고 목록</div>
-      {reviews.length === 0 ? (
+      {!reviews || reviews.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-6">
-          <div className="mb-3 text-2xl font-medium text-black">저장된 회고가 없어요</div>
-          <div className="text-sm font-normal text-black">
+          <div className="mb-3 text-2xl font-medium">저장된 회고가 없어요</div>
+          <div className="text-sm font-normal">
             프로젝트를 완료한 뒤 회고를 작성하면 이곳에서 모아볼 수 있어요
           </div>
         </div>
       ) : (
         <div className="mb-10">
-          {/* 회고 테이블 헤더 */}
-          <div className="bg-neutral-10 border-neutral-30 flex h-12 items-center border px-5 text-sm font-medium">
-            <div className="flex-1">제목</div>
-            <div className="w-40 text-center">만든 날짜</div>
-            <div className="w-16" />
+          {/* Desktop 리스트 */}
+          <div className="hidden md:block">
+            <div className="bg-neutral-10 border-neutral-30 flex h-12 items-center border px-5 text-sm font-medium">
+              <div className="flex-1">제목</div>
+              <div className="w-40 text-center">만든 날짜</div>
+              <div className="w-16" />
+            </div>
+
+            <div className="border-neutral-30 border-x border-b">
+              {reviews.map((review) => (
+                <div
+                  key={review.retrospectiveId}
+                  className="border-neutral-30 flex h-15 items-center border-b px-5 py-3 text-xs last:border-b-0"
+                >
+                  <div
+                    className="line-clamp-1 flex-1 cursor-pointer font-medium hover:text-orange-500"
+                    onClick={() => setSelectedReviewId(review.retrospectiveId)}
+                  >
+                    {review.title}
+                  </div>
+                  <div className="w-40 text-center">{formatDate(review.createdAt) || '-'}</div>
+                  <div className="w-16 text-center">
+                    <button
+                      onClick={() => setDeleteTargetId(review.retrospectiveId)}
+                      className="text-neutral-70 text-xs"
+                    >
+                      삭제
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
-          {/* 회고 테이블 바디 */}
-          <div className="border-neutral-30 border-x border-b">
+          {/* Mobile 카드 리스트 */}
+          <div className="space-y-3 md:hidden">
             {reviews.map((review) => (
               <div
-                key={review.id}
-                className="border-neutral-30 flex items-center border-b px-5 py-3 text-xs last:border-b-0"
+                key={review.retrospectiveId}
+                className="border-neutral-40 rounded-xl border bg-white px-4 py-3"
               >
-                <div className="line-clamp-1 flex-1 font-medium">{review.title}</div>
+                <div className="flex items-start gap-3">
+                  <div className="flex flex-1 flex-col">
+                    <div
+                      className="line-clamp-1 cursor-pointer text-base font-medium text-neutral-900 hover:text-orange-500"
+                      onClick={() => setSelectedReviewId(review.retrospectiveId)}
+                    >
+                      {review.title}
+                    </div>
+                    <span className="text-neutral-90 mt-1 text-[8px] font-normal">
+                      {formatDate(review.createdAt) || '-'}
+                    </span>
+                  </div>
 
-                <div className="w-40 text-center">{review.createdAt || '-'}</div>
-
-                <div className="w-16 text-center">
                   <button
-                    onClick={() => setDeleteTargetId(review.id)}
-                    className="text-neutral-70 text-xs"
+                    onClick={() => setDeleteTargetId(review.retrospectiveId)}
+                    className="text-xs font-medium text-neutral-500 hover:text-neutral-700"
                   >
                     삭제
                   </button>
@@ -249,7 +343,6 @@ const AIReview = () => {
         </div>
       )}
 
-      {/* 모달 */}
       <DeleteModal
         isOpen={deleteTargetId !== null}
         onClose={() => setDeleteTargetId(null)}
@@ -261,8 +354,19 @@ const AIReview = () => {
       {isCreateModalOpen && (
         <CreateReviewModal
           isOpen
-          onClose={() => setIsCreateModalOpen(false)}
-          onCreate={handleCreateFromModal}
+          onClose={handleCloseCreateModal}
+          onCreate={handleCreateSuccess}
+          selectedTasks={selectedTasksForAI}
+          projectId={projectId}
+        />
+      )}
+
+      {selectedReviewId !== null && (
+        <ReviewDetailModal
+          isOpen={selectedReviewId !== null}
+          onClose={() => setSelectedReviewId(null)}
+          projectId={projectId}
+          retrospectiveId={selectedReviewId}
         />
       )}
     </div>
