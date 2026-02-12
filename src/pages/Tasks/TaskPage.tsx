@@ -52,6 +52,7 @@ const TaskPage = () => {
     }
   }, [location.pathname, location.state, navigate]);
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
+  const [fixProjectModalOpen, setFixProjectModalOpen] = useState(false);
   const [roleModalPos, setRoleModalPos] = useState<{ top: number; left: number } | null>(null);
   const [activeMemberIndex, setActiveMemberIndex] = useState<number | null>(null);
   const [isMobileRoleSheetOpen, setIsMobileRoleSheetOpen] = useState(false);
@@ -113,6 +114,7 @@ const TaskPage = () => {
     try {
       const result = await closeProject(projectId);
       console.log('프로젝트 종료 성공:', result);
+      navigate('/')
       // 성공 처리: 페이지 이동, 알림 등
     } catch (error) {
       console.error('프로젝트 종료 에러:', error);
@@ -270,7 +272,12 @@ const TaskPage = () => {
                     >
                       프로젝트 종료
                     </div>
-                    <div className="flex h-7.5 w-full cursor-pointer items-center justify-center rounded-[20px] bg-zinc-200 px-[15px] py-1.5 text-neutral-600">
+                    <div className="flex h-7.5 w-full cursor-pointer items-center justify-center rounded-[20px] bg-zinc-200 px-[15px] py-1.5 text-neutral-600"
+                      onClick={() => { {
+                        setSettingDropdownIsOpen(false);
+                        setFixProjectModalOpen(true);
+                      }}}
+                    >
                       프로젝트 수정
                     </div>
                   </div>
@@ -473,6 +480,12 @@ const TaskPage = () => {
                 </div>
               </div>
             </div>
+          </Modal>
+        )}
+        {fixProjectModalOpen && (
+          <Modal isOpen={fixProjectModalOpen} onClose={() => setFixProjectModalOpen(false)}>
+            {/* <FixProjectModal/> */}
+            <div></div>
           </Modal>
         )}
       </div>

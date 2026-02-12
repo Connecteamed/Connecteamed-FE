@@ -191,9 +191,7 @@ const TaskManagement = ({ projectId }: Props) => {
     if (!showMyTasksOnly) return taskList;
     if (currentMemberId === null) return [];
 
-    return taskList.filter((task) =>
-      task.assigneeIds?.includes(currentMemberId) ?? false
-    );
+    return taskList.filter((task) => task.assigneeIds?.includes(currentMemberId) ?? false);
   }, [taskList, showMyTasksOnly, currentMemberId]);
 
   const showToast = (message: string) => {
@@ -334,25 +332,27 @@ const TaskManagement = ({ projectId }: Props) => {
   useEffect(() => {
     if (!taskListData) return;
 
-    const mapped: TaskRow[] = taskListData.map((task) => ({
-      id: task.taskId ?? crypto.randomUUID(),
-      title: task.name ?? '제목 없음',
-      description: task.content ?? '',
-      status: statusLabelByApi[task.status] ?? '시작 전',
-      startDate: normalizeDateInput(task.startDate),
-      endDate: normalizeDateInput(task.dueDate),
-      assignees: Array.isArray(task.assignees)
-        ? task.assignees
-            .map((a) => a.memberName)
-            .filter(Boolean)
-            .join(', ')
-        : '',
-      assigneeIds: Array.isArray(task.assignees)
-        ? task.assignees
-            .map((a) => a.projectMemberId)
-            .filter((id: number) => typeof id === 'number' && Number.isFinite(id))
-        : [],
-    }));
+    const mapped: TaskRow[] = taskListData
+      .filter((task) => statusLabelByApi[task.status] !== '완료') // 이 줄 추가!
+      .map((task) => ({
+        id: task.taskId ?? crypto.randomUUID(),
+        title: task.name ?? '제목 없음',
+        description: task.content ?? '',
+        status: statusLabelByApi[task.status] ?? '시작 전',
+        startDate: normalizeDateInput(task.startDate),
+        endDate: normalizeDateInput(task.dueDate),
+        assignees: Array.isArray(task.assignees)
+          ? task.assignees
+              .map((a) => a.memberName)
+              .filter(Boolean)
+              .join(', ')
+          : '',
+        assigneeIds: Array.isArray(task.assignees)
+          ? task.assignees
+              .map((a) => a.projectMemberId)
+              .filter((id: number) => typeof id === 'number' && Number.isFinite(id))
+          : [],
+      }));
 
     setTaskList(mapped);
   }, [taskListData]);
@@ -429,11 +429,10 @@ const TaskManagement = ({ projectId }: Props) => {
   };
 
   console.log(myTasks);
-  
 
   if (!hasVisibleTasks) {
     return (
-      <div className="pb-gap-4 flex w-full flex-col items-center justify-center max-[767px]:min-h-screen max-[767px]:py-10">
+      <div className="pb-gap-4 flex w-full flex-col items-center justify-center gap-4 py-25 max-[767px]:min-h-screen max-[767px]:py-10">
         <div className="inline-flex w-48 flex-col items-center justify-start gap-4 max-[767px]:hidden">
           <div className="inline-flex h-48 items-center justify-center gap-2.5 self-stretch rounded-[100px] bg-orange-100 p-8">
             <div className="relative h-32 w-32 overflow-hidden">
@@ -441,10 +440,10 @@ const TaskManagement = ({ projectId }: Props) => {
             </div>
           </div>
           <div className="flex w-80 flex-col items-center justify-start gap-3">
-            <div className="h-7 justify-center self-stretch text-center text-2xl font-medium text-black">
+            <div className="h-[28px] justify-center self-stretch text-center text-2xl font-medium text-black">
               아직 등록된 업무가 없어요
             </div>
-            <div className="h-10 justify-center self-stretch text-center text-sm font-normal text-black">
+            <div className="h-[40px] items-center justify-center self-stretch text-center font-normal text-black">
               업무를 추가해 팀원들과 작업을 시작해 보세요
             </div>
           </div>
@@ -487,9 +486,7 @@ const TaskManagement = ({ projectId }: Props) => {
         </div>
         {setAddTaskModalIsOpen && (
           <Modal isOpen={addTaskModalIsOpen} onClose={() => setAddTaskModalIsOpen(false)}>
-            <AddTaskModal
-              projectId={numericProjectId}
-              />
+            <AddTaskModal projectId={numericProjectId} />
           </Modal>
         )}
       </div>
@@ -518,7 +515,7 @@ const TaskManagement = ({ projectId }: Props) => {
       </div>
 
       <div className="flex h-12 flex-col justify-center self-stretch bg-slate-100 p-3.5 outline-gray-200 max-[767px]:hidden">
-        <div className="inline-flex items-center gap-0 w-full">
+        <div className="inline-flex w-full items-center gap-0">
           <div className="flex items-center gap-0">
             <div className="h-5 w-40 text-sm text-black">업무명</div>
             <div className="hidden h-5 w-64 text-sm text-black min-[1440px]:block">업무내용</div>
@@ -652,7 +649,7 @@ const TaskManagement = ({ projectId }: Props) => {
                   {task.title}
                 </div>
                 <div
-                  className="hidden w-64 text-xs leading-5 text-neutral-600 min-[1440px]:block max-[767px]:block max-[767px]:w-full max-[767px]:text-sm"
+                  className="hidden w-64 text-xs leading-5 text-neutral-600 max-[767px]:block max-[767px]:w-full max-[767px]:text-sm min-[1440px]:block"
                   style={{
                     WebkitLineClamp: 2,
                     WebkitBoxOrient: 'vertical',
