@@ -37,9 +37,10 @@ const DocumentAddDropdown = ({
   const rootClass = containerClassName ?? 'flex justify-end self-stretch';
 
   const baseTriggerClass =
-    'w-24 h-8 inline-flex items-center justify-center gap-2.5 rounded-[10px] px-2 py-[5px]';
-  const triggerBgClass = isOpen ? 'bg-gray-400' : 'bg-orange-500';
-  const baseLabelClass = "text-center font-medium text-white font-['Roboto']";
+    'h-8 min-w-[96px] inline-flex items-center justify-center gap-2.5 rounded-[10px] px-3';
+  const triggerBgClass = isOpen ? 'bg-gray-400' : 'bg-primary-500';
+  const baseLabelClass =
+    "text-center text-sm font-medium text-white whitespace-nowrap font-['Roboto']";
 
   const calcPos = useCallback(() => {
     const el = triggerRef.current;

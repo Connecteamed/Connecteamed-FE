@@ -26,51 +26,97 @@ export const TeamGraph = ({ projectId }: Props) => {
   };
 
   return (
-    // <div className="bg-neutral-0 hidden w-full max-w-[980px] min-w-[700px] rounded-[20px] px-[30px] pt-[16px] pb-[26px] shadow-[0_4px_4px_rgba(0,0,0,0.25)] min-[540px]:block">
-    <div className="bg-neutral-0 border-neutral-30 hidden w-full max-w-[980px] min-w-[700px] rounded-[20px] border px-[30px] pt-[16px] pb-[26px] min-[540px]:block">
-      <h2 className="text-neutral-90 mb-[16px] text-[18px] font-medium">팀 전체 업무 통계</h2>
+    <div className="w-full">
+      {/* 데스크톱 그래프 */}
+      <div className="hidden w-full overflow-x-auto pb-4 md:block">
+        <div className="bg-neutral-0 border-neutral-30 mx-auto min-w-[1000px] max-w-none rounded-[20px] border px-[40px] pt-[20px] pb-[30px]">
+          <h2 className="text-neutral-90 mb-[16px] text-[18px] font-medium">팀 전체 업무 통계</h2>
 
-      <div className="flex">
-        <div className="border-neutral-60 relative h-[150px] flex-1 border-x">
-          {/* 격자 라인 배경 */}
-          <div className="pointer-events-none absolute inset-0 flex flex-col justify-between">
-            <div className="border-neutral-60 w-full border-t"></div>
-            <div className="border-neutral-60 w-full border-t"></div>
-            <div className="border-neutral-60 w-full border-t"></div>
+          <div className="flex">
+            <div className="border-neutral-60 relative h-[150px] flex-1 border-x">
+              {/* 격자 라인 배경 */}
+              <div className="pointer-events-none absolute inset-0 flex flex-col justify-between">
+                <div className="border-neutral-60 w-full border-t"></div>
+                <div className="border-neutral-60 w-full border-t"></div>
+                <div className="border-neutral-60 w-full border-t"></div>
+              </div>
+
+              {/*막대 그래프 */}
+              <div className="relative flex h-full items-end justify-between gap-[5px]">
+                {contributionsData?.map((item) => {
+                  const heightPercent = Math.min((item.count / MAX_Y) * 100, 100);
+                  return (
+                    <div key={item.date} className="group flex h-full w-full flex-col items-center">
+                      <div
+                        className={`mt-auto w-full rounded-t-[8px] ${getBarColor(item.count)}`}
+                        style={{ height: `${heightPercent}%` }}
+                      ></div>
+
+                      <span className="text-neutral-90 absolute -bottom-[26px] text-[16px] whitespace-nowrap">
+                        {formatXAxisLabel(item.date)}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Y축 라벨 */}
+            <div className="text-neutral-90 relative ml-[8px] flex h-[147px] flex-col items-start justify-between text-[16px] font-medium">
+              <span>10</span>
+              <span>5</span>
+              <span>0</span>
+              <div className="text-neutral-90 absolute mt-[75px] rotate-90 text-[14px] whitespace-nowrap">
+                완료한 업무
+              </div>
+            </div>
           </div>
 
-          {/*막대 그래프 */}
-          <div className="relative flex h-full items-end justify-between gap-[5px]">
-            {contributionsData?.map((item) => {
-              const heightPercent = Math.min((item.count / MAX_Y) * 100, 100);
-              return (
-                <div key={item.date} className="group flex h-full w-full flex-col items-center">
-                  <div
-                    className={`mt-auto w-full rounded-t-[8px] ${getBarColor(item.count)}`}
-                    style={{ height: `${heightPercent}%` }}
-                  ></div>
-
-                  <span className="text-neutral-90 absolute -bottom-[26px] text-[16px] whitespace-nowrap">
-                    {formatXAxisLabel(item.date)}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Y축 라벨 */}
-        <div className="text-neutral-90 relative ml-[8px] flex h-[147px] flex-col items-start justify-between text-[16px] font-medium">
-          <span>10</span>
-          <span>5</span>
-          <span>0</span>
-          <div className="text-neutral-90 absolute mt-[75px] rotate-90 text-[14px] whitespace-nowrap">
-            완료한 업무
-          </div>
+          <div className="h-[29px]"></div>
         </div>
       </div>
 
-      <div className="h-[29px]"></div>
+      {/* 모바일: 가로 스크롤 가능한 간략 그래프 */}
+      <div className="md:hidden">
+        <div className="overflow-x-auto -mx-4 px-4">
+          <div className="bg-neutral-0 border-neutral-30 min-w-[640px] rounded-[16px] border px-4 pb-6 pt-4">
+            <h2 className="text-neutral-90 mb-3 text-base font-medium">팀 전체 업무 통계</h2>
+            <div className="flex">
+              <div className="relative h-[140px] flex-1 border-x border-neutral-60">
+                <div className="pointer-events-none absolute inset-0 flex flex-col justify-between">
+                  <div className="border-t border-neutral-60" />
+                  <div className="border-t border-neutral-60" />
+                  <div className="border-t border-neutral-60" />
+                </div>
+
+                <div className="relative flex h-full items-end justify-between gap-[5px]">
+                  {contributionsData?.map((item) => {
+                    const heightPercent = Math.min((item.count / MAX_Y) * 100, 100);
+                    return (
+                      <div key={item.date} className="group flex h-full w-full flex-col items-center">
+                        <div
+                          className={`mt-auto w-full rounded-t-[6px] ${getBarColor(item.count)}`}
+                          style={{ height: `${heightPercent}%` }}
+                        />
+                        <span className="text-neutral-90 absolute -bottom-[22px] text-[12px] whitespace-nowrap">
+                          {formatXAxisLabel(item.date)}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="relative ml-2 flex h-[137px] flex-col items-start justify-between text-[12px] font-medium text-neutral-90">
+                <span>10</span>
+                <span>5</span>
+                <span>0</span>
+                <div className="absolute mt-[70px] rotate-90 text-[10px] whitespace-nowrap">완료한 업무</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

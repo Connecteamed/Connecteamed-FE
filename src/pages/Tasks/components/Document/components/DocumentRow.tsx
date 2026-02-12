@@ -20,12 +20,12 @@ const DocumentRow = ({ doc, onDelete, onDownload, onEditText }: Props) => {
 
   return (
     <>
-      <div className="flex h-14 items-center self-stretch border-r border-b border-l border-gray-200 bg-white p-3.5">
+      <div className="flex h-15 items-center self-stretch border-r border-b border-l border-gray-200 bg-white p-3.5">
         <div className="inline-flex w-full items-center justify-between">
           <button
             type="button"
             onClick={() => setIsPreviewOpen(true)}
-            className="w-44 overflow-hidden text-left font-['Roboto'] text-xs font-medium text-ellipsis whitespace-nowrap text-neutral-600 hover:underline"
+            className="text-neutral-90 w-44 overflow-hidden text-left text-xs font-medium text-ellipsis whitespace-nowrap hover:underline"
             title={doc.name}
           >
             {doc.name}
@@ -33,13 +33,13 @@ const DocumentRow = ({ doc, onDelete, onDownload, onEditText }: Props) => {
 
           <div className="flex items-center justify-start gap-7">
             <div className="flex items-center justify-start gap-14">
-              <div className="w-12 font-['Roboto'] text-xs font-medium text-neutral-600">
+              <div className="text-neutral-90 w-12 font-['Roboto'] text-xs font-medium">
                 {doc.ext}
               </div>
-              <div className="w-12 font-['Roboto'] text-xs font-medium text-neutral-600">
+              <div className="text-neutral-90 w-12 font-['Roboto'] text-xs font-medium">
                 {doc.uploader}
               </div>
-              <div className="w-16 font-['Roboto'] text-xs font-medium text-neutral-600">
+              <div className="text-neutral-90 w-16 font-['Roboto'] text-xs font-medium">
                 {doc.uploadedAt}
               </div>
             </div>

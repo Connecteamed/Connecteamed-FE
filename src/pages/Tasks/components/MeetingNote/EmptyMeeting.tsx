@@ -22,7 +22,7 @@ const EmptyMeeting = ({ onCreate }: EmptyMeetingProps) => {
 
       <button
         onClick={onCreate}
-        className="bg-primary-500 h-8.5 w-37.5 rounded-xl px-4 py-2 text-center text-sm text-white md:my-5 md:h-12 md:w-37.5 md:px-10 md:text-sm"
+        className="bg-primary-500 h-8.5 w-37.5 rounded-xl px-4 py-2 text-center text-sm font-medium text-white md:my-5 md:h-12 md:w-37.5 md:px-10 md:text-sm"
       >
         회의록 추가
       </button>
