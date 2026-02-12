@@ -489,7 +489,7 @@ const TaskManagement = ({ projectId }: Props) => {
           <Modal isOpen={addTaskModalIsOpen} onClose={() => setAddTaskModalIsOpen(false)}>
             <AddTaskModal
               projectId={numericProjectId}
-              onClose={() => setAddTaskModalIsOpen(false)}/>
+              />
           </Modal>
         )}
       </div>

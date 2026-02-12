@@ -1,7 +1,7 @@
-import axios from '@/apis/axios';
-import { CompletedTasksResponse } from '@/types/TaskManagement/completedTasks';
+import type { CompletedTasksResponse } from '@/types/TaskManagement/completedTasks';
+import { instance } from '../axios';
 
 export const getCompletedTasks = async (projectId: number): Promise<CompletedTasksResponse> => {
-  const { data } = await axios.get(`/api/projects/${projectId}/tasks/completed`);
+  const { data } = await instance.get(`/api/projects/${projectId}/tasks/completed`);
   return data;
 };

@@ -30,7 +30,7 @@ import { closeProject } from '@/apis/MakeProject/closeProject';
 
 type Member = { id?: number; name: string; roles: string[] };
 
-const TaskPage = ({ projectName }: { projectName: string }) => {
+const TaskPage = () => {
   const { teamId: projectId } = useParams();
   const parsedProjectId = Number(projectId);
 
@@ -133,6 +133,8 @@ const TaskPage = ({ projectName }: { projectName: string }) => {
     { id: '6', title: 'AI 회고' },
   ];
 
+  const roleIdMap: Record<string, number> = {};
+
   const applyMemberRoles = (memberIndex: number, nextRoles: string[]) => {
     const member = members[memberIndex];
     if (!member?.id) return;
@@ -200,6 +202,8 @@ const TaskPage = ({ projectName }: { projectName: string }) => {
   };
 
   const closeMobileRoleSheet = () => setIsMobileRoleSheetOpen(false);
+
+  const projectName = teamName;
 
   return (
     <div className="max-[767px]:bg-slate-50">
