@@ -13,4 +13,7 @@ export const lazyRoutes = {
   LoginPage: React.lazy(() => import('../pages/Auth/LoginPage')),
   LoginCallbackPage: React.lazy(() => import('../pages/Auth/LoginCallbackPage')),
   SignupPage: React.lazy(() => import('../pages/Auth/SignupPage')),
+  LandingPage: React.lazy(() => import('../pages/Landing/LandingPage')),
+  SplashLayout: React.lazy(() => import('../layouts/SplashLayout')),
+  NotFoundPage: React.lazy(() => import('../pages/NotFound/NotFoundPage')),
 };
