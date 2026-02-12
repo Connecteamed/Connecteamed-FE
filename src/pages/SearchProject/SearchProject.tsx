@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { KeyboardEvent } from 'react';
 import Modal from '@/components/Modal';
 import SearchCheckModal from './components/SearchCheckModal';
-import projectSearchImage from '@assets/image-project-search.png'
+import projectSearchImage from '@assets/image-project-search.png';
 import usePostProjectJoin from '@/hooks/SearchProject/Mutate/usePostProjectJoin';
 
 const SearchProject = () => {
@@ -42,62 +42,67 @@ const SearchProject = () => {
 
   return (
     <>
-    <div className="w-full h-full bg-white">
-      <div className="inline-flex w-113.25 flex-col items-start justify-start gap-8 pl-20.5 pt-18.75">
-        <div className="h-16 justify-center self-stretch text-3xl font-bold text-black">
-          프로젝트에 참여해보세요!
-        </div>
-        <div className="flex w-96 flex-col items-start justify-start gap-16">
+      <div className="w-full h-full bg-white">
+        <div className="mx-auto flex max-w-md flex-col gap-6 px-6 py-6 md:max-w-none md:px-0 md:py-0 md:pt-18.75 md:pl-20.5">
+          
+          {/* 타이틀 */}
+          <div className="text-center text-xl font-bold md:text-left md:text-3xl">
+            프로젝트에 참여해보세요!
+          </div>
+
+          {/* 이미지 */}
           <img
-            className="h-72 w-full"
+            className="mx-auto w-full max-w-xs md:mx-0 md:h-72 md:w-96"
             src={projectSearchImage}
             alt="프로젝트 검색 플레이스홀더"
           />
-          <div className="flex flex-col items-start justify-start gap-10 self-stretch">
-            <div className="flex flex-col items-start justify-start gap-2.5 self-stretch">
-              <div className="flex flex-col items-end justify-start gap-1.5 self-stretch">
-                <div className="flex flex-col items-start justify-start gap-2.5 self-stretch">
-                  <div className="h-7 justify-center self-stretch text-lg text-black">
-                    입장코드
-                  </div>
-                  <div className="inline-flex h-12 items-center justify-start gap-2.5 self-stretch rounded-[10px] bg-white px-3.5 py-1.5 outline-1 -outline-offset-1 outline-gray-300">
-                    <input
-                      className="w-full justify-center text-lg text-gray-300 outline-none"
-                      placeholder="8자리 코드를 입력해주세요"
-                      value={code}
-                      onChange={(e) => handleChange(e.target.value)}
-                      maxLength={CODE_LENGTH}
-                    />
-                  </div>
-                </div>
+
+          <div className="flex flex-col gap-10 md:w-96">
+            
+            {/* 입장코드 */}
+            <div className="flex flex-col gap-1.5">
+              <div className="text-sm font-medium md:text-lg">
+                입장코드
+              </div>
+
+              <div className="h-10 rounded-[10px] border border-gray-300 px-3 md:h-12 md:px-3.5">
+                <input
+                  className="h-full w-full text-xs outline-none md:text-lg"
+                  placeholder="8자리 코드를 입력해주세요"
+                  value={code}
+                  onChange={(e) => handleChange(e.target.value)}
+                  maxLength={CODE_LENGTH}
+                />
               </div>
             </div>
+
+            {/* 버튼 */}
             <div
-              className={`inline-flex h-12 items-center justify-center self-stretch rounded-[10px] px-3 py-4 ${isComplete ? 'bg-orange-500' : 'bg-gray-300'} ${isComplete ? 'cursor-pointer' : 'cursor-not-allowed'}`}
+              className={`h-12 rounded-[10px] text-white flex items-center justify-center ${
+                isComplete
+                  ? 'bg-orange-500 cursor-pointer'
+                  : 'bg-gray-300 cursor-not-allowed'
+              }`}
               role="button"
               tabIndex={0}
               onClick={handleSearch}
               onKeyDown={handleKeyPress}
             >
-              <div className="flex items-center justify-center gap-2.5 px-4">
-                <div className="justify-start text-base leading-4 tracking-wide text-white">
-                  프로젝트 찾기
-                </div>
-              </div>
+              프로젝트 찾기
             </div>
           </div>
         </div>
       </div>
-    </div>
-    {isOpen && (
-    <Modal isOpen={isOpen} onClose={handleCloseModal}>
-      <SearchCheckModal
-        onConfirm={handleConfirm}
-        onCancel={handleCloseModal}
-        isLoading={isPending}
-      />
-    </Modal>
-    )}
+
+      {isOpen && (
+        <Modal isOpen={isOpen} onClose={handleCloseModal}>
+          <SearchCheckModal
+            onConfirm={handleConfirm}
+            onCancel={handleCloseModal}
+            isLoading={isPending}
+          />
+        </Modal>
+      )}
     </>
   );
 };

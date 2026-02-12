@@ -7,20 +7,20 @@ type ProjectNameInputProps = {
 
 const ProjectNameInput = ({ value, currentLength, maxLength, onChange }: ProjectNameInputProps) => {
   return (
-    <div className="flex flex-col items-end justify-start gap-1.5 self-stretch">
-      <div className="flex flex-col items-start justify-start gap-2.5 self-stretch">
-        <div className="h-7 justify-center self-stretch text-lg text-black">프로젝트명</div>
-        <div className="inline-flex h-12 items-center justify-start gap-2.5 self-stretch rounded-[10px] bg-white px-3.5 py-1.5 outline-1 -outline-offset-1 outline-gray-300">
-          <input
-            className="w-full justify-center text-lg text-black outline-none"
-            placeholder="프로젝트명을 입력해주세요"
-            value={value}
-            maxLength={maxLength}
-            onChange={(e) => onChange(e.target.value)}
-          />
-        </div>
+    <div className="flex flex-col gap-1.5">
+      <div className="text-sm font-medium md:text-lg">프로젝트명</div>
+
+      <div className="h-10 rounded-[10px] border border-gray-300 px-3 md:h-12 md:px-3.5">
+        <input
+          className="h-full w-full text-sm outline-none md:text-lg"
+          placeholder="프로젝트명을 입력해주세요"
+          value={value}
+          maxLength={maxLength}
+          onChange={(e) => onChange(e.target.value)}
+        />
       </div>
-      <div className="justify-center self-stretch text-right text-[8px] leading-3 text-neutral-900">
+
+      <div className="text-right text-[10px] md:text-[8px]">
         {currentLength}/{maxLength}
       </div>
     </div>
