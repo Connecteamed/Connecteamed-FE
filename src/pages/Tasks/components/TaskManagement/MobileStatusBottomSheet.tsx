@@ -26,7 +26,7 @@ const MobileStatusBottomSheet = ({ isOpen, currentStatus = '시작 전', onClose
   };
 
   return (
-    <MobileBottomSheet isOpen={isOpen} onClose={onClose} className="w-96 max-w-full gap-6 py-5">
+    <MobileBottomSheet isOpen={isOpen} onClose={onClose} className="w-full max-w-full gap-6 py-5">
       <div className="w-full flex flex-col items-center gap-6">
         <div className="w-full flex flex-col items-center gap-6 px-5">
           <div className="w-full text-center text-lg font-medium text-black">업무상태 선택</div>
@@ -39,7 +39,7 @@ const MobileStatusBottomSheet = ({ isOpen, currentStatus = '시작 전', onClose
                 <button
                   type="button"
                   key={status}
-                  className={`w-full h-12 px-9 py-2 ${bgClass} flex flex-col justify-center items-start gap-2.5 border-b border-zinc-200 ${borderTop}`}
+                  className={`w-full h-12 px-4 py-2 ${bgClass} flex flex-col justify-center items-start gap-2.5 border-b border-zinc-200 ${borderTop}`}
                   onClick={() => setDraftStatus(status)}
                 >
                   <div className="inline-flex items-center gap-1.5">
@@ -57,7 +57,7 @@ const MobileStatusBottomSheet = ({ isOpen, currentStatus = '시작 전', onClose
         </div>
         <button
           type="button"
-          className="inline-flex h-10 w-72 items-center justify-center gap-2.5 rounded-[10px] bg-orange-500 px-20 py-1 text-center text-sm font-medium text-white"
+          className="inline-flex h-12 w-full items-center justify-center gap-2.5 rounded-[10px] bg-orange-500 px-4 py-1 text-center text-sm font-medium text-white"
           onClick={handleSave}
         >
           저장

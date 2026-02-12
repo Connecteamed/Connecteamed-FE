@@ -7,33 +7,33 @@ type Props = {
 
 const SearchCheckModal = ({ onConfirm, onCancel, isLoading = false, projectName }: Props) => {
   return (
-    <div className="w-[450px] h-[250px] px-8 py-9 bg-white rounded-[10px] inline-flex flex-col justify-start items-start gap-2.5">
-      <div className="w-96 flex flex-col justify-start items-center gap-4">
-        <div className="self-stretch h-12 text-center justify-center text-3xl font-bold">
-          {projectName ?? '프로젝트'}
-        </div>
-        <div className="self-stretch h-12 text-center justify-center">
-          해당 프로젝트에 참여 하시겠어요?
-        </div>
-        <div className="self-stretch inline-flex justify-start items-center gap-6">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="w-44 h-12 px-4 py-2 bg-zinc-300 rounded-[5px] outline-1 -outline-offset-1 outline-gray-200 flex justify-center items-center gap-2.5"
-          >
-            <div className="text-center justify-center leading-4">아니요</div>
-          </button>
-          <button
-            type="button"
-            onClick={onConfirm}
-            disabled={isLoading}
-            className={`w-44 h-12 px-4 py-2 rounded-[5px] outline-1 -outline-offset-1 outline-gray-200 flex justify-center items-center gap-2.5 ${isLoading ? 'bg-blue-300 cursor-not-allowed' : 'bg-blue-600'}`}
-          >
-            <div className="text-center justify-center text-white leading-4">
-              {isLoading ? '진행중...' : '예'}
-            </div>
-          </button>
-        </div>
+    <div className="flex w-64 flex-col items-center justify-center gap-3 rounded-[10px] bg-white p-6 md:h-[250px] md:w-[450px] md:gap-4 md:px-8 md:py-9">
+      {/* 제목 */}
+      <div className="text-center text-lg font-medium md:text-3xl md:font-bold">
+        {projectName ?? '프로젝트'}
+      </div>
+
+      {/* 설명 */}
+      <div className="text-center text-xs md:text-base">해당 프로젝트에 참여 하시겠어요?</div>
+
+      {/* 버튼 영역 */}
+      <div className="flex w-full justify-center gap-4 md:gap-6">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="flex h-6 w-20 items-center justify-center rounded-[5px] bg-zinc-300 text-[10px] md:h-12 md:w-44 md:text-base"
+        >
+          아니요
+        </button>
+
+        <button
+          type="button"
+          onClick={onConfirm}
+          disabled={isLoading}
+          className={`flex h-6 w-20 items-center justify-center rounded-[5px] text-[10px] text-white ${isLoading ? 'cursor-not-allowed bg-blue-300' : 'bg-blue-600'} md:h-12 md:w-44 md:text-base`}
+        >
+          {isLoading ? '진행중...' : '예'}
+        </button>
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 //반응형 디자인 : 업무내용 -> 시작일/마감일 순으로 지워버리기
 import { useEffect, useMemo, useState } from 'react';
+
 import { useNavigate } from 'react-router-dom';
 
 import Modal from '@/components';
@@ -77,7 +78,7 @@ const statusStyle: Record<TaskRow['status'], string> = {
   완료: 'bg-orange-300 text-neutral-700',
 };
 
-type Props = { projectId: number; currentMemberId?: number };
+type Props = { projectId: number };
 
 const statusLabelByApi: Record<TaskStatusApi, TaskStatusLabel> = {
   NOT_STARTED: '시작 전',
@@ -119,7 +120,7 @@ const formatDateDisplayDots = (value?: string) => {
   return base ? base.replaceAll('-', '.') : '';
 };
 
-const TaskManagement = ({ projectId, currentMemberId }: Props) => {
+const TaskManagement = ({ projectId }: Props) => {
   const numericProjectId = Number(projectId);
   const navigate = useNavigate();
   const { data: taskListData = [] } = useGetTaskList(numericProjectId);
@@ -152,11 +153,13 @@ const TaskManagement = ({ projectId, currentMemberId }: Props) => {
   const [completeTaskModalIsOpen, setCompleteTaskModalIsOpen] = useState(false);
   const [taskToDeleteId, setTaskToDeleteId] = useState<string | null>(null);
   const [showMyTasksOnly, setShowMyTasksOnly] = useState(false);
-  const [resolvedCurrentMemberId, setResolvedCurrentMemberId] = useState<number | null>(
-    Number.isFinite(currentMemberId) ? (currentMemberId as number) : null,
-  );
+  // const [resolvedCurrentMemberId, setResolvedCurrentMemberId] = useState<number | null>(
+  //   Number.isFinite(currentMemberId) ? (currentMemberId as number) : null,
+  // );
   const [mobileAssigneeTaskId, setMobileAssigneeTaskId] = useState<string | null>(null);
   const [mobileAssigneeIds, setMobileAssigneeIds] = useState<number[]>([]);
+
+  // currentMemberId 관련 코드 완전 제거
 
   const memberNameById = useMemo(
     () =>
@@ -169,18 +172,29 @@ const TaskManagement = ({ projectId, currentMemberId }: Props) => {
     [projectMembers],
   );
 
-  useEffect(() => {
-    if (Number.isFinite(currentMemberId)) {
-      setResolvedCurrentMemberId(currentMemberId as number);
-      return;
-    }
+  const getCurrentMemberId = (): number | null => {
+    const stored = localStorage.getItem('memberId');
+    if (!stored) return null;
 
-    const storedMemberId = localStorage.getItem('memberId');
-    const parsed = storedMemberId ? Number(storedMemberId) : NaN;
-    if (Number.isFinite(parsed)) {
-      setResolvedCurrentMemberId(parsed);
-    }
-  }, [currentMemberId]);
+    const parsed = Number(stored);
+    return Number.isFinite(parsed) ? parsed : null;
+  };
+
+  const currentMemberId = getCurrentMemberId();
+
+  const isMyTask = (task: TaskRow) => {
+    if (currentMemberId === null) return false;
+    return task.assigneeIds?.includes(currentMemberId) ?? false;
+  };
+
+  const myTasks = useMemo(() => {
+    if (!showMyTasksOnly) return taskList;
+    if (currentMemberId === null) return [];
+
+    return taskList.filter((task) =>
+      task.assigneeIds?.includes(currentMemberId) ?? false
+    );
+  }, [taskList, showMyTasksOnly, currentMemberId]);
 
   const showToast = (message: string) => {
     const toast = document.createElement('div');
@@ -298,7 +312,9 @@ const TaskManagement = ({ projectId, currentMemberId }: Props) => {
 
     setTaskList((prev) =>
       prev.map((t) =>
-        t.id === taskId ? { ...t, assigneeIds: selectedIds, assignees: assigneeNames.join(', ') } : t,
+        t.id === taskId
+          ? { ...t, assigneeIds: selectedIds, assignees: assigneeNames.join(', ') }
+          : t,
       ),
     );
 
@@ -374,11 +390,6 @@ const TaskManagement = ({ projectId, currentMemberId }: Props) => {
     });
   };
 
-  const myTasks =
-    showMyTasksOnly && resolvedCurrentMemberId
-      ? taskList.filter((task) => task.assigneeIds?.includes(resolvedCurrentMemberId))
-      : taskList;
-
   const findTaskIndexById = (taskId: string) => taskList.findIndex((t) => t.id === taskId);
 
   const hasVisibleTasks = myTasks.length > 0;
@@ -386,9 +397,6 @@ const TaskManagement = ({ projectId, currentMemberId }: Props) => {
     ? taskList.find((t) => t.id === scheduleSheet.taskId)
     : null;
   const statusSheetTask = statusSheet ? taskList.find((t) => t.id === statusSheet.taskId) : null;
-  const mobileAssigneeTask = mobileAssigneeTaskId
-    ? taskList.find((t) => t.id === mobileAssigneeTaskId)
-    : null;
 
   const scheduleActiveDate = scheduleSheet
     ? toDateOrToday(
@@ -420,6 +428,9 @@ const TaskManagement = ({ projectId, currentMemberId }: Props) => {
     setTaskDetailModalIsOpen(true);
   };
 
+  console.log(myTasks);
+  
+
   if (!hasVisibleTasks) {
     return (
       <div className="pb-gap-4 flex w-full flex-col items-center justify-center max-[767px]:min-h-screen max-[767px]:py-10">
@@ -450,7 +461,11 @@ const TaskManagement = ({ projectId, currentMemberId }: Props) => {
           <div className="inline-flex w-48 flex-col items-center justify-start gap-4">
             <div className="inline-flex h-24 w-24 items-center justify-center gap-2.5 rounded-[100px] bg-orange-100 p-8">
               <div className="relative h-20 w-20 overflow-hidden">
-                <img src={searchPaper} alt="search paper" className="h-full w-full object-contain" />
+                <img
+                  src={searchPaper}
+                  alt="search paper"
+                  className="h-full w-full object-contain"
+                />
               </div>
             </div>
             <div className="flex w-80 flex-col items-center justify-start gap-1.5">
@@ -464,12 +479,19 @@ const TaskManagement = ({ projectId, currentMemberId }: Props) => {
             <button
               type="button"
               className="inline-flex h-8 w-36 items-center justify-center gap-2.5 rounded-md bg-orange-500 px-2 py-[5px] text-xs font-medium text-white"
-              onClick={() => navigate(`/team/${projectId}/task/new`)}
+              onClick={() => setAddTaskModalIsOpen(true)}
             >
               업무 추가
             </button>
           </div>
         </div>
+        {setAddTaskModalIsOpen && (
+          <Modal isOpen={addTaskModalIsOpen} onClose={() => setAddTaskModalIsOpen(false)}>
+            <AddTaskModal
+              projectId={numericProjectId}
+              />
+          </Modal>
+        )}
       </div>
     );
   }
@@ -496,17 +518,17 @@ const TaskManagement = ({ projectId, currentMemberId }: Props) => {
       </div>
 
       <div className="flex h-12 flex-col justify-center self-stretch bg-slate-100 p-3.5 outline-gray-200 max-[767px]:hidden">
-        <div className="inline-flex items-center gap-4">
-          <div className="flex items-center gap-3.5">
-            <div className="h-5 w-32 text-sm text-black">업무명</div>
-            <div className="hidden h-5 w-72 text-sm text-black min-[1440px]:block">업무내용</div>
+        <div className="inline-flex items-center gap-0 w-full">
+          <div className="flex items-center gap-0">
+            <div className="h-5 w-40 text-sm text-black">업무명</div>
+            <div className="hidden h-5 w-64 text-sm text-black min-[1440px]:block">업무내용</div>
           </div>
-          <div className="flex items-center gap-11">
-            <div className="h-5 w-20 text-center text-sm text-black">상태</div>
-            <div className="flex h-5 items-center gap-3.5">
-              <div className="h-5 w-24 text-sm text-black max-[1120px]:hidden">시작일</div>
-              <div className="h-5 w-24 text-sm text-black max-[1000px]:hidden">마감일</div>
-              <div className="h-5 w-24 text-sm text-black max-[890px]:hidden">담당자</div>
+          <div className="flex items-center gap-0">
+            <div className="h-5 w-24 text-center text-sm text-black">상태</div>
+            <div className="flex h-5 items-center gap-0">
+              <div className="h-5 w-28 text-sm text-black max-[1120px]:hidden">시작일</div>
+              <div className="h-5 w-28 text-sm text-black max-[1000px]:hidden">마감일</div>
+              <div className="h-5 w-32 text-sm text-black max-[890px]:hidden">담당자</div>
               <div className="h-5 w-7" />
             </div>
           </div>
@@ -567,7 +589,7 @@ const TaskManagement = ({ projectId, currentMemberId }: Props) => {
             </div>
             <div className="absolute top-[14px] left-[14px] flex w-72 flex-col items-start justify-start gap-2.5">
               <div
-                className="justify-center self-stretch font-['Roboto'] text-base leading-4 font-medium text-black cursor-pointer"
+                className="cursor-pointer justify-center self-stretch font-['Roboto'] text-base leading-4 font-medium text-black"
                 onClick={() => goToTaskDetail(task.id)}
               >
                 {task.title}
@@ -622,15 +644,15 @@ const TaskManagement = ({ projectId, currentMemberId }: Props) => {
             className="flex flex-col gap-2.5 self-stretch border-r border-b border-l border-gray-200 bg-white p-3.5 max-[767px]:rounded-[12px] max-[767px]:shadow-[0_4px_12px_rgba(0,0,0,0.06)]"
           >
             <div className="body-xl inline-flex items-center justify-start gap-4 max-[767px]:flex-col max-[767px]:items-start max-[767px]:gap-3">
-              <div className="flex items-start justify-start gap-3.5 max-[767px]:w-full max-[767px]:flex-col">
+              <div className="flex items-start justify-start gap-0 max-[767px]:w-full max-[767px]:flex-col">
                 <div
-                  className="w-32 truncate text-xs text-neutral-600 max-[767px]:w-full max-[767px]:text-base max-[767px]:font-semibold cursor-pointer"
+                  className="w-40 cursor-pointer truncate text-xs text-neutral-600 max-[767px]:w-full max-[767px]:text-base max-[767px]:font-semibold"
                   onClick={() => handleTitleClick(task.id, index)}
                 >
                   {task.title}
                 </div>
                 <div
-                  className="hidden w-72 text-xs leading-5 text-neutral-600 max-[767px]:block max-[767px]:w-full max-[767px]:text-sm min-[1440px]:[display:-webkit-box] min-[1440px]:block"
+                  className="hidden w-64 text-xs leading-5 text-neutral-600 min-[1440px]:block max-[767px]:block max-[767px]:w-full max-[767px]:text-sm"
                   style={{
                     WebkitLineClamp: 2,
                     WebkitBoxOrient: 'vertical',
@@ -644,7 +666,7 @@ const TaskManagement = ({ projectId, currentMemberId }: Props) => {
               <div className="relative flex items-center justify-start gap-11 max-[767px]:w-full max-[767px]:flex-col max-[767px]:items-start max-[767px]:gap-3">
                 <div className="relative flex items-center justify-center">
                   <div
-                    className={`flex w-20 items-center justify-center rounded-[20px] px-3.5 py-1.5 ${statusStyle[task.status]} max-[767px]:w-24 max-[767px]:text-sm`}
+                    className={`flex w-24 items-center justify-center rounded-[20px] px-3.5 py-1.5 ${statusStyle[task.status]} max-[767px]:w-24 max-[767px]:text-sm`}
                     onClick={() =>
                       setStatusDropdownOpenId((prev) => (prev === task.id ? null : task.id))
                     }
@@ -688,7 +710,7 @@ const TaskManagement = ({ projectId, currentMemberId }: Props) => {
                         시작일
                       </div>
                       <div
-                        className="w-24 cursor-pointer text-xs text-neutral-600 max-[767px]:w-full max-[767px]:rounded-[8px] max-[767px]:bg-slate-50 max-[767px]:px-3 max-[767px]:py-2 max-[767px]:text-sm"
+                        className="w-28 cursor-pointer text-xs text-neutral-600 max-[767px]:w-full max-[767px]:rounded-[8px] max-[767px]:bg-slate-50 max-[767px]:px-3 max-[767px]:py-2 max-[767px]:text-sm"
                         onClick={() => setDatePicker({ taskId: task.id, field: 'startDate' })}
                       >
                         {formatDateDisplay(task.startDate)}
@@ -713,7 +735,7 @@ const TaskManagement = ({ projectId, currentMemberId }: Props) => {
                         마감일
                       </div>
                       <div
-                        className="w-24 cursor-pointer text-xs text-neutral-600 max-[767px]:w-full max-[767px]:rounded-[8px] max-[767px]:bg-slate-50 max-[767px]:px-3 max-[767px]:py-2 max-[767px]:text-sm"
+                        className="w-28 cursor-pointer text-xs text-neutral-600 max-[767px]:w-full max-[767px]:rounded-[8px] max-[767px]:bg-slate-50 max-[767px]:px-3 max-[767px]:py-2 max-[767px]:text-sm"
                         onClick={() => setDatePicker({ taskId: task.id, field: 'endDate' })}
                       >
                         {formatDateDisplay(task.endDate)}
@@ -742,7 +764,7 @@ const TaskManagement = ({ projectId, currentMemberId }: Props) => {
                       <div className="hidden text-[11px] text-neutral-500 max-[767px]:block">
                         담당자
                       </div>
-                      <div className="w-24 cursor-pointer text-xs break-words whitespace-pre-line text-neutral-600 max-[767px]:w-full max-[767px]:rounded-[8px] max-[767px]:bg-slate-50 max-[767px]:px-3 max-[767px]:py-2 max-[767px]:text-sm">
+                      <div className="w-32 cursor-pointer text-xs break-words whitespace-pre-line text-neutral-600 max-[767px]:w-full max-[767px]:rounded-[8px] max-[767px]:bg-slate-50 max-[767px]:px-3 max-[767px]:py-2 max-[767px]:text-sm">
                         {task.assignees?.trim()
                           ? task.assignees.replaceAll(', ', '\n')
                           : '담당자 없음'}
@@ -824,7 +846,7 @@ const TaskManagement = ({ projectId, currentMemberId }: Props) => {
             content={taskList[selectedTaskIndex]?.description ?? ''}
             startDate={taskList[selectedTaskIndex]?.startDate ?? ''}
             endDate={taskList[selectedTaskIndex]?.endDate ?? ''}
-            onEdit={() => {}}
+            editable={isMyTask(taskList[selectedTaskIndex])}
           />
         </Modal>
       )}
