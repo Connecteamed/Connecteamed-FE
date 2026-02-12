@@ -268,6 +268,8 @@ const TaskManagement = ({ projectId }: Props) => {
     });
   };
 
+  console.log('taskList', myTasks.map(t => ({ id: t.id, status: t.status })));
+
   const handleSaveScheduleSheet = () => {
     if (!scheduleSheet) return;
 
@@ -345,13 +347,19 @@ const TaskManagement = ({ projectId }: Props) => {
   useEffect(() => {
     if (!taskListData) return;
 
+    // status가 'TODO'로 오면 'NOT_STARTED'로 매핑
+    const normalizeStatus = (status?: string): TaskStatusApi => {
+      if (status === 'TODO') return 'NOT_STARTED';
+      return (status as TaskStatusApi) ?? 'NOT_STARTED';
+    };
+
     const mapped: TaskRow[] = taskListData
-      .filter((task) => task.status !== 'DONE')
+      .filter((task) => normalizeStatus(task.status) !== 'DONE')
       .map((task) => ({
         id: task.taskId ?? crypto.randomUUID(),
         title: task.name ?? '제목 없음',
         description: task.content ?? '',
-        status: task.status as TaskStatusApi,
+        status: normalizeStatus(task.status),
         startDate: normalizeDateInput(task.startDate),
         endDate: normalizeDateInput(task.dueDate),
         assignees: Array.isArray(task.assignees)
@@ -609,14 +617,20 @@ const TaskManagement = ({ projectId }: Props) => {
               </div>
               <div className="inline-flex items-center justify-between self-stretch">
                 <div className="flex items-center justify-start gap-3.5">
-                  <div
-                    className={`flex h-4 w-10 items-center justify-center gap-4 rounded-[20px] px-3.5 py-1.5 ${statusStyle[task.status]}`}
-                    onClick={() => openMobileStatusSheet(task)}
-                  >
-                    <div className="justify-center text-center font-['Roboto'] text-[8px] font-medium text-neutral-600">
-                      {statusLabel[task.status]}
+                  {task.status === 'NOT_STARTED' ? (
+                    <div className="w-20 h-7 px-3.5 py-1.5 bg-zinc-200 rounded-[20px] inline-flex justify-center items-center gap-2.5" onClick={() => openMobileStatusSheet(task)}>
+                      <div className="text-center justify-center text-neutral-600 text-xs font-medium font-['Roboto']">시작 전</div>
                     </div>
-                  </div>
+                  ) : (
+                    <div
+                      className={`flex h-4 w-10 items-center justify-center gap-4 rounded-[20px] px-3.5 py-1.5 ${statusStyle[task.status]}`}
+                      onClick={() => openMobileStatusSheet(task)}
+                    >
+                      <div className="justify-center text-center font-['Roboto'] text-[8px] font-medium text-neutral-600">
+                        {statusLabel[task.status]}
+                      </div>
+                    </div>
+                  )}
                   <div
                     className="cursor-pointer justify-center font-['Roboto'] text-[10px] font-medium text-neutral-600"
                     onClick={() => openMobileAssigneeSheet(task)}
@@ -675,14 +689,22 @@ const TaskManagement = ({ projectId }: Props) => {
 
               <div className="relative flex items-center justify-start gap-11 max-[767px]:w-full max-[767px]:flex-col max-[767px]:items-start max-[767px]:gap-3">
                 <div className="relative flex items-center justify-center">
-                    <div
-                      className={`flex w-24 items-center justify-center rounded-[20px] px-3.5 py-1.5 ${statusStyle[task.status]} max-[767px]:w-24 max-[767px]:text-sm`}
-                      onClick={() =>
-                        setStatusDropdownOpenId((prev) => (prev === task.id ? null : task.id))
-                      }
-                    >
-                      <div className="text-xs max-[767px]:text-sm">{statusLabel[task.status]}</div>
-                    </div>
+                    {task.status === 'NOT_STARTED' ? (
+                      <div className="w-[96px] h-7 px-3.5 py-1.5 bg-zinc-200 rounded-[20px] inline-flex justify-center items-center gap-2.5"
+                        onClick={() => setStatusDropdownOpenId((prev) => (prev === task.id ? null : task.id))}
+                      >
+                        <div className="text-center justify-center text-neutral-600 text-xs font-medium font-['Roboto']">시작 전</div>
+                      </div>
+                    ) : (
+                      <div
+                        className={`flex w-24 items-center justify-center rounded-[20px] px-3.5 py-1.5 ${statusStyle[task.status]} max-[767px]:w-24 max-[767px]:text-sm`}
+                        onClick={() =>
+                          setStatusDropdownOpenId((prev) => (prev === task.id ? null : task.id))
+                        }
+                      >
+                        <div className="text-xs max-[767px]:text-sm">{statusLabel[task.status]}</div>
+                      </div>
+                    )}
                   {statusDropdownOpenId === task.id && (
                     <Dropdown
                       isOpen={statusDropdownOpenId === task.id}
