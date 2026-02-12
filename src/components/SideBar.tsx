@@ -9,12 +9,26 @@ import iconHomeOrange from '@assets/icon-home-orange.svg';
 import iconMeBlack from '@assets/icon-me-black.svg';
 import iconMeOrange from '@assets/icon-me-orange.svg';
 import iconPeopleBlack from '@assets/icon-people-black.svg';
+import iconPeopleOrange from '@assets/icon-people-orange.svg';
 import iconSearchBlack from '@assets/icon-search-black.svg';
 import iconSearchOrange from '@assets/icon-search-orange.svg';
 import logoImg from '@assets/icon-sidebar-logo.png';
-import iconPeopleOrange from '@assets/icon-people-orange.svg';
 
 import useGetTeamList from '@/hooks/TaskPage/Query/useGetTeamList';
+
+type TeamItem = {
+  teamId?: number;
+  id?: number;
+  name: string;
+};
+
+type TeamGroup = {
+  teams?: TeamItem[];
+};
+
+type ApiResponse = {
+  data?: TeamGroup[] | TeamGroup;
+};
 
 type Team = {
   teamId: number;
@@ -23,37 +37,37 @@ type Team = {
 
 const Sidebar = () => {
   const [isTeamOpen, setIsTeamOpen] = useState(true);
-  const { data, isLoading, isError } = useGetTeamList();
+  const { data, isLoading, isError } = useGetTeamList() as {
+    data?: ApiResponse;
+    isLoading: boolean;
+    isError: boolean;
+  };
 
   const teams: Team[] = useMemo(() => {
     if (!data?.data) return [];
-    const payload = data.data;
 
-    // 서버 응답이 TeamList[] 또는 TeamList 단일 객체 둘 다 대응
+    const payload = data.data;
     const list = Array.isArray(payload) ? payload : [payload];
 
-    return list.flatMap((group) =>
-      group?.teams?.map((team, idx) => ({
-        teamId: (team as any).teamId ?? (team as any).id ?? idx,
-        name: team.name,
-      })) ?? [],
+    return list.flatMap(
+      (group) =>
+        group.teams?.map((team, idx) => ({
+          teamId: team.teamId ?? team.id ?? idx,
+          name: team.name,
+        })) ?? [],
     );
   }, [data]);
-  
 
   return (
-    <aside className="flex h-screen w-[300px] flex-col justify-between border-r-2 border-zinc-200 bg-white px-5 py-4">
+    <aside className="flex h-screen w-75 flex-col justify-between border-r-2 border-zinc-200 bg-white px-5 py-4">
       {/* 상단 영역 */}
       <div className="flex flex-col gap-6">
-        {/* 로고 */}
-        <div className="flex items-center gap-1">
+        <NavLink to="/" className="flex items-center gap-1">
           <img src={logoImg} alt="logo" className="h-11 w-11" />
           <span className="text-primary-500 text-2xl font-medium">Connecteamed</span>
-        </div>
+        </NavLink>
 
-        {/* 메뉴 */}
         <nav className="flex flex-col">
-          {/* 대시보드 */}
           <NavLink
             to="/"
             end
@@ -81,7 +95,6 @@ const Sidebar = () => {
             )}
           </NavLink>
 
-          {/* 팀 */}
           <button
             type="button"
             onClick={() => setIsTeamOpen((prev) => !prev)}
@@ -98,14 +111,15 @@ const Sidebar = () => {
             />
           </button>
 
-          {/* 팀 리스트 */}
           {isTeamOpen && (
             <div className="flex flex-col">
               {isLoading && (
                 <span className="text-neutral-80 px-11 py-1.5 text-sm">팀을 불러오는 중...</span>
               )}
               {!isLoading && isError && (
-                <span className="px-11 py-1.5 text-sm text-red-500">팀 정보를 불러오지 못했습니다.</span>
+                <span className="px-11 py-1.5 text-sm text-red-500">
+                  팀 정보를 불러오지 못했습니다.
+                </span>
               )}
               {!isLoading && !isError && teams.length === 0 && (
                 <span className="text-neutral-80 px-11 py-1.5 text-sm">참여한 팀이 없어요</span>
@@ -116,19 +130,19 @@ const Sidebar = () => {
                   <NavLink
                     key={team.teamId ?? idx}
                     to={`/team/${team.teamId}`}
+                    state={{ projectName: team.name }}
                     className={({ isActive }) =>
                       `flex h-10 items-center rounded-md px-11 py-1.5 transition-colors ${
                         isActive ? 'text-primary-500 bg-slate-100' : 'text-black hover:bg-slate-50'
                       }`
                     }
                   >
-                    <span className="text-base font-medium">{team.name}</span>
+                    <span className="line-clamp-1 text-base font-medium">{team.name}</span>
                   </NavLink>
                 ))}
             </div>
           )}
 
-          {/* 프로젝트 생성 */}
           <NavLink
             to="/project/create"
             className={({ isActive }) =>
@@ -139,7 +153,11 @@ const Sidebar = () => {
           >
             {({ isActive }) => (
               <>
-                <img src={isActive ? iconPeopleOrange : iconPeopleBlack} alt="create project" className="h-6 w-6" />
+                <img
+                  src={isActive ? iconPeopleOrange : iconPeopleBlack}
+                  alt="create project"
+                  className="h-6 w-6"
+                />
                 <span
                   className={`text-base font-medium ${
                     isActive ? 'text-primary-500' : 'text-black'
@@ -151,7 +169,6 @@ const Sidebar = () => {
             )}
           </NavLink>
 
-          {/* 프로젝트 찾기 */}
           <NavLink
             to="/project/search"
             className={({ isActive }) =>
@@ -180,7 +197,6 @@ const Sidebar = () => {
         </nav>
       </div>
 
-      {/* 하단 마이페이지 */}
       <NavLink
         to="/mypage"
         className={({ isActive }) =>

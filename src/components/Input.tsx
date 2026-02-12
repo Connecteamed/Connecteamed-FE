@@ -17,7 +17,7 @@ const Input = ({
 }: InputProps) => {
   return (
     <input
-      className={`${width} ${height} ${rounded} placeholder:text-neutral-60 bg-white px-3.5 py-1.5 font-['Roboto'] text-lg font-medium text-black outline-1 -outline-offset-1 outline-neutral-50 ${className}`}
+      className={`${width} ${height} ${rounded} placeholder:text-neutral-60 bg-white px-3.5 py-1.5 font-['Roboto'] text-lg font-medium text-black outline-1 -outline-offset-1 outline-neutral-50 transition-all focus:placeholder:text-transparent focus:outline-orange-500 ${className}`}
       placeholder={placeholder}
       {...props}
     />

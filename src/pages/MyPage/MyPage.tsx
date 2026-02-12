@@ -1,19 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
-
-import { useNavigate } from 'react-router-dom';
-
-import { postLogout } from '@/apis/auth';
-import {
-  deleteProject,
-  deleteRetrospective,
-  getMyProjects,
-  getMyRetrospectives,
-} from '@/apis/mypage';
-import type { Project, Retrospective } from '@/types/mypage';
-
 import DeleteModal from '@/components/DeleteModal';
 
 import EmptyState from './components/EmptyState';
+import { useMyPage } from './hooks/useMyPage';
 
 const formatDate = (iso: string) => {
   const d = new Date(iso);
@@ -23,148 +11,68 @@ const formatDate = (iso: string) => {
   return `${yyyy}.${mm}.${dd}`;
 };
 
-type DeleteTarget =
-  | { type: 'project'; id: number; label: string }
-  | { type: 'retrospective'; id: number; label: string };
-
 const MyPage = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
-  const [target, setTarget] = useState<DeleteTarget | null>(null);
-
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [retros, setRetros] = useState<Retrospective[]>([]);
-
-  const [, /*loading*/ setLoading] = useState(true);
-  const [, /*error*/ setError] = useState('');
-
-  const openDeleteModal = (target: DeleteTarget) => {
-    setTarget(target);
-    setIsOpen(true);
-  };
-
-  const closeModal = () => {
-    setIsOpen(false);
-    setTarget(null);
-  };
-
-  const openLogoutModal = () => {
-    setIsLogoutModalOpen(true);
-  };
-
-  const closeLogoutModal = () => {
-    setIsLogoutModalOpen(false);
-  };
-
-  const fetchAll = async () => {
-    try {
-      setError('');
-      setLoading(true);
-
-      const [pRes, rRes] = await Promise.all([getMyProjects(), getMyRetrospectives()]);
-
-      if (pRes.status === 'success' && pRes.data) setProjects(pRes.data.projects);
-      else setProjects([]);
-
-      if (rRes.status === 'success' && rRes.data) setRetros(rRes.data.retrospectives);
-      else setRetros([]);
-    } catch {
-      setError('마이페이지 데이터를 불러오지 못했습니다.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    void fetchAll();
-  }, []);
-
-  const handleDelete = async () => {
-    if (!target) return;
-
-    try {
-      if (target.type === 'retrospective') {
-        const res = await deleteRetrospective(target.id);
-        if (res.status === 'success') {
-          setRetros((prev) => prev.filter((r) => r.id !== target.id));
-        } else {
-          console.log(res.message);
-        }
-      }
-
-      if (target.type === 'project') {
-        const res = await deleteProject(target.id);
-        if (res.status === 'success') {
-          setProjects((prev) => prev.filter((p) => p.id !== target.id));
-        } else {
-          console.log(res.message);
-        }
-      }
-    } catch {
-      console.log('삭제 중 오류가 발생했습니다.');
-    } finally {
-      closeModal();
-    }
-  };
-
-  const modalDescription = useMemo(() => {
-    if (!target) return '';
-    return `선택하신 "${target.label}" 항목을 영구적으로 삭제할까요?`;
-  }, [target]);
-
-  const navigate = useNavigate();
-
-  const handleLogout = async () => {
-    closeLogoutModal();
-
-    try {
-      const res = await postLogout();
-      if (res.status !== 'success') {
-        console.log(res.message);
-      }
-    } catch (error) {
-      console.log(error);
-    } finally {
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      navigate('/login');
-    }
-  };
+  const {
+    projects,
+    retros,
+    isDeleteModalOpen,
+    isLogoutModalOpen,
+    modalDescription,
+    openDeleteModal,
+    closeDeleteModal,
+    openLogoutModal,
+    closeLogoutModal,
+    handleDelete,
+    handleLogout,
+  } = useMyPage();
 
   return (
-    <div className="mt-10 flex flex-col justify-center px-20.5">
-      <h1 className="text-[42px] font-bold text-black">마이페이지</h1>
-      <section className="mt-10.5 mb-20 w-full">
-        <h2 className="text-secondary-900 mb-6 text-[24px] font-medium">완료한 프로젝트</h2>
+    <div className="mx-auto mt-8 flex w-full flex-col px-4 pb-24 md:mt-10 md:px-20.5 md:pb-20">
+      <h1 className="text-[24px] font-bold text-black md:text-[42px]">마이페이지</h1>
+      <section className="mt-[42px] mb-6 w-full md:mt-10.5 md:mb-20">
+        <h2 className="text-secondary-900 text mb-6 text-[16px] font-medium md:text-[24px]">
+          완료한 프로젝트
+        </h2>
         {projects.length === 0 ? (
           <EmptyState
             title="완료된 프로젝트가 없어요"
             description="프로젝트를 마무리하면 이곳에서 확인할 수 있어요"
           />
         ) : (
-          <div className="border-neutral-30 overflow-hidden border">
-            <table className="w-full bg-white text-left text-sm">
+          <div className="border-neutral-30 overflow-hidden border bg-white">
+            <table className="w-full table-fixed text-left text-[12px] font-normal md:text-sm">
+              <colgroup>
+                <col />
+                <col className="w-[58px] md:w-auto" />
+                <col className="w-[74px] md:w-auto" />
+                <col className="w-[74px] md:w-auto" />
+                <col className="w-[44px] md:w-[80px]" />
+              </colgroup>
               <thead className="border-b-neutral-30 bg-neutral-10 text-black">
-                <tr className="whitespace-nowrap">
-                  <th className="p-4">프로젝트명</th>
-                  <th className="w-30 p-4">역할</th>
-                  <th className="w-30 p-4">시작일</th>
-                  <th className="w-30 p-4">종료일</th>
-                  <th className="w-20 p-4"></th>
+                <tr>
+                  <th className="p-2 whitespace-nowrap md:p-4">프로젝트명</th>
+                  <th className="p-2 whitespace-nowrap md:p-4">역할</th>
+                  <th className="p-2 whitespace-nowrap md:p-4">시작일</th>
+                  <th className="p-2 whitespace-nowrap md:p-4">종료일</th>
+                  <th className="p-2 md:p-4"></th>
                 </tr>
               </thead>
               <tbody>
                 {projects.map((p) => (
                   <tr
                     key={p.id}
-                    className="border-b-neutral-30 font-medium whitespace-nowrap text-black"
+                    className="border-b-neutral-30 text-[10px] text-black md:text-[14px] md:font-medium"
                   >
-                    <td className="p-4">{p.name}</td>
-                    <td className="p-4">{p.roles.join(', ')}</td>
-                    <td className="p-4">{formatDate(p.createdAt)}</td>
-                    <td className="p-4">{formatDate(p.closedAt)}</td>
+                    <td className="truncate p-2 md:p-4">{p.name}</td>
+                    <td className="truncate p-2 md:p-4">{p.roles.join(', ')}</td>
+                    <td className="p-2 whitespace-nowrap tabular-nums md:p-4">
+                      {formatDate(p.createdAt)}
+                    </td>
+                    <td className="p-2 whitespace-nowrap tabular-nums md:p-4">
+                      {formatDate(p.closedAt)}
+                    </td>
                     <td
-                      className="text-primary-500 cursor-pointer p-4 text-right"
+                      className="text-primary-500 cursor-pointer p-2 text-right whitespace-nowrap md:p-4"
                       onClick={() => openDeleteModal({ type: 'project', id: p.id, label: p.name })}
                     >
                       삭제
@@ -177,33 +85,42 @@ const MyPage = () => {
         )}
       </section>
 
-      <section className="mt-10.5 w-full">
-        <h2 className="text-secondary-900 mb-6 text-[24px] font-medium">나의 회고</h2>
+      <section className="mt-8 w-full md:mt-10.5">
+        <h2 className="text-secondary-900 text mb-6 text-[16px] font-medium md:text-[24px]">
+          나의 회고
+        </h2>
         {retros.length === 0 ? (
           <EmptyState
             title="작성한 회고가 없어요"
             description="프로젝트를 완료한 뒤 회고를 작성하면 이곳에서 모아볼 수 있어요"
           />
         ) : (
-          <div className="border-neutral-30 overflow-hidden border">
-            <table className="w-full bg-white text-left text-sm">
+          <div className="border-neutral-30 overflow-hidden border bg-white">
+            <table className="w-full table-fixed text-left text-[12px] font-normal md:text-sm">
+              <colgroup>
+                <col />
+                <col className="w-[88px] md:w-auto" />
+                <col className="w-[44px] md:w-[80px]" />
+              </colgroup>
               <thead className="border-b-neutral-30 bg-neutral-10 text-black">
-                <tr className="whitespace-nowrap">
-                  <th className="p-4">제목</th>
-                  <th className="w-30 p-4">만든 날짜</th>
-                  <th className="w-20 p-4"></th>
+                <tr>
+                  <th className="p-2 whitespace-nowrap md:p-4">제목</th>
+                  <th className="p-2 whitespace-nowrap md:p-4">만든 날짜</th>
+                  <th className="p-2 md:p-4"></th>
                 </tr>
               </thead>
               <tbody>
                 {retros.map((r) => (
                   <tr
                     key={r.id}
-                    className="border-b-neutral-30 font-medium whitespace-nowrap text-black"
+                    className="border-b-neutral-30 text-[10px] text-black md:text-[14px] md:font-medium"
                   >
-                    <td className="p-4">{r.title}</td>
-                    <td className="p-4">{formatDate(r.createdAt)}</td>
+                    <td className="truncate p-2 md:p-4">{r.title}</td>
+                    <td className="p-2 whitespace-nowrap tabular-nums md:p-4">
+                      {formatDate(r.createdAt)}
+                    </td>
                     <td
-                      className="text-primary-500 cursor-pointer p-4 text-right"
+                      className="text-primary-500 cursor-pointer p-2 text-right whitespace-nowrap md:p-4"
                       onClick={() =>
                         openDeleteModal({ type: 'retrospective', id: r.id, label: r.title })
                       }
@@ -216,18 +133,22 @@ const MyPage = () => {
             </table>
           </div>
         )}
+        <button
+          type="button"
+          className="hover:bg-primary-100 text-primary-500 mt-20 flex text-[12px] font-normal md:text-[24px] md:font-bold"
+          onClick={openLogoutModal}
+        >
+          로그아웃
+        </button>
       </section>
-      <h2 className="text-primary-500 mt-20 text-[24px] font-bold" onClick={openLogoutModal}>
-        로그아웃
-      </h2>
 
       <DeleteModal
-        isOpen={isOpen}
-        onClose={closeModal}
+        isOpen={isDeleteModalOpen}
+        onClose={closeDeleteModal}
         onConfirm={handleDelete}
         title="항목 삭제"
         description={modalDescription}
-      ></DeleteModal>
+      />
 
       <DeleteModal
         isOpen={isLogoutModalOpen}
@@ -235,7 +156,7 @@ const MyPage = () => {
         onConfirm={handleLogout}
         title="로그아웃"
         description="로그아웃 하시겠습니까?"
-      ></DeleteModal>
+      />
     </div>
   );
 };

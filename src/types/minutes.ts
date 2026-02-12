@@ -24,8 +24,14 @@ export interface CreateMinuteRequest {
   projectId: number;
   title: string;
   meetingDate: string;
-  attendeeIds: number[];
-  agendas: string[];
+  attendeeMemberIds: number[];
+  agendas: CreateMinuteAgendaRequest[];
+}
+
+export interface CreateMinuteAgendaRequest {
+  title: string;
+  content: string;
+  sortOrder: number;
 }
 
 export interface CreateMinuteData {
