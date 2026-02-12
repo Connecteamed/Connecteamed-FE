@@ -24,15 +24,17 @@ const MeetingList = ({ meetings, onCreate, onOpen, onDelete }: MeetingListProps)
               <div key={meeting.id} className="flex h-15 items-center px-4 py-3">
                 <button
                   type="button"
-                  className="text-neutral-90 flex h-14 flex-1 items-center truncate text-left font-medium"
+                  className="text-neutral-90 flex h-15 flex-1 items-center truncate text-left text-xs font-medium"
                   onClick={() => onOpen(meeting.id)}
                 >
                   {meeting.title}
                 </button>
-                <div className="text-neutral-90 w-32 truncate text-center text-sm">
+                <div className="text-neutral-90 w-32 truncate text-center text-xs font-medium">
                   {meeting.members}
                 </div>
-                <div className="text-neutral-90 w-32 text-center text-sm">{meeting.date}</div>
+                <div className="text-neutral-90 w-32 text-center text-xs font-medium">
+                  {meeting.date}
+                </div>
                 <div className="flex w-16 justify-center">
                   <button onClick={() => onDelete(meeting.id)} className="text-neutral-70 text-xs">
                     삭제
