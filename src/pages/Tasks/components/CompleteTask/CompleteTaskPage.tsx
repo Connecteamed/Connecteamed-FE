@@ -1,10 +1,14 @@
+import { useEffect, useState } from 'react';
 
-import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+
+import type { TaskStatusApi, TaskStatusLabel } from '@/types/TaskManagement/task';
+import paper from '@assets/icon-search-paper.svg';
+
+import Dropdown from '@/components/Dropdown';
+
 import usePatchTaskStatus from '@/hooks/TaskPage/Mutate/usePatchTaskStatus';
 import useGetCompletedTasks from '@/hooks/TaskPage/Query/useGetCompletedTasks';
-import type { TaskStatusApi, TaskStatusLabel } from '@/types/TaskManagement/task';
-import paper from '@assets/icon-search-paper.svg'
 
 const statusStyle: Record<TaskStatusLabel, string> = {
   '시작 전': 'bg-zinc-200 text-neutral-600',
@@ -18,6 +22,12 @@ const statusLabelByApi: Record<TaskStatusApi, TaskStatusLabel> = {
   DONE: '완료',
 };
 
+const statusLabel: Record<TaskStatusApi, string> = {
+  NOT_STARTED: '시작 전',
+  IN_PROGRESS: '진행 중',
+  DONE: '완료',
+};
+
 const normalizeDateInput = (value?: string | null) => {
   if (!value) return '';
   if (value.includes('T')) return value.slice(0, 10);
@@ -26,7 +36,10 @@ const normalizeDateInput = (value?: string | null) => {
 
 const formatAssignees = (assignees?: { memberName?: string }[]) => {
   if (!Array.isArray(assignees)) return '';
-  return assignees.map((a) => a?.memberName).filter(Boolean).join(', ');
+  return assignees
+    .map((a) => a?.memberName)
+    .filter(Boolean)
+    .join(', ');
 };
 
 type Props = {
@@ -43,7 +56,6 @@ type TaskRow = {
   assignees: string;
   assigneeIds: number[];
 };
-
 
 const CompleteTaskPage = ({ projectId }: Props) => {
   const { data: completedTasks } = useGetCompletedTasks(projectId);
@@ -62,10 +74,15 @@ const CompleteTaskPage = ({ projectId }: Props) => {
       startDate: normalizeDateInput(task.startDate),
       endDate: normalizeDateInput(task.endDate),
       assignees: Array.isArray(task.assignees)
-        ? task.assignees.map((a: any) => a.nickname).filter(Boolean).join(', ')
+        ? task.assignees
+            .map((a: any) => a.nickname)
+            .filter(Boolean)
+            .join(', ')
         : '',
       assigneeIds: Array.isArray(task.assignees)
-        ? task.assignees.map((a: any) => a.id).filter((id: number) => typeof id === 'number' && Number.isFinite(id))
+        ? task.assignees
+            .map((a: any) => a.id)
+            .filter((id: number) => typeof id === 'number' && Number.isFinite(id))
         : [],
     }));
     setTaskList(mapped);
@@ -75,28 +92,41 @@ const CompleteTaskPage = ({ projectId }: Props) => {
     navigate(`/team/${projectId}/task/${taskId}`);
   };
 
-  const handleStatusChange = (taskId: string, nextStatus: TaskStatusApi) => {
-    setTaskList((prev) => prev.map((task) =>
-      task.id === taskId ? { ...task, status: statusLabelByApi[nextStatus] } : task
-    ));
-    patchStatus({ taskId, status: nextStatus });
+  const handleSelectStatus = (taskId: string, status: TaskStatusApi) => {
+    const previous = taskList;
+    setTaskList((prev) => prev.map((task) => (
+      task.id === taskId
+        ? { ...task, status: statusLabelByApi[status] ?? '완료' }
+        : task
+    )));
+    patchStatus(
+      { taskId, status },
+      {
+        onError: (error: any) => {
+          setTaskList(previous);
+          if (status === 'DONE' && error?.response?.data?.code === 'TASK403') {
+            // showToast('완료로 상태변경은 <br/>본인 업무만 가능합니다');
+          }
+        },
+      },
+    );
     setStatusDropdownOpenId(null);
   };
 
   if (!taskList.length) {
     return (
-      <div className="flex py-25 gap-4 w-full flex-col items-center justify-center max-[767px]:min-h-screen max-[767px]:py-10">
+      <div className="flex w-full flex-col items-center justify-center gap-4 py-25 max-[767px]:min-h-screen max-[767px]:py-10">
         <div className="inline-flex w-48 flex-col items-center justify-start gap-4 max-[767px]:hidden">
           <div className="inline-flex h-48 items-center justify-center gap-2.5 self-stretch rounded-[100px] bg-orange-100 p-8">
             <div className="relative h-32 w-32 overflow-hidden">
               <img src={paper} alt="search paper" />
             </div>
           </div>
-          <div className="flex w-80 flex-col items-center gap-3 justify-start">
+          <div className="flex w-80 flex-col items-center justify-start gap-3">
             <div className="h-[28px] justify-center self-stretch text-center text-2xl font-medium text-black">
               아직 완료된 업무가 없어요
             </div>
-            <div className="h-[40px] justify-center items-center self-stretch text-center font-normal text-black">
+            <div className="h-[40px] items-center justify-center self-stretch text-center font-normal text-black">
               완료된 업무가 이곳에 표시됩니다
             </div>
           </div>
@@ -105,7 +135,11 @@ const CompleteTaskPage = ({ projectId }: Props) => {
           <div className="inline-flex w-48 flex-col items-center justify-start gap-4">
             <div className="inline-flex h-24 w-24 items-center justify-center gap-2.5 rounded-[100px] bg-orange-100 p-8">
               <div className="relative h-20 w-20 overflow-hidden">
-                <img src="/assets/search-paper.svg" alt="search paper" className="h-full w-full object-contain" />
+                <img
+                  src="/assets/search-paper.svg"
+                  alt="search paper"
+                  className="h-full w-full object-contain"
+                />
               </div>
             </div>
             <div className="flex w-80 flex-col items-center justify-start gap-1.5">
@@ -125,7 +159,7 @@ const CompleteTaskPage = ({ projectId }: Props) => {
   return (
     <div className="inline-flex w-full flex-col items-start justify-start">
       <div className="flex h-12 flex-col justify-center self-stretch bg-slate-100 p-3.5 outline-gray-200 max-[767px]:hidden">
-        <div className="inline-flex items-center gap-0 w-full">
+        <div className="inline-flex w-full items-center gap-0">
           <div className="flex items-center gap-0">
             <div className="h-5 w-40 text-sm text-black">업무명</div>
             <div className="hidden h-5 w-64 text-sm text-black min-[1440px]:block">업무내용</div>
@@ -151,40 +185,65 @@ const CompleteTaskPage = ({ projectId }: Props) => {
             <div className="body-xl inline-flex items-center justify-start gap-4 max-[767px]:flex-col max-[767px]:items-start max-[767px]:gap-3">
               <div className="flex items-start justify-start gap-0 max-[767px]:w-full max-[767px]:flex-col">
                 <div
-                  className="w-40 text-xs text-neutral-600 cursor-pointer hover:underline"
+                  className="w-40 cursor-pointer text-xs text-neutral-600 hover:underline"
                   onClick={() => goToTaskDetail(task.id)}
                 >
                   {task.title}
                 </div>
-                <div className="hidden w-64 text-xs leading-5 text-neutral-600 min-[1440px]:block">{task.description}</div>
+                <div className="hidden w-64 text-xs leading-5 text-neutral-600 min-[1440px]:block">
+                  {task.description}
+                </div>
               </div>
               <div className="relative flex items-center justify-start gap-11 max-[767px]:w-full max-[767px]:flex-col max-[767px]:items-start max-[767px]:gap-3">
-                <div className="flex w-24 items-center justify-center rounded-[20px] px-3.5 py-1.5 cursor-pointer relative"
+                <div
+                  className="relative flex w-24 cursor-pointer items-center justify-center rounded-[20px] px-3.5 py-1.5"
                   onClick={() => setStatusDropdownOpenId(task.id)}
                 >
-                  <div className="text-xs">{task.status}</div>
-                  {statusDropdownOpenId === task.id && (
-                    <div className="absolute top-8 left-0 z-10 bg-white border border-gray-200 rounded shadow-md min-w-[80px]">
-                      {(['NOT_STARTED', 'IN_PROGRESS', 'DONE'] as TaskStatusApi[]).map((statusOpt) => (
-                        <div
-                          key={statusOpt}
-                          className={`px-3 py-1 text-xs cursor-pointer hover:bg-orange-100 ${statusLabelByApi[statusOpt] === task.status ? 'font-bold text-orange-500' : ''}`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleStatusChange(task.id, statusOpt);
-                          }}
-                        >
-                          {statusLabelByApi[statusOpt]}
-                        </div>
-                      ))}
+                  {task.status === '완료' ? (
+                    <div className="flex h-7 w-[78px] items-center justify-center self-stretch rounded-[20px] bg-orange-300 text-xs">
+                        완료
                     </div>
+                  ) : (
+                    <div className="text-xs">{task.status}</div>
+                  )}
+                  {statusDropdownOpenId === task.id && (
+                    <Dropdown
+                      isOpen={statusDropdownOpenId === task.id}
+                      onClose={() => setStatusDropdownOpenId(null)}
+                      usePortal={false}
+                    >
+                      <div className="absolute top-full left-0 z-20 mt-2 flex h-32 w-24 flex-col gap-2.5 rounded-[10px] bg-white px-3 py-3 text-xs shadow-[0px_4px_4px_0px_rgba(0,0,0,0.15)]">
+                        <div
+                          className="flex h-7 w-[78px] items-center justify-center self-stretch rounded-[20px] bg-zinc-200"
+                          onClick={() => handleSelectStatus(task.id, 'NOT_STARTED')}
+                        >
+                          {statusLabel.NOT_STARTED}
+                        </div>
+                        <div
+                          className="flex h-7 w-[78px] items-center justify-center self-stretch rounded-[20px] bg-orange-100"
+                          onClick={() => handleSelectStatus(task.id, 'IN_PROGRESS')}
+                        >
+                          {statusLabel.IN_PROGRESS}
+                        </div>
+                        <div
+                          className="flex h-7 w-[78px] items-center justify-center self-stretch rounded-[20px] bg-orange-300"
+                          onClick={() => handleSelectStatus(task.id, 'DONE')}
+                        >
+                          {statusLabel.DONE}
+                        </div>
+                      </div>
+                    </Dropdown>
                   )}
                 </div>
                 <div className="flex items-center justify-start gap-3.5">
                   <div className="flex items-center justify-start gap-5">
-                    <div className="w-28 text-xs text-neutral-600 max-[1120px]:hidden">{task.startDate}</div>
-                    <div className="w-28 text-xs text-neutral-600 max-[1000px]:hidden">{task.endDate}</div>
-                    <div className="w-32 whitespace-pre-line text-xs text-neutral-600 max-[890px]:hidden">
+                    <div className="w-28 text-xs text-neutral-600 max-[1120px]:hidden">
+                      {task.startDate}
+                    </div>
+                    <div className="w-28 text-xs text-neutral-600 max-[1000px]:hidden">
+                      {task.endDate}
+                    </div>
+                    <div className="w-32 text-xs whitespace-pre-line text-neutral-600 max-[890px]:hidden">
                       {task.assignees.replaceAll(', ', '\n')}
                     </div>
                   </div>
@@ -203,7 +262,9 @@ const CompleteTaskPage = ({ projectId }: Props) => {
             <div className="h-28 self-stretch rounded-tl-[10px] rounded-tr-[10px] border border-zinc-200 bg-white" />
             <div className="flex h-8 flex-col items-start justify-start gap-2.5 self-stretch border-r border-l border-zinc-200 bg-white px-4 py-2.5">
               <div className="inline-flex items-center justify-between self-stretch">
-                <div className="justify-center font-['Roboto'] text-xs font-medium text-black">시작일</div>
+                <div className="justify-center font-['Roboto'] text-xs font-medium text-black">
+                  시작일
+                </div>
                 <div className="flex items-center justify-start gap-4">
                   <div className="w-24 text-xs text-neutral-600">{task.startDate}</div>
                 </div>
@@ -211,7 +272,9 @@ const CompleteTaskPage = ({ projectId }: Props) => {
             </div>
             <div className="flex h-8 flex-col items-start justify-start gap-2.5 self-stretch rounded-br-[10px] rounded-bl-[10px] bg-white px-4 py-2.5 outline outline-1 outline-offset-[-1px] outline-zinc-200">
               <div className="inline-flex items-end justify-between self-stretch">
-                <div className="justify-center font-['Roboto'] text-xs font-medium text-black">마감일</div>
+                <div className="justify-center font-['Roboto'] text-xs font-medium text-black">
+                  마감일
+                </div>
                 <div className="flex items-center justify-start gap-4">
                   <div className="w-24 text-xs text-neutral-600">{task.endDate}</div>
                 </div>
@@ -226,10 +289,12 @@ const CompleteTaskPage = ({ projectId }: Props) => {
               </div>
               <div className="inline-flex items-center justify-between self-stretch">
                 <div className="flex items-center justify-start gap-3.5">
-                  <div className={`flex w-24 items-center justify-center rounded-[20px] px-3.5 py-1.5 ${statusStyle[task.status]}`}>
+                  <div
+                    className={`flex w-24 items-center justify-center rounded-[20px] px-3.5 py-1.5 ${statusStyle[task.status]}`}
+                  >
                     <div className="text-xs">{task.status}</div>
                   </div>
-                  <div className="w-32 whitespace-pre-line text-xs text-neutral-600">
+                  <div className="w-32 text-xs whitespace-pre-line text-neutral-600">
                     {task.assignees.replaceAll(', ', '\n')}
                   </div>
                 </div>
