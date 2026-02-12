@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+
 import { useLocation } from 'react-router-dom';
 
 import { getMyProjects } from '@/apis/mypage';
@@ -40,6 +41,8 @@ const AIReview = ({ projectId }: { projectId: number }) => {
   const [excludedTaskIds, setExcludedTaskIds] = useState<number[]>([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+
+  // 마이페이지에서 회고 눌렀을 때 바로 회고 자세히보기로 가는 로직
   const [selectedReviewId, setSelectedReviewId] = useState<number | null>(() => {
     const state = location.state as { retrospectiveId?: unknown } | null;
     const retrospectiveId = state?.retrospectiveId;
