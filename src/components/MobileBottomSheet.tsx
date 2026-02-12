@@ -1,4 +1,5 @@
-import { useCallback, useEffect, type ReactNode } from 'react';
+import { type ReactNode, useCallback, useEffect } from 'react';
+
 import { createPortal } from 'react-dom';
 
 interface MobileBottomSheetProps {
@@ -61,12 +62,12 @@ const MobileBottomSheet = ({
       onClick={handleBackdropClick}
     >
       <div
-        className={`w-96 max-w-[calc(100%-32px)] max-h-[90vh] overflow-hidden rounded-tl-[20px] rounded-tr-[20px] bg-white p-5 shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] inline-flex flex-col justify-start items-start gap-2.5 ${className}`}
+        className={`inline-flex max-h-[90vh] w-96 max-w-[calc(100%-32px)] flex-col items-start justify-start gap-2.5 overflow-hidden rounded-tl-[20px] rounded-tr-[20px] bg-white p-5 pb-[83px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] ${className}`}
         onClick={(e) => e.stopPropagation()}
       >
         {showHandle && (
-          <div className="w-full flex items-center justify-center">
-            <div className="w-24 h-0 outline outline-[3px] outline-offset-[-1.5px] outline-zinc-200" />
+          <div className="flex w-full items-center justify-center">
+            <div className="h-0 w-24 outline outline-[3px] outline-offset-[-1.5px] outline-zinc-200" />
           </div>
         )}
         {children}
