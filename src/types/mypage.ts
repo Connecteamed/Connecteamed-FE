@@ -16,6 +16,8 @@ export interface Retrospective {
   id: number;
   title: string;
   createdAt: string;
+  projectId?: number | string;
+  teamId?: number | string;
 }
 
 export interface RetrospectivesData {

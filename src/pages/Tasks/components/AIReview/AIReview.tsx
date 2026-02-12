@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 
 import { getMyProjects } from '@/apis/mypage';
 import { QUERY_KEY } from '@/constants/key';
@@ -18,6 +19,7 @@ import ReviewDetailModal from './ReviewDetailModal';
 type TaskForReview = CompleteTask & { included: boolean };
 
 const AIReview = ({ projectId }: { projectId: number }) => {
+  const location = useLocation();
   const queryClient = useQueryClient();
 
   const {
@@ -38,7 +40,21 @@ const AIReview = ({ projectId }: { projectId: number }) => {
   const [excludedTaskIds, setExcludedTaskIds] = useState<number[]>([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
-  const [selectedReviewId, setSelectedReviewId] = useState<number | null>(null);
+  const [selectedReviewId, setSelectedReviewId] = useState<number | null>(() => {
+    const state = location.state as { retrospectiveId?: unknown } | null;
+    const retrospectiveId = state?.retrospectiveId;
+
+    if (typeof retrospectiveId === 'number' && Number.isFinite(retrospectiveId)) {
+      return retrospectiveId;
+    }
+
+    if (typeof retrospectiveId === 'string') {
+      const parsed = Number(retrospectiveId);
+      return Number.isFinite(parsed) ? parsed : null;
+    }
+
+    return null;
+  });
 
   const tasksForReview = useMemo<TaskForReview[]>(() => {
     if (!completedTasks) return [];
