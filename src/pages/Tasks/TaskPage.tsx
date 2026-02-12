@@ -244,6 +244,8 @@ const TaskPage = () => {
               </div>
             </div>
             {notificationModalIsOpen && (
+              console.log(notificationData),
+              
               <Modal
                 isOpen={notificationModalIsOpen}
                 onClose={() => setNotificationModalIsOpen(false)}
