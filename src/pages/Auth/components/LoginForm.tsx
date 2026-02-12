@@ -1,12 +1,12 @@
 import Button from '@/components/Button';
 import Input from '@/components/Input';
 
+import iconCloseEye from '@/assets/icon-close-eye.svg';
 import iconError from '@/assets/icon-error.svg';
 import iconEye from '@/assets/icon-eye.svg';
 import iconGoogle from '@/assets/icon-google.svg';
 import iconKakao from '@/assets/icon-kakao.svg';
 import iconLogin from '@/assets/icon-login.svg';
-import iconOpenEye from '@/assets/icon-open-eye.svg';
 import iconPassword from '@/assets/icon-password.svg';
 
 import { useLoginForm } from '../hooks/useLoginForm';
@@ -61,7 +61,7 @@ const LoginForm = () => {
                 className="absolute right-4 flex items-center justify-center focus:outline-none"
               >
                 <img
-                  src={showPassword ? iconOpenEye : iconEye}
+                  src={showPassword ? iconEye : iconCloseEye}
                   className="h-[14px] w-[14px] md:h-6 md:w-6"
                 />
               </button>
