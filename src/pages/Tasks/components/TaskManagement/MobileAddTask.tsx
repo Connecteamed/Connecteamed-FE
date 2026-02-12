@@ -150,7 +150,7 @@ const MobileAddTask = ({ projectId, members, onClose, onSuccess }: Props) => {
           id: taskId,
           title: title.trim(),
           description: content.trim(),
-          status: '시작 전',
+          status: 'NOT_STARTED',
           startDate,
           endDate,
           assignees,
