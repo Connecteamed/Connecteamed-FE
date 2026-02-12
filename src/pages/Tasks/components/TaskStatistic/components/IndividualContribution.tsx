@@ -70,13 +70,14 @@ export const IndividualContribution = ({ name, contributions }: PersonalContribu
   };
 
   return (
-    // <div className="bg-neutral-0 relative w-[478px] rounded-[20px] px-[50px] py-[28px] shadow-[0_4px_4px_rgba(0,0,0,0.25)]">
-    <div className="bg-neutral-0 border-neutral-30 relative w-[478px] rounded-[20px] border px-[50px] py-[28px]">
-      <p className="text-neutral-90 mb-[24px] text-[18px] font-medium">{name} 님의 업무기록</p>
+    <div className="bg-neutral-0 border-neutral-30 relative w-full max-w-[1100px] rounded-[20px] border px-4 py-5 sm:px-[32px] sm:py-[26px] mx-auto">
+      <p className="text-neutral-90 mb-[18px] text-lg font-medium sm:mb-[22px] sm:text-[18px]">
+        {name} 님의 업무기록
+      </p>
 
       <div className="flex">
         {/* 요일 라벨 */}
-        <div className="mr-[16px] flex flex-col gap-[6px] pt-[22px] text-[8px] font-medium text-neutral-100">
+        <div className="mr-[10px] flex flex-col gap-[3px] pt-[12px] text-[8px] font-medium text-neutral-100 sm:mr-[14px] sm:pt-[18px] sm:gap-[5px] md:mr-[16px] md:pt-[22px]">
           {days.map((day) => (
             <span className="py-[1px]" key={day}>
               {day}
@@ -84,38 +85,40 @@ export const IndividualContribution = ({ name, contributions }: PersonalContribu
           ))}
         </div>
 
-        <div className="flex flex-col">
-          {/* 월 라벨 */}
-          <div className="relative mb-[12px] h-[10px] text-[8px] font-medium text-neutral-100">
-            {monthLabels.map(({ month, colIndex }) => (
-              <span
-                key={`${month}-${colIndex}`}
-                className="absolute top-0 whitespace-nowrap"
-                style={{
-                  left: colIndex * 20,
-                }}
-              >
-                {month}
-              </span>
-            ))}
-          </div>
+        <div className="flex-1 max-w-full overflow-x-auto flex justify-center">
+          <div className="inline-flex min-w-fit flex-col items-start">
+            {/* 월 라벨 */}
+            <div className="relative mb-[10px] h-[10px] text-[8px] font-medium text-neutral-100 sm:mb-[12px]">
+              {monthLabels.map(({ month, colIndex }) => (
+                <span
+                  key={`${month}-${colIndex}`}
+                  className="absolute top-0 whitespace-nowrap"
+                  style={{
+                    left: colIndex * 20,
+                  }}
+                >
+                  {month}
+                </span>
+              ))}
+            </div>
 
-          {/* 잔디 */}
-          <div className="grid grid-flow-col grid-rows-7 gap-[6px]">
-            {contributions.map((item) => (
-              <div
-                key={item.date}
-                className={`h-[14px] w-[14px] rounded-[3px] ${getLevelColor(item.level)}`}
-                onMouseEnter={(e) => {
-                  const target = e.currentTarget;
-                  const left = target.offsetLeft + target.offsetWidth / 2;
-                  const top = target.offsetTop;
-                  setTooltipPos({ left, top });
-                  setHoveredData(item);
-                }}
-                onMouseLeave={() => setHoveredData(null)}
-              />
-            ))}
+            {/* 잔디 */}
+            <div className="grid grid-flow-col grid-rows-7 gap-[clamp(1px,0.6vw,5px)]">
+              {contributions.map((item) => (
+                <div
+                  key={item.date}
+                  className={`rounded-[3px] ${getLevelColor(item.level)} h-[clamp(6px,1.2vw,14px)] w-[clamp(6px,1.2vw,14px)]`}
+                  onMouseEnter={(e) => {
+                    const target = e.currentTarget;
+                    const left = target.offsetLeft + target.offsetWidth / 2;
+                    const top = target.offsetTop;
+                    setTooltipPos({ left, top });
+                    setHoveredData(item);
+                  }}
+                  onMouseLeave={() => setHoveredData(null)}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </div>
