@@ -369,7 +369,7 @@ const TaskPage = () => {
             );
           })}
         </div>
-        <div>
+        <div className='mt-7'>
           {selectedTask === '1' && (
             <div>
               <TaskManagement projectId={parsedProjectId} />

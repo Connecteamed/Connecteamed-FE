@@ -15,6 +15,7 @@ import iconSearchOrange from '@assets/icon-search-orange.svg';
 import logoImg from '@assets/icon-sidebar-logo.png';
 
 import useGetTeamList from '@/hooks/TaskPage/Query/useGetTeamList';
+import useGetCompletedTeamList from '@/hooks/TaskPage/Query/useGetCompletedTeamList';
 
 type TeamItem = {
   teamId?: number;
@@ -48,10 +49,8 @@ const Sidebar = () => {
 
   const teams: Team[] = useMemo(() => {
     if (!data?.data) return [];
-
     const payload = data.data;
     const list = Array.isArray(payload) ? payload : [payload];
-
     return list.flatMap(
       (group) =>
         group.teams?.map((team, idx) => ({
@@ -61,11 +60,16 @@ const Sidebar = () => {
     );
   }, [data]);
 
-  // 완료한 프로젝트 (예시: 팀 리스트에서 완료 여부를 filter)
+  // 완료한 프로젝트 API 연동
+  const { data: completedData, isLoading: completedLoading, isError: completedError } = useGetCompletedTeamList();
+
   const completedTeams: Team[] = useMemo(() => {
-    // 실제 API가 따로 있다면 여기서 useGetCompletedTeamList() 호출
-    return teams.filter((team) => team.name.includes('[완료]')); // 예시: 이름에 '[완료]' 포함된 프로젝트
-  }, [teams]);
+    if (!completedData?.data?.projects) return [];
+    return completedData.data.projects.map((project: any) => ({
+      teamId: project.id,
+      name: project.name,
+    }));
+  }, [completedData]);
 
   const renderTeamList = (
     list: Team[],
@@ -214,7 +218,7 @@ const Sidebar = () => {
               className={`h-6 w-6 transition-transform ${isCompletedOpen ? '' : '-rotate-180'}`}
             />
           </button>
-          {isCompletedOpen && renderTeamList(completedTeams, isLoading, isError, '완료한 프로젝트가 없어요')}
+          {isCompletedOpen && renderTeamList(completedTeams, completedLoading, completedError, '완료한 프로젝트가 없어요')}
         </nav>
       </div>
 
