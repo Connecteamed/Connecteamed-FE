@@ -23,7 +23,15 @@ const SplashLayout = () => {
     checkAuth();
   }, []);
 
-  if (isLoading) return <div>로딩중... (스피너)</div>; // 여기에 실제 로딩 컴포넌트
+  if (isLoading) {
+    // 실제 랜딩(로딩) 페이지를 보여줌
+    const LandingPage = lazyRoutes.LandingPage;
+    return (
+      <Suspense fallback={<div />}> 
+        <LandingPage />
+      </Suspense>
+    );
+  }
   return <Outlet />;
 };
 
