@@ -1,5 +1,7 @@
 import { useState } from 'react';
 
+import { useNavigate } from 'react-router-dom';
+
 import plus from '@assets/icon-plus-orange.svg';
 import projectMakingImage from '@assets/image-project-making.png';
 
@@ -8,12 +10,11 @@ import usePostMakeProject from '@/hooks/TaskPage/Mutate/usePostMakeProject';
 
 import ProjectGoalInput from './components/ProjectGoalInput';
 import ProjectNameInput from './components/ProjectNameInput';
-import { useNavigate } from 'react-router-dom';
 
 const MakeProject = () => {
   const { mutate: makeProject } = usePostMakeProject();
   const navigate = useNavigate();
-  
+
   const projectNameInput = useLimitedInput(30);
   const projectGoalInput = useLimitedInput(30);
   const [roleInput, setRoleInput] = useState('');
@@ -44,37 +45,40 @@ const MakeProject = () => {
   const handleSubmit = () => {
     if (!isReady) return;
 
-    makeProject({
-      name: projectNameInput.value,
-      goal: projectGoalInput.value,
-      requiredRoleNames: roles,
-      image: null,
-    }, {
-      onSuccess: (data) => {
-        if (!data.data.projectId){
-          return alert(data.message || '프로젝트 생성에 실패했습니다.');
-        }
-        navigate(`/team/${data.data.projectId}`);
+    makeProject(
+      {
+        name: projectNameInput.value,
+        goal: projectGoalInput.value,
+        requiredRoleNames: roles,
+        image: null,
       },
-    });
+      {
+        onSuccess: (data) => {
+          if (!data.data.projectId) {
+            return alert(data.message || '프로젝트 생성에 실패했습니다.');
+          }
+          navigate(`/team/${data.data.projectId}`);
+        },
+      },
+    );
   };
 
   return (
-    <div className="w-full h-full bg-white">
-      <div className="mx-auto flex max-w-md flex-col gap-6 px-6 py-6 md:max-w-none md:px-0 md:py-0 md:pt-18.75 md:pl-20.5">
+    <div className="min-h-screen w-full bg-white">
+      <div className="flex w-full max-w-[720px] flex-col gap-8 px-6 py-10 md:ml-10 md:px-12 md:pt-18.75">
         {/* 타이틀 */}
-        <div className="text-center text-xl font-bold md:text-left md:text-3xl">
+        <div className="pb-2 text-2xl font-bold text-neutral-900 md:text-3xl">
           새로운 프로젝트를 만들어 볼까요?
         </div>
 
         {/* 이미지 */}
         <img
-          className="mx-auto w-full max-w-xs md:mx-0 md:h-72 md:w-96"
+          className="w-full object-contain"
           src={projectMakingImage}
           alt="프로젝트 플레이스홀더"
         />
 
-        <div className="flex flex-col gap-10 md:w-96">
+        <div className="flex w-full flex-col gap-8">
           <ProjectNameInput
             value={projectNameInput.value}
             currentLength={projectNameInput.length}
@@ -90,28 +94,44 @@ const MakeProject = () => {
           />
 
           {/* 역할 */}
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-2">
             <div className="text-sm font-medium md:text-lg">프로젝트 역할</div>
 
-            <div className="relative flex flex-col">
-              <div className="flex flex-wrap gap-2 rounded-t-[10px] border border-b-0 border-gray-300 p-3 md:absolute md:top-2 md:left-3 md:border-none md:p-0">
+            <div className="focus-within:border-primary-500 rounded-[12px] border border-gray-300">
+              <div className="flex min-h-[52px] flex-wrap items-center gap-2 px-3 py-2">
                 {roles.length === 0 && (
-                  <span className="text-xs text-gray-300 md:text-sm">역할을 추가해주세요</span>
+                  <span className="text-xs text-gray-400 placeholder-gray-400 md:text-lg">
+                    역할을 추가해주세요
+                  </span>
                 )}
-
                 {roles.map((role) => (
                   <span
                     key={role}
-                    className="flex items-center gap-1 rounded-full bg-gray-100 px-3 py-1 text-[10px] md:text-sm"
+                    className="flex items-center gap-2 rounded-full bg-gray-100 px-3 py-2 text-sm font-medium text-neutral-900"
                   >
                     {role}
-                    <button onClick={() => removeRole(role)}>×</button>
+                    <button
+                      type="button"
+                      onClick={() => removeRole(role)}
+                      className="text-neutral-500"
+                      aria-label={`${role} 삭제`}
+                    >
+                      ×
+                    </button>
                   </span>
                 ))}
               </div>
 
-              <div className="flex h-10 items-center rounded-b-[10px] border border-gray-300 px-3 py-2 md:h-12 md:rounded-[10px]">
-                <img src={plus} alt="역할 추가" className="mr-2 h-4 w-4 md:h-5 md:w-5" />
+              <div className="flex h-12 items-center gap-2 border-t border-gray-300 px-3 py-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    addRole();
+                  }}
+                  className="text-primary-500 flex items-center gap-1"
+                >
+                  <img src={plus} alt="역할 추가" className="h-4 w-4 md:h-5 md:w-5" />
+                </button>
                 <input
                   value={roleInput}
                   onChange={(e) => setRoleInput(e.target.value)}
@@ -121,8 +141,8 @@ const MakeProject = () => {
                       addRole();
                     }
                   }}
-                  placeholder="역할 추가"
-                  className="flex-1 text-xs outline-none md:text-sm"
+                  placeholder="추가하고 싶은 역할을 입력해주세요"
+                  className="flex-1 text-sm text-neutral-900 placeholder-gray-400 outline-none focus:placeholder-transparent"
                 />
               </div>
             </div>
@@ -131,9 +151,9 @@ const MakeProject = () => {
           <button
             disabled={!isReady}
             onClick={handleSubmit}
-            className={`h-12 rounded-[10px] text-white ${
-              isReady ? 'bg-orange-500' : 'cursor-not-allowed bg-gray-300'
-            }`}
+            className={`h-12 rounded-[10px] text-base font-medium text-white ${
+              isReady ? 'bg-primary-500' : 'cursor-not-allowed bg-[#c6ccd7]'
+            } mt-6`}
           >
             프로젝트 생성하기
           </button>

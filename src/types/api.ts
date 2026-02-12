@@ -1,5 +1,6 @@
 // API 공통 응답 타입
 export interface ApiResponse<T> {
+  projectId: number;
   status: 'success' | 'error';
   data: T;
   message?: string;

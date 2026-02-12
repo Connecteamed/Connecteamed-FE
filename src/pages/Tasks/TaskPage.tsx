@@ -109,6 +109,8 @@ const TaskPage = () => {
   const [notificationModalIsOpen, setNotificationModalIsOpen] = useState<boolean>(false);
   const { data: notificationData } = useNotification();
 
+  console.log(notificationData)
+
   const [loading, setLoading] = useState(false);
 
   const handleCloseProject = async (projectId: number) => {
@@ -210,7 +212,7 @@ const TaskPage = () => {
   return (
     <div className="max-[767px]:bg-slate-50">
       <div className="mt-[50px] mr-[40px] ml-[80px] flex justify-between max-[767px]:mx-4 max-[767px]:mt-6 max-[767px]:flex-col max-[767px]:items-start max-[767px]:gap-4">
-        <div className="h-[61px] w-[453px] text-5xl font-bold text-black max-[767px]:h-auto max-[767px]:w-full max-[767px]:text-3xl">
+        <div className="h-[61px] w-[453px] text-5xl font-bold text-black max-[767px]:h-auto max-[767px]:w-full max-[767px]:text-3xl truncate">
           {teamName || '팀 이름'}
         </div>
         <div className="flex max-[767px]:w-full max-[767px]:justify-start">

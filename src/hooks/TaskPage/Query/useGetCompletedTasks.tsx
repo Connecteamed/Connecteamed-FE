@@ -1,11 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
-
 import { getCompletedTasks } from '@/apis/TaskPage/completeTask';
 import { QUERY_KEY } from '@/constants/key';
-import type { CompleteTask } from '@/types/TaskManagement/taskComplete';
+import type { CompletedTasksResponse } from '@/types/TaskManagement/completedTasks';
 
 function useGetCompletedTasks(projectId: number) {
-  return useQuery<CompleteTask[]>({
+  return useQuery<CompletedTasksResponse>({
     queryKey: [QUERY_KEY.completeTaskList, projectId],
     queryFn: () => getCompletedTasks(projectId),
     enabled: Number.isFinite(projectId),
