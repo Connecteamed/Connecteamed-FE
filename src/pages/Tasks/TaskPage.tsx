@@ -113,6 +113,7 @@ const TaskPage = () => {
     try {
       const result = await closeProject(projectId);
       console.log('프로젝트 종료 성공:', result);
+      navigate('/')
       // 성공 처리: 페이지 이동, 알림 등
     } catch (error) {
       console.error('프로젝트 종료 에러:', error);

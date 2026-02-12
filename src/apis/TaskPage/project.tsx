@@ -24,10 +24,10 @@ export const postMakeProject = async (
     formData.append('image', image);
   }
 
-  const { data } = await instance.post<ApiResponse<ProjectCreateResponse>>('/projects', formData, {
+  const data = await instance.post<ApiResponse<ProjectCreateResponse>>('/projects', formData, {
     params,
   });
-  return data;
+  return data.data;
 };
 
 
@@ -35,7 +35,7 @@ export const getProjectRoleList = async (projectId: number) => {
   const { data } = await instance.get<ApiResponse<ResponseProjectRoleDTO>>(
     `/projects/${projectId}/roles`,
   );
-  return data;
+  return data.data;
 };
 
 export const getProjectMemberList = async (projectId: number): Promise<ResponseProjectMemberDTO> => {

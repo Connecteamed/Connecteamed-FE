@@ -4,11 +4,13 @@ import Modal from '@/components/Modal';
 import SearchCheckModal from './components/SearchCheckModal';
 import projectSearchImage from '@assets/image-project-search.png';
 import usePostProjectJoin from '@/hooks/SearchProject/Mutate/usePostProjectJoin';
+import { useNavigate } from 'react-router-dom';
 
 const SearchProject = () => {
   const CODE_LENGTH = 8;
   const [code, setCode] = useState('');
   const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
 
   const handleChange = (value: string) => {
     const next = value.slice(0, CODE_LENGTH);
@@ -36,7 +38,10 @@ const SearchProject = () => {
   const handleConfirm = () => {
     if (isPending) return;
     joinProject(undefined, {
-      onSuccess: () => setIsOpen(false),
+      onSuccess: (data) => {
+        setIsOpen(false);
+        navigate(`/team/${data.data.projectId}`);
+      },
     });
   };
 
