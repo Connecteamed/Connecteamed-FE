@@ -8,10 +8,12 @@ import usePostMakeProject from '@/hooks/TaskPage/Mutate/usePostMakeProject';
 
 import ProjectGoalInput from './components/ProjectGoalInput';
 import ProjectNameInput from './components/ProjectNameInput';
+import { useNavigate } from 'react-router-dom';
 
 const MakeProject = () => {
   const { mutate: makeProject } = usePostMakeProject();
-
+  const navigate = useNavigate();
+  
   const projectNameInput = useLimitedInput(30);
   const projectGoalInput = useLimitedInput(30);
   const [roleInput, setRoleInput] = useState('');
@@ -47,6 +49,13 @@ const MakeProject = () => {
       goal: projectGoalInput.value,
       requiredRoleNames: roles,
       image: null,
+    }, {
+      onSuccess: (data) => {
+        if (!data.data.projectId){
+          return alert(data.message || '프로젝트 생성에 실패했습니다.');
+        }
+        navigate(`/team/${data.data.projectId}`);
+      },
     });
   };
 
