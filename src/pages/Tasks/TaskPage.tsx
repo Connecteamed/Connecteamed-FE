@@ -13,17 +13,20 @@ import Dropdown from '@/components/Dropdown';
 import Modal from '@/components/Modal';
 
 import useGetProjectRoleList from '@/hooks/MakeProject/Query/useGetProjectRoleList';
+import { useCloseProject } from '@/hooks/MakeProject/useCloseProject';
 import { useNotification } from '@/hooks/Notification/useNotification';
 import usePatchMemberRoles from '@/hooks/TaskPage/Mutate/usePatchMemberRole';
 import useGetProjectMemberList from '@/hooks/TaskPage/Query/useGetProjectMemberList';
 
 import AIReview from './components/AIReview/AIReview';
+import CompleteTaskPage from './components/CompleteTask/CompleteTaskPage';
 import InviteModal from './components/InviteModal';
 import MeetingNote from './components/MeetingNote/MeetingNote';
 import MobileRoleBottomSheet from './components/MobileRoleBottomSheet';
 import NotificationModal from './components/NotificationModal';
 import TaskManagement from './components/TaskManagement/TaskManagement';
 import TaskStatistic from './components/TaskStatistic/TaskStatistic';
+import { closeProject } from '@/apis/MakeProject/closeProject';
 
 type Member = { id?: number; name: string; roles: string[] };
 
@@ -60,18 +63,16 @@ const TaskPage = () => {
 
   const [members, setMembers] = useState<Member[]>([]);
   const projectNameFromNav = (location.state as { projectName?: string } | null)?.projectName;
-  const teamName =
-    projectNameFromNav ||
-    (memberList[0] as { projectName?: string } | undefined)?.projectName ||
-    '팀 이름';
-  const roleIdMap = useMemo(
-    () =>
-      projectRoles?.reduce<Record<string, number>>((acc, role) => {
-        acc[role.name] = role.roleId;
-        return acc;
-      }, {}) ?? {},
-    [projectRoles],
-  );
+
+  const [teamName, setTeamName] = useState<string>('');
+
+  useEffect(() => {
+    const name =
+      projectNameFromNav ||
+      (memberList[0] as { projectName?: string } | undefined)?.projectName ||
+      '팀 이름';
+    setTeamName(name);
+  }, [projectNameFromNav, memberList]); // projectNameFromNav나 memberList가 바뀔 때 갱신
 
   useEffect(() => {
     if (!memberList) return;
@@ -105,6 +106,22 @@ const TaskPage = () => {
   const [notificationModalIsOpen, setNotificationModalIsOpen] = useState<boolean>(false);
   const { data: notificationData } = useNotification();
 
+  const [loading, setLoading] = useState(false);
+
+  const handleCloseProject = async (projectId: number) => {
+    setLoading(true);
+    try {
+      const result = await closeProject(projectId);
+      console.log('프로젝트 종료 성공:', result);
+      // 성공 처리: 페이지 이동, 알림 등
+    } catch (error) {
+      console.error('프로젝트 종료 에러:', error);
+      alert('프로젝트 종료 실패');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const [isProjectEndModalOpen, setIsProjectEndModalOpen] = useState<boolean>(false);
 
   const tasks = [
@@ -115,6 +132,8 @@ const TaskPage = () => {
     { id: '5', title: '업무 통계' },
     { id: '6', title: 'AI 회고' },
   ];
+
+  const roleIdMap: Record<string, number> = {};
 
   const applyMemberRoles = (memberIndex: number, nextRoles: string[]) => {
     const member = members[memberIndex];
@@ -184,6 +203,8 @@ const TaskPage = () => {
 
   const closeMobileRoleSheet = () => setIsMobileRoleSheetOpen(false);
 
+  const projectName = teamName;
+
   return (
     <div className="max-[767px]:bg-slate-50">
       <div className="mt-[50px] mr-[40px] ml-[80px] flex justify-between max-[767px]:mx-4 max-[767px]:mt-6 max-[767px]:flex-col max-[767px]:items-start max-[767px]:gap-4">
@@ -201,7 +222,7 @@ const TaskPage = () => {
                 <Modal isOpen={inviteModalIsOpen} onClose={() => setInviteModalIsOpen(false)}>
                   <InviteModal
                     projectId={parsedProjectId}
-                    projectName={teamName}
+                    projectName={projectName}
                     onClose={() => setInviteModalIsOpen(false)}
                   />
                 </Modal>
@@ -357,7 +378,11 @@ const TaskPage = () => {
               <MeetingNote newMeeting={location.state?.newMeeting} />
             </div>
           )}
-          {selectedTask === '4' && <div>완료한 업무 컴포넌트</div>}
+          {selectedTask === '4' && (
+            <div>
+              <CompleteTaskPage projectId={parsedProjectId} />
+            </div>
+          )}
           {selectedTask === '5' && (
             <div>
               <TaskStatistic />
@@ -438,11 +463,13 @@ const TaskPage = () => {
                       아니요
                     </div>
                   </div>
-                  <div className="flex h-12 w-44 items-center justify-center gap-2.5 rounded-[5px] bg-blue-600 px-4 py-2 outline outline-1 outline-offset-[-1px] outline-gray-200">
-                    <div className="justify-center text-center font-['Roboto'] text-base leading-4 font-medium text-white">
-                      예
-                    </div>
-                  </div>
+                  <button
+                    type="button"
+                    className="flex h-12 w-44 items-center justify-center gap-2.5 rounded-[5px] bg-blue-600 px-4 py-2"
+                    onClick={() => {handleCloseProject(parsedProjectId);}}
+                  >
+                    예
+                  </button>
                 </div>
               </div>
             </div>

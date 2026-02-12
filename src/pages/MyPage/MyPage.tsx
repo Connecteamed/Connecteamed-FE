@@ -24,6 +24,8 @@ const MyPage = () => {
     closeLogoutModal,
     handleDelete,
     handleLogout,
+    openProjectPage,
+    openRetrospectivePage,
   } = useMyPage();
 
   return (
@@ -63,7 +65,15 @@ const MyPage = () => {
                     key={p.id}
                     className="border-b-neutral-30 text-[10px] text-black md:text-[14px] md:font-medium"
                   >
-                    <td className="truncate p-2 md:p-4">{p.name}</td>
+                    <td className="truncate p-2 md:p-4">
+                      <button
+                        type="button"
+                        className="max-w-full cursor-pointer truncate text-left hover:underline"
+                        onClick={() => openProjectPage(p.id)}
+                      >
+                        {p.name}
+                      </button>
+                    </td>
                     <td className="truncate p-2 md:p-4">{p.roles.join(', ')}</td>
                     <td className="p-2 whitespace-nowrap tabular-nums md:p-4">
                       {formatDate(p.createdAt)}
@@ -115,7 +125,15 @@ const MyPage = () => {
                     key={r.id}
                     className="border-b-neutral-30 text-[10px] text-black md:text-[14px] md:font-medium"
                   >
-                    <td className="truncate p-2 md:p-4">{r.title}</td>
+                    <td className="truncate p-2 md:p-4">
+                      <button
+                        type="button"
+                        className="max-w-full cursor-pointer truncate text-left hover:underline"
+                        onClick={() => openRetrospectivePage(r)}
+                      >
+                        {r.title}
+                      </button>
+                    </td>
                     <td className="p-2 whitespace-nowrap tabular-nums md:p-4">
                       {formatDate(r.createdAt)}
                     </td>
@@ -135,7 +153,7 @@ const MyPage = () => {
         )}
         <button
           type="button"
-          className="hover:bg-primary-100 text-primary-500 mt-20 flex text-[12px] font-normal md:text-[24px] md:font-bold"
+          className="text-primary-500 mt-20 flex text-[12px] font-normal md:text-[24px] md:font-bold"
           onClick={openLogoutModal}
         >
           로그아웃

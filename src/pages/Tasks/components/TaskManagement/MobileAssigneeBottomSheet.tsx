@@ -19,7 +19,7 @@ const MobileAssigneeBottomSheet = ({ isOpen, members, selectedIds, onToggle, onS
     <MobileBottomSheet
       isOpen={isOpen}
       onClose={onClose}
-      className="h-[470px] w-96 max-w-full py-5"
+      className="h-[470px] w-full max-w-full py-5"
     >
       <div className="flex h-full w-full flex-col items-center gap-6">
         <div className="h-0 w-24 border-[3px] border-zinc-200" />
@@ -27,7 +27,7 @@ const MobileAssigneeBottomSheet = ({ isOpen, members, selectedIds, onToggle, onS
 
         <div className="flex w-full flex-1 flex-col overflow-y-auto">
           {members.length === 0 && (
-            <div className="px-9 py-4 text-center text-sm text-neutral-500">프로젝트 멤버가 없어요</div>
+            <div className="px-4 py-4 text-center text-sm text-neutral-500">프로젝트 멤버가 없어요</div>
           )}
           {members.map((member, idx) => {
             const selected = selectedIds.includes(member.projectMemberId);
@@ -36,7 +36,7 @@ const MobileAssigneeBottomSheet = ({ isOpen, members, selectedIds, onToggle, onS
               <button
                 type="button"
                 key={member.projectMemberId}
-                className={`flex h-12 w-full items-center border-b border-zinc-200 px-9 py-2 ${borderTopClass}`}
+                className={`flex h-12 w-full items-center border-b border-zinc-200 px-4 py-2 ${borderTopClass}`}
                 onClick={() => onToggle(member.projectMemberId)}
               >
                 <div className="inline-flex items-center gap-1.5">
@@ -54,7 +54,7 @@ const MobileAssigneeBottomSheet = ({ isOpen, members, selectedIds, onToggle, onS
 
         <button
           type="button"
-          className="inline-flex h-10 w-72 items-center justify-center gap-2.5 rounded-[10px] bg-orange-500 px-20 py-1 text-center text-sm font-medium text-white"
+          className="inline-flex h-12 w-full items-center justify-center gap-2.5 rounded-[10px] bg-orange-500 px-4 py-1 text-center text-sm font-medium text-white"
           onClick={onSave}
           disabled={!isOpen}
         >
