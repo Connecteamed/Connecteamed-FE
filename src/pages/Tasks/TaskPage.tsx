@@ -322,49 +322,24 @@ const TaskPage = () => {
           })}
         </div>
 
-        <div className="mt-[30px] flex gap-[42px] max-[767px]:hidden">
-          {tasks.map((task) => (
-            <div
-              key={task.id}
-              className={`mb-4 flex h-[21px] cursor-pointer items-center rounded-lg px-4 text-lg ${selectedTask === task.id ? 'text-secondary-900 line-clamp-2' : ''}`}
-              onClick={() => setSelectedTask(task.id)}
-            >
-              {task.title}
-            </div>
-          ))}
-        </div>
-
-        <div className="hidden max-[767px]:mt-6 max-[767px]:flex max-[767px]:w-full max-[767px]:justify-start">
-          <div className="inline-flex w-full max-w-[18rem] flex-col items-start justify-center gap-1">
-            <div className="inline-flex items-center gap-4">
-              {tasks.map((task) => {
-                const isActive = selectedTask === task.id;
-                return (
-                  <button
-                    key={task.id}
-                    type="button"
-                    className="flex flex-col items-center gap-1"
-                    onClick={() => setSelectedTask(task.id)}
-                  >
-                    <span
-                      className={`text-center font-['Roboto'] text-xs font-medium ${
-                        isActive ? 'text-blue-900' : 'text-black'
-                      }`}
-                    >
-                      {task.title}
-                    </span>
-                    <span
-                      className={`${
-                        isActive
-                          ? 'w-11 border-b-2 border-blue-900'
-                          : 'w-0 border-b-2 border-transparent'
-                      }`}
-                    />
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+        <div className="mt-6 flex w-full justify-between gap-2 overflow-x-auto px-1 md:mt-[30px] md:justify-start md:gap-[42px] md:overflow-visible md:px-0">
+          {tasks.map((task) => {
+            const isActive = selectedTask === task.id;
+            return (
+              <button
+                key={task.id}
+                type="button"
+                className={`flex h-8 cursor-pointer items-center border-b-2 px-3 text-xs whitespace-nowrap md:h-auto md:px-4 md:pb-1 md:text-lg ${
+                  isActive
+                    ? 'border-secondary-900 text-secondary-900'
+                    : 'border-transparent text-black'
+                }`}
+                onClick={() => setSelectedTask(task.id)}
+              >
+                {task.title}
+              </button>
+            );
+          })}
         </div>
         <div>
           {selectedTask === '1' && (

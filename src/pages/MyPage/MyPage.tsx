@@ -148,7 +148,7 @@ const MyPage = () => {
         onConfirm={handleDelete}
         title="항목 삭제"
         description={modalDescription}
-      ></DeleteModal>
+      />
 
       <DeleteModal
         isOpen={isLogoutModalOpen}
@@ -156,7 +156,7 @@ const MyPage = () => {
         onConfirm={handleLogout}
         title="로그아웃"
         description="로그아웃 하시겠습니까?"
-      ></DeleteModal>
+      />
     </div>
   );
 };
