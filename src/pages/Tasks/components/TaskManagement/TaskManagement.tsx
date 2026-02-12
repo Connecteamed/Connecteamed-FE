@@ -1,5 +1,19 @@
+// 상태 변환 함수
+const statusApiToLabel = (status: TaskStatusApi): TaskStatusLabel => {
+  if (status === 'NOT_STARTED') return '시작 전';
+  if (status === 'IN_PROGRESS') return '진행 중';
+  if (status === 'DONE') return '완료';
+  return '시작 전';
+};
+const statusLabelToApi = (label: TaskStatusLabel): TaskStatusApi => {
+  if (label === '시작 전') return 'NOT_STARTED';
+  if (label === '진행 중') return 'IN_PROGRESS';
+  if (label === '완료') return 'DONE';
+  return 'NOT_STARTED';
+};
 //반응형 디자인 : 업무내용 -> 시작일/마감일 순으로 지워버리기
 import { useEffect, useMemo, useState } from 'react';
+
 import { useNavigate } from 'react-router-dom';
 
 import Modal from '@/components';
@@ -29,7 +43,7 @@ export type TaskRow = {
   id: string;
   title: string;
   description: string;
-  status: TaskStatusLabel;
+  status: TaskStatusApi;
   startDate: string;
   endDate: string;
   assignees: string;
@@ -42,7 +56,7 @@ const initialTasks: TaskRow[] = [
     id: 'task-1',
     title: '와이어프레임 제작',
     description: 'UI 디자인을 위한 와이어프레임 제작 후 디자이너에게 연락',
-    status: '시작 전',
+    status: 'NOT_STARTED',
     startDate: '2025-11-13',
     endDate: '2025-11-24',
     assignees: '팀원1',
@@ -53,7 +67,7 @@ const initialTasks: TaskRow[] = [
     title: 'API  명세서 작성',
     description:
       '와이어프레임 보고 서비스에 기능별 API 제작 : 스웨거로 관리할 거고 REST API 형식...',
-    status: '진행 중',
+    status: 'IN_PROGRESS',
     startDate: '2025-11-13',
     endDate: '2025-11-30',
     assignees: '팀원1, 팀원2, 팀원3, 팀원4',
@@ -63,7 +77,7 @@ const initialTasks: TaskRow[] = [
     id: 'task-3',
     title: 'ERD 작성',
     description: '데이터베이스 ERD 작성',
-    status: '진행 중',
+    status: 'IN_PROGRESS',
     startDate: '2025-11-13',
     endDate: '2025-11-30',
     assignees: '팀원1, 팀원2',
@@ -71,13 +85,19 @@ const initialTasks: TaskRow[] = [
   },
 ];
 
-const statusStyle: Record<TaskRow['status'], string> = {
-  '시작 전': 'bg-zinc-200 text-neutral-600',
-  '진행 중': 'bg-orange-100 text-neutral-600',
-  완료: 'bg-orange-300 text-neutral-700',
+const statusStyle: Record<TaskStatusApi, string> = {
+  NOT_STARTED: 'bg-zinc-200 text-neutral-600',
+  IN_PROGRESS: 'bg-orange-100 text-neutral-600',
+  DONE: 'bg-orange-300 text-neutral-700',
 };
 
-type Props = { projectId: number; currentMemberId?: number };
+const statusLabel: Record<TaskStatusApi, string> = {
+  NOT_STARTED: '시작 전',
+  IN_PROGRESS: '진행 중',
+  DONE: '완료',
+};
+
+type Props = { projectId: number };
 
 const statusLabelByApi: Record<TaskStatusApi, TaskStatusLabel> = {
   NOT_STARTED: '시작 전',
@@ -119,7 +139,7 @@ const formatDateDisplayDots = (value?: string) => {
   return base ? base.replaceAll('-', '.') : '';
 };
 
-const TaskManagement = ({ projectId, currentMemberId }: Props) => {
+const TaskManagement = ({ projectId }: Props) => {
   const numericProjectId = Number(projectId);
   const navigate = useNavigate();
   const { data: taskListData = [] } = useGetTaskList(numericProjectId);
@@ -147,40 +167,45 @@ const TaskManagement = ({ projectId, currentMemberId }: Props) => {
   } | null>(null);
   const [statusSheet, setStatusSheet] = useState<{
     taskId: string;
-    draftStatus: TaskStatusLabel;
+    draftStatus: TaskStatusApi;
   } | null>(null);
   const [completeTaskModalIsOpen, setCompleteTaskModalIsOpen] = useState(false);
   const [taskToDeleteId, setTaskToDeleteId] = useState<string | null>(null);
   const [showMyTasksOnly, setShowMyTasksOnly] = useState(false);
-  const [resolvedCurrentMemberId, setResolvedCurrentMemberId] = useState<number | null>(
-    Number.isFinite(currentMemberId) ? (currentMemberId as number) : null,
-  );
   const [mobileAssigneeTaskId, setMobileAssigneeTaskId] = useState<string | null>(null);
   const [mobileAssigneeIds, setMobileAssigneeIds] = useState<number[]>([]);
 
   const memberNameById = useMemo(
     () =>
       projectMembers.reduce<Record<number, string>>((acc, cur) => {
-        if (Number.isFinite(cur.projectMemberId)) {
-          acc[cur.projectMemberId] = cur.memberName ?? '';
+        if (Number.isFinite(cur.memberId)) {
+          acc[cur.memberId] = cur.memberName ?? '';
         }
         return acc;
       }, {}),
     [projectMembers],
   );
 
-  useEffect(() => {
-    if (Number.isFinite(currentMemberId)) {
-      setResolvedCurrentMemberId(currentMemberId as number);
-      return;
-    }
+  const getCurrentMemberId = (): number | null => {
+    const stored = localStorage.getItem('memberId');
+    if (!stored) return null;
 
-    const storedMemberId = localStorage.getItem('memberId');
-    const parsed = storedMemberId ? Number(storedMemberId) : NaN;
-    if (Number.isFinite(parsed)) {
-      setResolvedCurrentMemberId(parsed);
-    }
-  }, [currentMemberId]);
+    const parsed = Number(stored);
+    return Number.isFinite(parsed) ? parsed : null;
+  };
+  const currentMemberId = getCurrentMemberId();  
+
+  const isMyTask = (task: TaskRow) => {
+    if (currentMemberId === null) return false;
+    return task.assigneeIds?.includes(currentMemberId) ?? false;
+  };
+
+  const myTasks = useMemo(() => {
+    if (!showMyTasksOnly) return taskList;
+    if (currentMemberId === null) return [];
+
+    return taskList.filter((task) => task.assigneeIds?.includes(currentMemberId) ?? false);
+  }, [taskList, showMyTasksOnly, currentMemberId]);
 
   const showToast = (message: string) => {
     const toast = document.createElement('div');
@@ -277,7 +302,7 @@ const TaskManagement = ({ projectId, currentMemberId }: Props) => {
   };
 
   const closeMobileStatusSheet = () => setStatusSheet(null);
-  const handleSaveStatusSheet = (status: TaskStatusLabel) => {
+  const handleSaveStatusSheet = (status: TaskStatusApi) => {
     if (!statusSheet) return;
     handleSelectStatus(statusSheet.taskId, status);
     closeMobileStatusSheet();
@@ -298,7 +323,9 @@ const TaskManagement = ({ projectId, currentMemberId }: Props) => {
 
     setTaskList((prev) =>
       prev.map((t) =>
-        t.id === taskId ? { ...t, assigneeIds: selectedIds, assignees: assigneeNames.join(', ') } : t,
+        t.id === taskId
+          ? { ...t, assigneeIds: selectedIds, assignees: assigneeNames.join(', ') }
+          : t,
       ),
     );
 
@@ -318,38 +345,40 @@ const TaskManagement = ({ projectId, currentMemberId }: Props) => {
   useEffect(() => {
     if (!taskListData) return;
 
-    const mapped: TaskRow[] = taskListData.map((task) => ({
-      id: task.taskId ?? crypto.randomUUID(),
-      title: task.name ?? '제목 없음',
-      description: task.content ?? '',
-      status: statusLabelByApi[task.status] ?? '시작 전',
-      startDate: normalizeDateInput(task.startDate),
-      endDate: normalizeDateInput(task.dueDate),
-      assignees: Array.isArray(task.assignees)
-        ? task.assignees
-            .map((a) => a.memberName)
-            .filter(Boolean)
-            .join(', ')
-        : '',
-      assigneeIds: Array.isArray(task.assignees)
-        ? task.assignees
-            .map((a) => a.projectMemberId)
-            .filter((id: number) => typeof id === 'number' && Number.isFinite(id))
-        : [],
-    }));
+    const mapped: TaskRow[] = taskListData
+      .filter((task) => task.status !== 'DONE')
+      .map((task) => ({
+        id: task.taskId ?? crypto.randomUUID(),
+        title: task.name ?? '제목 없음',
+        description: task.content ?? '',
+        status: task.status as TaskStatusApi,
+        startDate: normalizeDateInput(task.startDate),
+        endDate: normalizeDateInput(task.dueDate),
+        assignees: Array.isArray(task.assignees)
+          ? task.assignees
+              .map((a) => a.memberName)
+              .filter(Boolean)
+              .join(', ')
+          : '',
+        assigneeIds: Array.isArray(task.assignees)
+          ? task.assignees
+              .map((a) => a.memberId)
+              .filter((id: number) => typeof id === 'number' && Number.isFinite(id))
+          : [],
+      }));
 
     setTaskList(mapped);
   }, [taskListData]);
 
-  const handleSelectStatus = (taskId: string, status: '시작 전' | '진행 중' | '완료') => {
+  const handleSelectStatus = (taskId: string, status: TaskStatusApi) => {
     const previous = taskList;
     setTaskList((prev) => prev.map((task) => (task.id === taskId ? { ...task, status } : task)));
     patchStatus(
-      { taskId, status: statusApiByLabel[status] },
+      { taskId, status },
       {
         onError: (error: any) => {
           setTaskList(previous);
-          if (status === '완료' && error?.response?.data?.code === 'TASK403') {
+          if (status === 'DONE' && error?.response?.data?.code === 'TASK403') {
             showToast('완료로 상태변경은 <br/>본인 업무만 가능합니다');
           }
         },
@@ -374,11 +403,6 @@ const TaskManagement = ({ projectId, currentMemberId }: Props) => {
     });
   };
 
-  const myTasks =
-    showMyTasksOnly && resolvedCurrentMemberId
-      ? taskList.filter((task) => task.assigneeIds?.includes(resolvedCurrentMemberId))
-      : taskList;
-
   const findTaskIndexById = (taskId: string) => taskList.findIndex((t) => t.id === taskId);
 
   const hasVisibleTasks = myTasks.length > 0;
@@ -386,9 +410,6 @@ const TaskManagement = ({ projectId, currentMemberId }: Props) => {
     ? taskList.find((t) => t.id === scheduleSheet.taskId)
     : null;
   const statusSheetTask = statusSheet ? taskList.find((t) => t.id === statusSheet.taskId) : null;
-  const mobileAssigneeTask = mobileAssigneeTaskId
-    ? taskList.find((t) => t.id === mobileAssigneeTaskId)
-    : null;
 
   const scheduleActiveDate = scheduleSheet
     ? toDateOrToday(
@@ -420,9 +441,11 @@ const TaskManagement = ({ projectId, currentMemberId }: Props) => {
     setTaskDetailModalIsOpen(true);
   };
 
+  console.log(myTasks);
+
   if (!hasVisibleTasks) {
     return (
-      <div className="pb-gap-4 flex w-full flex-col items-center justify-center max-[767px]:min-h-screen max-[767px]:py-10">
+      <div className="pb-gap-4 flex w-full flex-col items-center justify-center gap-4 py-25 max-[767px]:min-h-screen max-[767px]:py-10">
         <div className="inline-flex w-48 flex-col items-center justify-start gap-4 max-[767px]:hidden">
           <div className="inline-flex h-48 items-center justify-center gap-2.5 self-stretch rounded-[100px] bg-orange-100 p-8">
             <div className="relative h-32 w-32 overflow-hidden">
@@ -430,10 +453,10 @@ const TaskManagement = ({ projectId, currentMemberId }: Props) => {
             </div>
           </div>
           <div className="flex w-80 flex-col items-center justify-start gap-3">
-            <div className="h-7 justify-center self-stretch text-center text-2xl font-medium text-black">
+            <div className="h-[28px] justify-center self-stretch text-center text-2xl font-medium text-black">
               아직 등록된 업무가 없어요
             </div>
-            <div className="h-10 justify-center self-stretch text-center text-sm font-normal text-black">
+            <div className="h-[40px] items-center justify-center self-stretch text-center font-normal text-black">
               업무를 추가해 팀원들과 작업을 시작해 보세요
             </div>
           </div>
@@ -450,7 +473,11 @@ const TaskManagement = ({ projectId, currentMemberId }: Props) => {
           <div className="inline-flex w-48 flex-col items-center justify-start gap-4">
             <div className="inline-flex h-24 w-24 items-center justify-center gap-2.5 rounded-[100px] bg-orange-100 p-8">
               <div className="relative h-20 w-20 overflow-hidden">
-                <img src={searchPaper} alt="search paper" className="h-full w-full object-contain" />
+                <img
+                  src={searchPaper}
+                  alt="search paper"
+                  className="h-full w-full object-contain"
+                />
               </div>
             </div>
             <div className="flex w-80 flex-col items-center justify-start gap-1.5">
@@ -464,12 +491,17 @@ const TaskManagement = ({ projectId, currentMemberId }: Props) => {
             <button
               type="button"
               className="inline-flex h-8 w-36 items-center justify-center gap-2.5 rounded-md bg-orange-500 px-2 py-[5px] text-xs font-medium text-white"
-              onClick={() => navigate(`/team/${projectId}/task/new`)}
+              onClick={() => setAddTaskModalIsOpen(true)}
             >
               업무 추가
             </button>
           </div>
         </div>
+        {setAddTaskModalIsOpen && (
+          <Modal isOpen={addTaskModalIsOpen} onClose={() => setAddTaskModalIsOpen(false)}>
+            <AddTaskModal projectId={numericProjectId} />
+          </Modal>
+        )}
       </div>
     );
   }
@@ -496,17 +528,17 @@ const TaskManagement = ({ projectId, currentMemberId }: Props) => {
       </div>
 
       <div className="flex h-12 flex-col justify-center self-stretch bg-slate-100 p-3.5 outline-gray-200 max-[767px]:hidden">
-        <div className="inline-flex items-center gap-4">
-          <div className="flex items-center gap-3.5">
-            <div className="h-5 w-32 text-sm text-black">업무명</div>
-            <div className="hidden h-5 w-72 text-sm text-black min-[1440px]:block">업무내용</div>
+        <div className="inline-flex w-full items-center gap-0">
+          <div className="flex items-center gap-0">
+            <div className="h-5 w-40 text-sm text-black">업무명</div>
+            <div className="hidden h-5 w-64 text-sm text-black min-[1440px]:block">업무내용</div>
           </div>
-          <div className="flex items-center gap-11">
-            <div className="h-5 w-20 text-center text-sm text-black">상태</div>
-            <div className="flex h-5 items-center gap-3.5">
-              <div className="h-5 w-24 text-sm text-black max-[1120px]:hidden">시작일</div>
-              <div className="h-5 w-24 text-sm text-black max-[1000px]:hidden">마감일</div>
-              <div className="h-5 w-24 text-sm text-black max-[890px]:hidden">담당자</div>
+          <div className="flex items-center gap-0">
+            <div className="h-5 w-24 text-center text-sm text-black">상태</div>
+            <div className="flex h-5 items-center gap-0">
+              <div className="h-5 w-28 text-sm text-black max-[1120px]:hidden">시작일</div>
+              <div className="h-5 w-28 text-sm text-black max-[1000px]:hidden">마감일</div>
+              <div className="h-5 w-32 text-sm text-black max-[890px]:hidden">담당자</div>
               <div className="h-5 w-7" />
             </div>
           </div>
@@ -567,7 +599,7 @@ const TaskManagement = ({ projectId, currentMemberId }: Props) => {
             </div>
             <div className="absolute top-[14px] left-[14px] flex w-72 flex-col items-start justify-start gap-2.5">
               <div
-                className="justify-center self-stretch font-['Roboto'] text-base leading-4 font-medium text-black cursor-pointer"
+                className="cursor-pointer justify-center self-stretch font-['Roboto'] text-base leading-4 font-medium text-black"
                 onClick={() => goToTaskDetail(task.id)}
               >
                 {task.title}
@@ -582,7 +614,7 @@ const TaskManagement = ({ projectId, currentMemberId }: Props) => {
                     onClick={() => openMobileStatusSheet(task)}
                   >
                     <div className="justify-center text-center font-['Roboto'] text-[8px] font-medium text-neutral-600">
-                      {task.status}
+                      {statusLabel[task.status]}
                     </div>
                   </div>
                   <div
@@ -622,15 +654,15 @@ const TaskManagement = ({ projectId, currentMemberId }: Props) => {
             className="flex flex-col gap-2.5 self-stretch border-r border-b border-l border-gray-200 bg-white p-3.5 max-[767px]:rounded-[12px] max-[767px]:shadow-[0_4px_12px_rgba(0,0,0,0.06)]"
           >
             <div className="body-xl inline-flex items-center justify-start gap-4 max-[767px]:flex-col max-[767px]:items-start max-[767px]:gap-3">
-              <div className="flex items-start justify-start gap-3.5 max-[767px]:w-full max-[767px]:flex-col">
+              <div className="flex items-start justify-start gap-0 max-[767px]:w-full max-[767px]:flex-col">
                 <div
-                  className="w-32 truncate text-xs text-neutral-600 max-[767px]:w-full max-[767px]:text-base max-[767px]:font-semibold cursor-pointer"
+                  className="w-40 cursor-pointer truncate text-xs text-neutral-600 max-[767px]:w-full max-[767px]:text-base max-[767px]:font-semibold"
                   onClick={() => handleTitleClick(task.id, index)}
                 >
                   {task.title}
                 </div>
                 <div
-                  className="hidden w-72 text-xs leading-5 text-neutral-600 max-[767px]:block max-[767px]:w-full max-[767px]:text-sm min-[1440px]:[display:-webkit-box] min-[1440px]:block"
+                  className="hidden w-64 text-xs leading-5 text-neutral-600 max-[767px]:block max-[767px]:w-full max-[767px]:text-sm min-[1440px]:block"
                   style={{
                     WebkitLineClamp: 2,
                     WebkitBoxOrient: 'vertical',
@@ -643,14 +675,14 @@ const TaskManagement = ({ projectId, currentMemberId }: Props) => {
 
               <div className="relative flex items-center justify-start gap-11 max-[767px]:w-full max-[767px]:flex-col max-[767px]:items-start max-[767px]:gap-3">
                 <div className="relative flex items-center justify-center">
-                  <div
-                    className={`flex w-20 items-center justify-center rounded-[20px] px-3.5 py-1.5 ${statusStyle[task.status]} max-[767px]:w-24 max-[767px]:text-sm`}
-                    onClick={() =>
-                      setStatusDropdownOpenId((prev) => (prev === task.id ? null : task.id))
-                    }
-                  >
-                    <div className="text-xs max-[767px]:text-sm">{task.status}</div>
-                  </div>
+                    <div
+                      className={`flex w-24 items-center justify-center rounded-[20px] px-3.5 py-1.5 ${statusStyle[task.status]} max-[767px]:w-24 max-[767px]:text-sm`}
+                      onClick={() =>
+                        setStatusDropdownOpenId((prev) => (prev === task.id ? null : task.id))
+                      }
+                    >
+                      <div className="text-xs max-[767px]:text-sm">{statusLabel[task.status]}</div>
+                    </div>
                   {statusDropdownOpenId === task.id && (
                     <Dropdown
                       isOpen={statusDropdownOpenId === task.id}
@@ -660,21 +692,21 @@ const TaskManagement = ({ projectId, currentMemberId }: Props) => {
                       <div className="absolute top-full left-0 z-20 mt-2 flex h-32 w-24 flex-col gap-2.5 rounded-[10px] bg-white px-3 py-3 text-xs shadow-[0px_4px_4px_0px_rgba(0,0,0,0.15)]">
                         <div
                           className="flex h-7 w-[78px] items-center justify-center self-stretch rounded-[20px] bg-zinc-200"
-                          onClick={() => handleSelectStatus(task.id, '시작 전')}
+                          onClick={() => handleSelectStatus(task.id, 'NOT_STARTED')}
                         >
-                          시작 전
+                          {statusLabel.NOT_STARTED}
                         </div>
                         <div
                           className="flex h-7 w-[78px] items-center justify-center self-stretch rounded-[20px] bg-orange-100"
-                          onClick={() => handleSelectStatus(task.id, '진행 중')}
+                          onClick={() => handleSelectStatus(task.id, 'IN_PROGRESS')}
                         >
-                          진행 중
+                          {statusLabel.IN_PROGRESS}
                         </div>
                         <div
                           className="flex h-7 w-[78px] items-center justify-center self-stretch rounded-[20px] bg-orange-300"
-                          onClick={() => handleSelectStatus(task.id, '완료')}
+                          onClick={() => handleSelectStatus(task.id, 'DONE')}
                         >
-                          완료
+                          {statusLabel.DONE}
                         </div>
                       </div>
                     </Dropdown>
@@ -688,7 +720,7 @@ const TaskManagement = ({ projectId, currentMemberId }: Props) => {
                         시작일
                       </div>
                       <div
-                        className="w-24 cursor-pointer text-xs text-neutral-600 max-[767px]:w-full max-[767px]:rounded-[8px] max-[767px]:bg-slate-50 max-[767px]:px-3 max-[767px]:py-2 max-[767px]:text-sm"
+                        className="w-28 cursor-pointer text-xs text-neutral-600 max-[767px]:w-full max-[767px]:rounded-[8px] max-[767px]:bg-slate-50 max-[767px]:px-3 max-[767px]:py-2 max-[767px]:text-sm"
                         onClick={() => setDatePicker({ taskId: task.id, field: 'startDate' })}
                       >
                         {formatDateDisplay(task.startDate)}
@@ -713,7 +745,7 @@ const TaskManagement = ({ projectId, currentMemberId }: Props) => {
                         마감일
                       </div>
                       <div
-                        className="w-24 cursor-pointer text-xs text-neutral-600 max-[767px]:w-full max-[767px]:rounded-[8px] max-[767px]:bg-slate-50 max-[767px]:px-3 max-[767px]:py-2 max-[767px]:text-sm"
+                        className="w-28 cursor-pointer text-xs text-neutral-600 max-[767px]:w-full max-[767px]:rounded-[8px] max-[767px]:bg-slate-50 max-[767px]:px-3 max-[767px]:py-2 max-[767px]:text-sm"
                         onClick={() => setDatePicker({ taskId: task.id, field: 'endDate' })}
                       >
                         {formatDateDisplay(task.endDate)}
@@ -742,7 +774,7 @@ const TaskManagement = ({ projectId, currentMemberId }: Props) => {
                       <div className="hidden text-[11px] text-neutral-500 max-[767px]:block">
                         담당자
                       </div>
-                      <div className="w-24 cursor-pointer text-xs break-words whitespace-pre-line text-neutral-600 max-[767px]:w-full max-[767px]:rounded-[8px] max-[767px]:bg-slate-50 max-[767px]:px-3 max-[767px]:py-2 max-[767px]:text-sm">
+                      <div className="w-32 cursor-pointer text-xs break-words whitespace-pre-line text-neutral-600 max-[767px]:w-full max-[767px]:rounded-[8px] max-[767px]:bg-slate-50 max-[767px]:px-3 max-[767px]:py-2 max-[767px]:text-sm">
                         {task.assignees?.trim()
                           ? task.assignees.replaceAll(', ', '\n')
                           : '담당자 없음'}
@@ -816,15 +848,18 @@ const TaskManagement = ({ projectId, currentMemberId }: Props) => {
         />
       </div>
       {taskDetailModalIsOpen && selectedTaskIndex !== null && (
+        console.log(taskList[selectedTaskIndex]),
         <Modal isOpen={taskDetailModalIsOpen} onClose={() => setTaskDetailModalIsOpen(false)}>
           <TaskDetailModal
+            taskId={taskList[selectedTaskIndex]?.id ?? ''}
+            assigneeIds={Array.isArray(taskList[selectedTaskIndex]?.assigneeIds) ? taskList[selectedTaskIndex]?.assigneeIds : []}
             title={taskList[selectedTaskIndex]?.title ?? ''}
-            status={taskList[selectedTaskIndex]?.status ?? ''}
+            status={taskList[selectedTaskIndex]?.status ?? 'NOT_STARTED'}
             assignees={taskList[selectedTaskIndex]?.assignees ?? ''}
             content={taskList[selectedTaskIndex]?.description ?? ''}
             startDate={taskList[selectedTaskIndex]?.startDate ?? ''}
             endDate={taskList[selectedTaskIndex]?.endDate ?? ''}
-            onEdit={() => {}}
+            editable={isMyTask(taskList[selectedTaskIndex])}
           />
         </Modal>
       )}
@@ -886,9 +921,9 @@ const TaskManagement = ({ projectId, currentMemberId }: Props) => {
 
       <MobileStatusBottomSheet
         isOpen={Boolean(statusSheet)}
-        currentStatus={statusSheet?.draftStatus ?? statusSheetTask?.status ?? '시작 전'}
+        currentStatus={statusApiToLabel(statusSheet?.draftStatus ?? statusSheetTask?.status ?? 'NOT_STARTED')}
         onClose={closeMobileStatusSheet}
-        onSave={handleSaveStatusSheet}
+        onSave={(label) => handleSaveStatusSheet(statusLabelToApi(label))}
       />
 
       <MobileAssigneeBottomSheet

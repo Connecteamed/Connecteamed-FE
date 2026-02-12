@@ -1,36 +1,36 @@
 import Calender from '@/components/calender';
 import MobileBottomSheet from '@/components/MobileBottomSheet';
 
-interface Props {
+type Props = {
   isOpen: boolean;
+  onClose: () => void;
   activeField: 'startDate' | 'endDate';
-  startDisplay: string;
-  endDisplay: string;
-  activeDate: Date;
   onSelectTab: (field: 'startDate' | 'endDate') => void;
+  startDisplay?: string;
+  endDisplay?: string;
+  activeDate: Date;
   onPickDate: (date: Date) => void;
   onSave: () => void;
-  onClose: () => void;
   isSaveDisabled?: boolean;
-}
+};
 
 const MobileScheduleBottomSheet = ({
   isOpen,
+  onClose,
   activeField,
+  onSelectTab,
   startDisplay,
   endDisplay,
   activeDate,
-  onSelectTab,
   onPickDate,
   onSave,
-  onClose,
   isSaveDisabled,
 }: Props) => {
   return (
-    <MobileBottomSheet isOpen={isOpen} onClose={onClose} className="w-96 max-w-full gap-6 py-5">
-      <div className="flex w-full flex-col items-center gap-6">
-        <div className="flex w-full flex-col items-center gap-6 px-5">
-          <div className="w-full text-center text-lg font-medium text-black">업무 일정 선택</div>
+    <MobileBottomSheet isOpen={isOpen} onClose={onClose} className="w-full max-w-full py-3.5">
+      <div className="flex w-full flex-col items-start justify-start gap-6">
+        <div className="flex w-full flex-col items-start justify-start gap-6">
+          <div className="flex pt-6 h-10 w-full text-lg items-center justify-center font-medium text-black">업무 일정 선택</div>
           <div className="flex w-full flex-col items-center gap-2.5 border-t border-b border-zinc-200 bg-white px-9 py-2">
             <div className="inline-flex items-center justify-start gap-px">
               <button
@@ -52,7 +52,7 @@ const MobileScheduleBottomSheet = ({
                 마감일
               </button>
             </div>
-            <div className="inline-flex items-center justify-start gap-[5px]">
+            <div className="inline-flex items-center justify-start gap-1.5">
               <div
                 className={`w-28 h-4 text-center text-sm font-medium ${
                   startDisplay ? 'text-black' : 'text-gray-400'
@@ -72,14 +72,14 @@ const MobileScheduleBottomSheet = ({
         </div>
 
         <div className="flex w-full flex-col items-start border-b border-zinc-200 px-5 pb-4">
-          <div className="w-full flex justify-center rounded-[12px] bg-white">
+          <div className="w-full flex justify-center rounded-xl bg-white">
             <Calender prev={activeDate} next={onPickDate} onClose={() => {}} />
           </div>
         </div>
 
         <button
           type="button"
-          className="inline-flex h-10 w-72 items-center justify-center gap-2.5 rounded-[10px] bg-orange-500 px-20 py-1 text-center text-sm font-medium text-white"
+          className="self-center mb-flex h-10 w-72 items-center justify-center gap-2.5 rounded-[10px] bg-orange-500 px-20 py-1 text-center text-sm font-medium text-white"
           onClick={onSave}
           disabled={isSaveDisabled}
         >

@@ -150,7 +150,7 @@ const MobileAddTask = ({ projectId, members, onClose, onSuccess }: Props) => {
           id: taskId,
           title: title.trim(),
           description: content.trim(),
-          status: '시작 전',
+          status: 'NOT_STARTED',
           startDate,
           endDate,
           assignees,
@@ -162,9 +162,9 @@ const MobileAddTask = ({ projectId, members, onClose, onSuccess }: Props) => {
   };
 
   return (
-    <MobileBottomSheet isOpen onClose={onClose} className="w-96 h-[812px] max-w-full gap-1.5 py-3.5">
-      <div className="flex w-80 flex-col items-start justify-start gap-6">
-        <div className="flex h-8 w-80 items-center justify-start gap-6">
+    <MobileBottomSheet isOpen onClose={onClose} className="w-full h-[812px] max-w-full gap-1.5 py-3.5">
+      <div className="flex w-full flex-col items-start justify-start gap-6">
+        <div className="flex h-8 w-full items-center justify-start gap-6">
           <div className="flex items-center gap-0.5">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-500 text-white">
               C
@@ -173,7 +173,7 @@ const MobileAddTask = ({ projectId, members, onClose, onSuccess }: Props) => {
           </div>
         </div>
 
-        <div className="flex w-80 flex-col items-start justify-start gap-6">
+        <div className="flex w-full flex-col items-start justify-start gap-6">
           <div className="flex w-full flex-col items-start justify-start gap-6">
             <div className="relative h-7 w-3 overflow-hidden">
               <div className="absolute left-[1.08px] top-[3.94px] h-5 w-2.5 bg-neutral-400" />
@@ -183,9 +183,10 @@ const MobileAddTask = ({ projectId, members, onClose, onSuccess }: Props) => {
             <div className="flex w-full flex-col items-start justify-start gap-3">
               <div className="text-sm font-medium text-black">업무명</div>
               <input
-                className="h-7 w-full rounded-[5px] border border-gray-300 px-2.5 text-sm"
+                className="h-10 w-full rounded-[5px] border border-gray-300 px-3 text-sm focus:outline-none"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
+                style={{ minWidth: 0 }}
               />
             </div>
 
@@ -193,49 +194,53 @@ const MobileAddTask = ({ projectId, members, onClose, onSuccess }: Props) => {
               <div className="text-sm font-medium text-black">담당자</div>
               <button
                 type="button"
-                className="flex h-7 w-full items-center rounded-[5px] border border-gray-300 px-2.5 text-left text-sm"
+                className="flex h-10 w-full items-center rounded-[5px] border border-gray-300 px-3 text-left text-sm focus:outline-none"
                 onClick={openAssigneeSheet}
+                style={{ minWidth: 0 }}
               >
                 {assigneeNames.length ? assigneeNames.join(', ') : '담당자 선택'}
               </button>
             </div>
 
-            <div className="flex h-14 w-full items-center justify-start gap-8">
-              <div className="inline-flex w-40 flex-col items-start justify-start gap-3">
-                <div className="text-sm font-medium text-black">시작일</div>
-                <button
-                  type="button"
-                  className="flex h-7 w-full items-center rounded-[5px] border border-gray-300 px-2.5 text-left text-sm"
-                  onClick={() => openScheduleSheet('startDate')}
-                >
-                  {formatDateDisplay(startDate) || '시작일 선택'}
-                </button>
-              </div>
-              <div className="inline-flex w-40 flex-col items-start justify-start gap-3">
-                <div className="text-sm font-medium text-black">마감일</div>
-                <button
-                  type="button"
-                  className="flex h-7 w-full items-center rounded-[5px] border border-gray-300 px-2.5 text-left text-sm"
-                  onClick={() => openScheduleSheet('endDate')}
-                >
-                  {formatDateDisplay(endDate) || '마감일 선택'}
-                </button>
+            <div className="flex flex-col w-full gap-3">
+              <div className="flex w-full gap-3">
+                <div className="flex-1 flex flex-col gap-1">
+                  <div className="text-sm font-medium text-black">시작일</div>
+                  <button
+                    type="button"
+                    className="flex h-10 w-full items-center rounded-[5px] border border-gray-300 px-3 text-left text-sm focus:outline-none"
+                    onClick={() => openScheduleSheet('startDate')}
+                  >
+                    {formatDateDisplay(startDate) || '시작일 선택'}
+                  </button>
+                </div>
+                <div className="flex-1 flex flex-col gap-1">
+                  <div className="text-sm font-medium text-black">마감일</div>
+                  <button
+                    type="button"
+                    className="flex h-10 w-full items-center rounded-[5px] border border-gray-300 px-3 text-left text-sm focus:outline-none"
+                    onClick={() => openScheduleSheet('endDate')}
+                  >
+                    {formatDateDisplay(endDate) || '마감일 선택'}
+                  </button>
+                </div>
               </div>
             </div>
 
             <div className="flex w-full flex-col items-start justify-start gap-3">
               <div className="text-sm font-medium text-black">업무내용</div>
               <textarea
-                className="h-64 w-full rounded-[5px] border border-gray-300 px-2.5 py-2 text-sm"
+                className="h-40 w-full rounded-[5px] border border-gray-300 px-3 py-2 text-sm focus:outline-none resize-none"
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
+                style={{ minWidth: 0 }}
               />
             </div>
           </div>
 
           <button
             type="button"
-            className={`inline-flex h-10 w-full items-center justify-center gap-2.5 rounded-[5px] px-24 py-4 text-base font-medium text-white ${
+            className={`inline-flex h-12 w-full items-center justify-center gap-2.5 rounded-[5px] px-4 py-4 text-base font-medium text-white ${
               isValid ? 'bg-orange-500' : 'bg-gray-300'
             }`}
             onClick={handleSubmit}

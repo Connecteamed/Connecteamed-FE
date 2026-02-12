@@ -1,9 +1,11 @@
+import logo from '@/assets/icon-logo.svg';
+
 const LandingPage = () => {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-white px-6 text-center">
       <div className="mb-6 flex flex-col items-center gap-3">
         <div className="flex items-center">
-          <img src="/src/assets/icon-logo.svg" alt="Connecteamed logo" className="h-30 pt-1.5" />
+          <img src={logo} alt="Connecteamed logo" className="h-30 pt-1.5" />
           <div className="text-primary-500 text-7xl font-bold">Connecteamed</div>
         </div>
       </div>

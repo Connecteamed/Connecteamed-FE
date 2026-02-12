@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
+import useGetProject from '@/hooks/TaskPage/Query/useGetProject';
 import type { MouseEvent } from 'react';
 
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
+import { closeProject } from '@/apis/MakeProject/closeProject';
 import DocumentPage from '@/pages/Tasks/components/Document/DocumentPage';
 import bell from '@assets/icon-bell-black.svg';
 import selectedRoll from '@assets/icon-selectedRoll-orange.svg';
@@ -13,11 +15,13 @@ import Dropdown from '@/components/Dropdown';
 import Modal from '@/components/Modal';
 
 import useGetProjectRoleList from '@/hooks/MakeProject/Query/useGetProjectRoleList';
+import { useCloseProject } from '@/hooks/MakeProject/useCloseProject';
 import { useNotification } from '@/hooks/Notification/useNotification';
 import usePatchMemberRoles from '@/hooks/TaskPage/Mutate/usePatchMemberRole';
 import useGetProjectMemberList from '@/hooks/TaskPage/Query/useGetProjectMemberList';
 
 import AIReview from './components/AIReview/AIReview';
+import CompleteTaskPage from './components/CompleteTask/CompleteTaskPage';
 import InviteModal from './components/InviteModal';
 import MeetingNote from './components/MeetingNote/MeetingNote';
 import MobileRoleBottomSheet from './components/MobileRoleBottomSheet';
@@ -31,11 +35,10 @@ const TaskPage = () => {
   const { teamId: projectId } = useParams();
   const parsedProjectId = Number(projectId);
 
-  // console.log(Number.isFinite(parsedProjectId));
-
   const navigate = useNavigate();
   const location = useLocation();
 
+  // 1. 초기 선택된 태스크 설정
   const initialSelectedTask = (() => {
     const state = location.state as { selectedTask?: string } | null;
     return state?.selectedTask ?? '1';
@@ -43,36 +46,37 @@ const TaskPage = () => {
 
   const [selectedTask, setSelectedTask] = useState<string | null>(initialSelectedTask);
 
+  // 2. location.state 초기화 (URL 정리)
   useEffect(() => {
+    // 주의: 여기서 state를 바로 날리면, 아래 teamName 로직에서 state를 못 읽을 수 있으므로
+    // teamName 처리가 끝난 후(렌더링 이후)에 정리되도록 동작합니다.
     if (location.state && Object.keys(location.state as Record<string, unknown>).length > 0) {
+      // 히스토리 스택을 덮어쓰되, state를 비웁니다.
       navigate(location.pathname, { replace: true, state: {} });
     }
   }, [location.pathname, location.state, navigate]);
+
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
+  const [fixProjectModalOpen, setFixProjectModalOpen] = useState(false);
   const [roleModalPos, setRoleModalPos] = useState<{ top: number; left: number } | null>(null);
   const [activeMemberIndex, setActiveMemberIndex] = useState<number | null>(null);
   const [isMobileRoleSheetOpen, setIsMobileRoleSheetOpen] = useState(false);
   const [mobileRoleDraft, setMobileRoleDraft] = useState<string[]>([]);
+
   const { data: projectRoles } = useGetProjectRoleList(parsedProjectId);
   const { data: memberList = [] } = useGetProjectMemberList(parsedProjectId);
-
   const { mutate: patchMemberRole } = usePatchMemberRoles(parsedProjectId);
 
   const [members, setMembers] = useState<Member[]>([]);
-  const projectNameFromNav = (location.state as { projectName?: string } | null)?.projectName;
-  const teamName =
-    projectNameFromNav ||
-    (memberList[0] as { projectName?: string } | undefined)?.projectName ||
-    '팀 이름';
-  const roleIdMap = useMemo(
-    () =>
-      projectRoles?.reduce<Record<string, number>>((acc, role) => {
-        acc[role.name] = role.roleId;
-        return acc;
-      }, {}) ?? {},
-    [projectRoles],
-  );
 
+  // =========================================================
+  // [핵심 수정] 팀 이름 유지 로직 (API 활용)
+  // =========================================================
+  const { data: projectData } = useGetProject(parsedProjectId);
+  const teamName = projectData?.name || '';
+  // =========================================================
+
+  // 멤버 데이터 정제
   useEffect(() => {
     if (!memberList) return;
     const normalized = memberList.map((m) => {
@@ -105,6 +109,22 @@ const TaskPage = () => {
   const [notificationModalIsOpen, setNotificationModalIsOpen] = useState<boolean>(false);
   const { data: notificationData } = useNotification();
 
+  const [loading, setLoading] = useState(false);
+
+  const handleCloseProject = async (projectId: number) => {
+    setLoading(true);
+    try {
+      const result = await closeProject(projectId);
+      console.log('프로젝트 종료 성공:', result);
+      navigate('/');
+    } catch (error) {
+      console.error('프로젝트 종료 에러:', error);
+      alert('프로젝트 종료 실패');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const [isProjectEndModalOpen, setIsProjectEndModalOpen] = useState<boolean>(false);
 
   const tasks = [
@@ -115,6 +135,8 @@ const TaskPage = () => {
     { id: '5', title: '업무 통계' },
     { id: '6', title: 'AI 회고' },
   ];
+
+  const roleIdMap: Record<string, number> = {};
 
   const applyMemberRoles = (memberIndex: number, nextRoles: string[]) => {
     const member = members[memberIndex];
@@ -184,11 +206,12 @@ const TaskPage = () => {
 
   const closeMobileRoleSheet = () => setIsMobileRoleSheetOpen(false);
 
+  console.log('현재 팀 이름:', teamName);
   return (
     <div className="max-[767px]:bg-slate-50">
       <div className="mt-[50px] mr-[40px] ml-[80px] flex justify-between max-[767px]:mx-4 max-[767px]:mt-6 max-[767px]:flex-col max-[767px]:items-start max-[767px]:gap-4">
         <div className="h-[61px] w-[453px] text-5xl font-bold text-black max-[767px]:h-auto max-[767px]:w-full max-[767px]:text-3xl">
-          {teamName}
+          {teamName || '팀 이름'}
         </div>
         <div className="flex max-[767px]:w-full max-[767px]:justify-start">
           <div className="inline-flex items-center justify-start gap-6 max-[767px]:flex-wrap max-[767px]:gap-4">
@@ -201,7 +224,7 @@ const TaskPage = () => {
                 <Modal isOpen={inviteModalIsOpen} onClose={() => setInviteModalIsOpen(false)}>
                   <InviteModal
                     projectId={parsedProjectId}
-                    projectName={teamName}
+                    projectName={teamName || '팀 이름'}
                     onClose={() => setInviteModalIsOpen(false)}
                   />
                 </Modal>
@@ -249,7 +272,15 @@ const TaskPage = () => {
                     >
                       프로젝트 종료
                     </div>
-                    <div className="flex h-7.5 w-full cursor-pointer items-center justify-center rounded-[20px] bg-zinc-200 px-[15px] py-1.5 text-neutral-600">
+                    <div
+                      className="flex h-7.5 w-full cursor-pointer items-center justify-center rounded-[20px] bg-zinc-200 px-[15px] py-1.5 text-neutral-600"
+                      onClick={() => {
+                        {
+                          setSettingDropdownIsOpen(false);
+                          setFixProjectModalOpen(true);
+                        }
+                      }}
+                    >
                       프로젝트 수정
                     </div>
                   </div>
@@ -341,7 +372,7 @@ const TaskPage = () => {
             );
           })}
         </div>
-        <div>
+        <div className="mt-7">
           {selectedTask === '1' && (
             <div>
               <TaskManagement projectId={parsedProjectId} />
@@ -357,7 +388,11 @@ const TaskPage = () => {
               <MeetingNote newMeeting={location.state?.newMeeting} />
             </div>
           )}
-          {selectedTask === '4' && <div>완료한 업무 컴포넌트</div>}
+          {selectedTask === '4' && (
+            <div>
+              <CompleteTaskPage projectId={parsedProjectId} />
+            </div>
+          )}
           {selectedTask === '5' && (
             <div>
               <TaskStatistic />
@@ -438,14 +473,24 @@ const TaskPage = () => {
                       아니요
                     </div>
                   </div>
-                  <div className="flex h-12 w-44 items-center justify-center gap-2.5 rounded-[5px] bg-blue-600 px-4 py-2 outline outline-1 outline-offset-[-1px] outline-gray-200">
-                    <div className="justify-center text-center font-['Roboto'] text-base leading-4 font-medium text-white">
-                      예
-                    </div>
-                  </div>
+                  <button
+                    type="button"
+                    className="flex h-12 w-44 items-center justify-center gap-2.5 rounded-[5px] bg-blue-600 px-4 py-2"
+                    onClick={() => {
+                      handleCloseProject(parsedProjectId);
+                    }}
+                  >
+                    예
+                  </button>
                 </div>
               </div>
             </div>
+          </Modal>
+        )}
+        {fixProjectModalOpen && (
+          <Modal isOpen={fixProjectModalOpen} onClose={() => setFixProjectModalOpen(false)}>
+            {/* <FixProjectModal/> */}
+            <div></div>
           </Modal>
         )}
       </div>

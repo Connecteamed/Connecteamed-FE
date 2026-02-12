@@ -10,7 +10,7 @@ function useGetProjectRoleList(projectId?: number) {
     queryKey: [QUERY_KEY.roleList, projectId],
     queryFn: async() => {
         const res = await getProjectRoleList(projectId as number);
-        return res.data?.roles ?? [];
+        return res.roles ?? [];
     },
     enabled,
     staleTime: 1000 * 6 * 5,

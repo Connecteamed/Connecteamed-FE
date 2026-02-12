@@ -1,3 +1,8 @@
+// 프로젝트 상세 정보 조회 (팀 이름 등)
+export const getProject = async (projectId: number) => {
+  const { data } = await instance.get(`/projects/${projectId}`);
+  return data.data;
+};
 import type { ApiResponse } from '@/types';
 import type {
   ProjectCreateResponse,
@@ -24,10 +29,10 @@ export const postMakeProject = async (
     formData.append('image', image);
   }
 
-  const { data } = await instance.post<ApiResponse<ProjectCreateResponse>>('/projects', formData, {
+  const data = await instance.post<ApiResponse<ProjectCreateResponse>>('/projects', formData, {
     params,
   });
-  return data;
+  return data.data;
 };
 
 
@@ -35,7 +40,7 @@ export const getProjectRoleList = async (projectId: number) => {
   const { data } = await instance.get<ApiResponse<ResponseProjectRoleDTO>>(
     `/projects/${projectId}/roles`,
   );
-  return data;
+  return data.data;
 };
 
 export const getProjectMemberList = async (projectId: number): Promise<ResponseProjectMemberDTO> => {
