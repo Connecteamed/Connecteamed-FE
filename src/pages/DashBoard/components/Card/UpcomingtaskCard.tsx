@@ -1,3 +1,5 @@
+import { useNavigate } from 'react-router-dom';
+
 import Card from '@/pages/DashBoard/components/Card/Card';
 
 import type { UpcomingTaskApi } from '../../apis/dashboardApi';
@@ -14,6 +16,7 @@ function daysLeft(endDate: string) {
 
 export default function ComingtaskCard() {
   const { data = [], isLoading, isError } = useUpcomingTasks();
+  const navigate = useNavigate();
 
   if (isLoading) {
     return (
@@ -31,7 +34,6 @@ export default function ComingtaskCard() {
     );
   }
 
-  // ✅ 마감일까지 7일 이내만
   const filtered = data
     .filter((t) => {
       const left = daysLeft(t.endDate);
@@ -63,7 +65,20 @@ export default function ComingtaskCard() {
                   </div>
 
                   <div className="flex flex-1 justify-between">
-                    <span className="text-sm">{item.title}</span>
+                    <button
+                      type="button"
+                      className="min-w-0 truncate text-left text-sm hover:underline"
+                      onClick={() => {
+                        const teamId = item.teamId;
+                        if (!teamId) {
+                          alert('teamId가 없어서 업무 상세로 이동할 수 없어요.');
+                          return;
+                        }
+                        navigate(`/team/${teamId}`);
+                      }}
+                    >
+                      {item.title}
+                    </button>
 
                     <div className="flex gap-5 text-sm text-neutral-500">
                       <span>{item.teamName}</span>

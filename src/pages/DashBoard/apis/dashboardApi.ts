@@ -89,7 +89,7 @@ export type UpcomingTaskApi = {
   status: UpcomingTaskStatus;
   teamName: string;
   endDate: string;
-  teamId?: number | string; // 백엔드에서 추가되면 자동 대응
+  teamId?: number | string;
 };
 
 type UpcomingTasksResponse = {
@@ -179,6 +179,7 @@ export type ContributionDay = {
   date: string;
   count: number;
   level: ContributionLevel;
+  projectId: number;
 };
 
 export type ContributionCalendar = {
@@ -188,10 +189,23 @@ export type ContributionCalendar = {
   contributions: ContributionDay[];
 };
 
-export async function getContributionCalendar(year: number): Promise<ContributionCalendar> {
+export async function getContributionCalendar(params: {
+  projectId: number;
+  year: number;
+}): Promise<ContributionCalendar> {
+  const { projectId, year } = params;
+
   const { data } = await dashboardClient.get<ApiResponse<ContributionCalendar>>(
     '/api/contributions/calendar',
-    { params: { year } },
+    { params: { projectId, year } },
   );
+
   return data.data;
+}
+
+export async function getAnnualContributionCalendar(params: {
+  projectId: number;
+  year: number;
+}): Promise<ContributionCalendar> {
+  return getContributionCalendar(params);
 }
