@@ -135,7 +135,7 @@ const MyPage = () => {
         )}
         <button
           type="button"
-          className="hover:bg-primary-100 text-primary-500 mt-20 flex text-[12px] font-normal md:text-[24px] md:font-bold"
+          className="text-primary-500 mt-20 flex text-[12px] font-normal md:text-[24px] md:font-bold"
           onClick={openLogoutModal}
         >
           로그아웃
