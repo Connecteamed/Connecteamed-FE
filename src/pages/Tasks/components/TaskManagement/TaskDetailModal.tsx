@@ -1,11 +1,18 @@
 import { useState } from 'react';
+import usePatchTaskDetail from '@/hooks/TaskPage/Mutate/usePatchTaskDetail';
 
-import type { TaskStatusLabel } from '@/types/TaskManagement/task';
+import type { TaskStatusApi } from '@/types/TaskManagement/task';
 
-const statusStyle: Record<TaskStatusLabel, string> = {
-  '시작 전': 'bg-zinc-200 text-neutral-600',
-  '진행 중': 'bg-orange-100 text-neutral-600',
-  완료: 'bg-orange-300 text-neutral-700',
+const statusStyle: Record<TaskStatusApi, string> = {
+  NOT_STARTED: 'bg-zinc-200 text-neutral-600',
+  IN_PROGRESS: 'bg-orange-100 text-neutral-600',
+  DONE: 'bg-orange-300 text-neutral-700',
+};
+
+const statusLabel: Record<TaskStatusApi, string> = {
+  NOT_STARTED: '시작 전',
+  IN_PROGRESS: '진행 중',
+  DONE: '완료',
 };
 
 const formatDate = (value?: string) => {
@@ -14,34 +21,38 @@ const formatDate = (value?: string) => {
 };
 
 type Props = {
+  taskId: string;
   title: string;
-  status: TaskStatusLabel;
+  status: TaskStatusApi;
   assignees: string;
-  startDate?: string;
-  endDate?: string;
+  assigneeIds?: number[];
+  startDate: string;
+  endDate: string;
   content?: string;
   myNote?: string;
-  onEdit?: (content: string, myNote: string) => void;
+  onEdit?: () => void;
   editable?: boolean;
+  onSuccessEdit?: () => void;
 };
 
 const TaskDetailModal = ({
+  taskId,
   title,
   status,
   assignees,
+  assigneeIds = [],
   startDate,
   endDate,
   content: initialContent,
   myNote: initialMyNote,
   onEdit,
-  editable
+  editable,
+  onSuccessEdit,
 }: Props) => {
+  const { mutate: patchTask, isPending } = usePatchTaskDetail(Number(taskId));
   const [content, setContent] = useState(initialContent || '');
   const [myNote, setMyNote] = useState(initialMyNote || '');
   const isEditable = editable;
-
-  console.log(isEditable);
-  
 
   if (!isEditable) {
     return (
@@ -59,7 +70,7 @@ const TaskDetailModal = ({
                   <div
                     className={`flex h-7 w-20 items-center justify-center gap-2.5 rounded-[20px] px-3.5 py-1.5 ${statusStyle[status]}`}
                   >
-                    <div className="text-center text-xs font-medium text-neutral-600">{status}</div>
+                    <div className="text-center text-xs font-medium text-neutral-600">{statusLabel[status]}</div>
                   </div>
                 </div>
                 <div className="inline-flex w-full items-center justify-start gap-7">
@@ -190,11 +201,38 @@ const TaskDetailModal = ({
 
           <button
             type="button"
-            className="flex h-14 w-full items-center justify-center gap-2.5 rounded-[5px] bg-gray-300 px-4 py-4 md:px-24 text-lg font-medium text-white"
-            onClick={() => onEdit && onEdit(content, myNote)}
-            disabled={!onEdit}
+            className={`flex h-14 w-full items-center justify-center gap-2.5 rounded-[5px] ${isPending ? 'bg-gray-300' : 'bg-orange-500'} px-4 py-4 md:px-24 text-lg font-medium text-white`}
+            onClick={() => {
+              let safeAssigneeIds: number[] = [];
+              if (Array.isArray(assigneeIds)) {
+                safeAssigneeIds = assigneeIds.filter((id) => typeof id === 'number' && !isNaN(id));
+              } else if (typeof assigneeIds === 'number' && !isNaN(assigneeIds)) {
+                safeAssigneeIds = [assigneeIds];
+              }
+              // 날짜를 점(.) 구분 형식으로 변환
+              const toDotDate = (date?: string) => {
+                if (!date) return '';
+                if (date.includes('.')) return date;
+                if (date.includes('T')) return date.slice(0, 10).replaceAll('-', '.');
+                return date.replaceAll('-', '.');
+              };
+              patchTask({
+                title,
+                status,
+                assigneeIds: safeAssigneeIds,
+                startDate: toDotDate(startDate) || '',
+                endDate: toDotDate(endDate) || '',
+                contents: content,
+                noteContent: myNote,
+              }, {
+                onSuccess: () => {
+                  if (onSuccessEdit) onSuccessEdit();
+                },
+              });
+            }}
+            disabled={isPending}
           >
-            수정하기
+            {isPending ? '저장 중...' : '수정하기'}
           </button>
         </div>
       </div>

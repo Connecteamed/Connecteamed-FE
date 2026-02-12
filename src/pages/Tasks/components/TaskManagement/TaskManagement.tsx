@@ -1,3 +1,16 @@
+// 상태 변환 함수
+const statusApiToLabel = (status: TaskStatusApi): TaskStatusLabel => {
+  if (status === 'NOT_STARTED') return '시작 전';
+  if (status === 'IN_PROGRESS') return '진행 중';
+  if (status === 'DONE') return '완료';
+  return '시작 전';
+};
+const statusLabelToApi = (label: TaskStatusLabel): TaskStatusApi => {
+  if (label === '시작 전') return 'NOT_STARTED';
+  if (label === '진행 중') return 'IN_PROGRESS';
+  if (label === '완료') return 'DONE';
+  return 'NOT_STARTED';
+};
 //반응형 디자인 : 업무내용 -> 시작일/마감일 순으로 지워버리기
 import { useEffect, useMemo, useState } from 'react';
 
@@ -30,7 +43,7 @@ export type TaskRow = {
   id: string;
   title: string;
   description: string;
-  status: TaskStatusLabel;
+  status: TaskStatusApi;
   startDate: string;
   endDate: string;
   assignees: string;
@@ -43,7 +56,7 @@ const initialTasks: TaskRow[] = [
     id: 'task-1',
     title: '와이어프레임 제작',
     description: 'UI 디자인을 위한 와이어프레임 제작 후 디자이너에게 연락',
-    status: '시작 전',
+    status: 'NOT_STARTED',
     startDate: '2025-11-13',
     endDate: '2025-11-24',
     assignees: '팀원1',
@@ -54,7 +67,7 @@ const initialTasks: TaskRow[] = [
     title: 'API  명세서 작성',
     description:
       '와이어프레임 보고 서비스에 기능별 API 제작 : 스웨거로 관리할 거고 REST API 형식...',
-    status: '진행 중',
+    status: 'IN_PROGRESS',
     startDate: '2025-11-13',
     endDate: '2025-11-30',
     assignees: '팀원1, 팀원2, 팀원3, 팀원4',
@@ -64,7 +77,7 @@ const initialTasks: TaskRow[] = [
     id: 'task-3',
     title: 'ERD 작성',
     description: '데이터베이스 ERD 작성',
-    status: '진행 중',
+    status: 'IN_PROGRESS',
     startDate: '2025-11-13',
     endDate: '2025-11-30',
     assignees: '팀원1, 팀원2',
@@ -72,10 +85,16 @@ const initialTasks: TaskRow[] = [
   },
 ];
 
-const statusStyle: Record<TaskRow['status'], string> = {
-  '시작 전': 'bg-zinc-200 text-neutral-600',
-  '진행 중': 'bg-orange-100 text-neutral-600',
-  완료: 'bg-orange-300 text-neutral-700',
+const statusStyle: Record<TaskStatusApi, string> = {
+  NOT_STARTED: 'bg-zinc-200 text-neutral-600',
+  IN_PROGRESS: 'bg-orange-100 text-neutral-600',
+  DONE: 'bg-orange-300 text-neutral-700',
+};
+
+const statusLabel: Record<TaskStatusApi, string> = {
+  NOT_STARTED: '시작 전',
+  IN_PROGRESS: '진행 중',
+  DONE: '완료',
 };
 
 type Props = { projectId: number };
@@ -148,7 +167,7 @@ const TaskManagement = ({ projectId }: Props) => {
   } | null>(null);
   const [statusSheet, setStatusSheet] = useState<{
     taskId: string;
-    draftStatus: TaskStatusLabel;
+    draftStatus: TaskStatusApi;
   } | null>(null);
   const [completeTaskModalIsOpen, setCompleteTaskModalIsOpen] = useState(false);
   const [taskToDeleteId, setTaskToDeleteId] = useState<string | null>(null);
@@ -159,8 +178,8 @@ const TaskManagement = ({ projectId }: Props) => {
   const memberNameById = useMemo(
     () =>
       projectMembers.reduce<Record<number, string>>((acc, cur) => {
-        if (Number.isFinite(cur.projectMemberId)) {
-          acc[cur.projectMemberId] = cur.memberName ?? '';
+        if (Number.isFinite(cur.memberId)) {
+          acc[cur.memberId] = cur.memberName ?? '';
         }
         return acc;
       }, {}),
@@ -283,7 +302,7 @@ const TaskManagement = ({ projectId }: Props) => {
   };
 
   const closeMobileStatusSheet = () => setStatusSheet(null);
-  const handleSaveStatusSheet = (status: TaskStatusLabel) => {
+  const handleSaveStatusSheet = (status: TaskStatusApi) => {
     if (!statusSheet) return;
     handleSelectStatus(statusSheet.taskId, status);
     closeMobileStatusSheet();
@@ -327,12 +346,12 @@ const TaskManagement = ({ projectId }: Props) => {
     if (!taskListData) return;
 
     const mapped: TaskRow[] = taskListData
-      .filter((task) => statusLabelByApi[task.status] !== '완료') // 이 줄 추가!
+      .filter((task) => task.status !== 'DONE')
       .map((task) => ({
         id: task.taskId ?? crypto.randomUUID(),
         title: task.name ?? '제목 없음',
         description: task.content ?? '',
-        status: statusLabelByApi[task.status] ?? '시작 전',
+        status: task.status as TaskStatusApi,
         startDate: normalizeDateInput(task.startDate),
         endDate: normalizeDateInput(task.dueDate),
         assignees: Array.isArray(task.assignees)
@@ -343,7 +362,7 @@ const TaskManagement = ({ projectId }: Props) => {
           : '',
         assigneeIds: Array.isArray(task.assignees)
           ? task.assignees
-              .map((a) => a.projectMemberId)
+              .map((a) => a.memberId)
               .filter((id: number) => typeof id === 'number' && Number.isFinite(id))
           : [],
       }));
@@ -351,15 +370,15 @@ const TaskManagement = ({ projectId }: Props) => {
     setTaskList(mapped);
   }, [taskListData]);
 
-  const handleSelectStatus = (taskId: string, status: '시작 전' | '진행 중' | '완료') => {
+  const handleSelectStatus = (taskId: string, status: TaskStatusApi) => {
     const previous = taskList;
     setTaskList((prev) => prev.map((task) => (task.id === taskId ? { ...task, status } : task)));
     patchStatus(
-      { taskId, status: statusApiByLabel[status] },
+      { taskId, status },
       {
         onError: (error: any) => {
           setTaskList(previous);
-          if (status === '완료' && error?.response?.data?.code === 'TASK403') {
+          if (status === 'DONE' && error?.response?.data?.code === 'TASK403') {
             showToast('완료로 상태변경은 <br/>본인 업무만 가능합니다');
           }
         },
@@ -595,7 +614,7 @@ const TaskManagement = ({ projectId }: Props) => {
                     onClick={() => openMobileStatusSheet(task)}
                   >
                     <div className="justify-center text-center font-['Roboto'] text-[8px] font-medium text-neutral-600">
-                      {task.status}
+                      {statusLabel[task.status]}
                     </div>
                   </div>
                   <div
@@ -656,14 +675,14 @@ const TaskManagement = ({ projectId }: Props) => {
 
               <div className="relative flex items-center justify-start gap-11 max-[767px]:w-full max-[767px]:flex-col max-[767px]:items-start max-[767px]:gap-3">
                 <div className="relative flex items-center justify-center">
-                  <div
-                    className={`flex w-24 items-center justify-center rounded-[20px] px-3.5 py-1.5 ${statusStyle[task.status]} max-[767px]:w-24 max-[767px]:text-sm`}
-                    onClick={() =>
-                      setStatusDropdownOpenId((prev) => (prev === task.id ? null : task.id))
-                    }
-                  >
-                    <div className="text-xs max-[767px]:text-sm">{task.status}</div>
-                  </div>
+                    <div
+                      className={`flex w-24 items-center justify-center rounded-[20px] px-3.5 py-1.5 ${statusStyle[task.status]} max-[767px]:w-24 max-[767px]:text-sm`}
+                      onClick={() =>
+                        setStatusDropdownOpenId((prev) => (prev === task.id ? null : task.id))
+                      }
+                    >
+                      <div className="text-xs max-[767px]:text-sm">{statusLabel[task.status]}</div>
+                    </div>
                   {statusDropdownOpenId === task.id && (
                     <Dropdown
                       isOpen={statusDropdownOpenId === task.id}
@@ -673,21 +692,21 @@ const TaskManagement = ({ projectId }: Props) => {
                       <div className="absolute top-full left-0 z-20 mt-2 flex h-32 w-24 flex-col gap-2.5 rounded-[10px] bg-white px-3 py-3 text-xs shadow-[0px_4px_4px_0px_rgba(0,0,0,0.15)]">
                         <div
                           className="flex h-7 w-[78px] items-center justify-center self-stretch rounded-[20px] bg-zinc-200"
-                          onClick={() => handleSelectStatus(task.id, '시작 전')}
+                          onClick={() => handleSelectStatus(task.id, 'NOT_STARTED')}
                         >
-                          시작 전
+                          {statusLabel.NOT_STARTED}
                         </div>
                         <div
                           className="flex h-7 w-[78px] items-center justify-center self-stretch rounded-[20px] bg-orange-100"
-                          onClick={() => handleSelectStatus(task.id, '진행 중')}
+                          onClick={() => handleSelectStatus(task.id, 'IN_PROGRESS')}
                         >
-                          진행 중
+                          {statusLabel.IN_PROGRESS}
                         </div>
                         <div
                           className="flex h-7 w-[78px] items-center justify-center self-stretch rounded-[20px] bg-orange-300"
-                          onClick={() => handleSelectStatus(task.id, '완료')}
+                          onClick={() => handleSelectStatus(task.id, 'DONE')}
                         >
-                          완료
+                          {statusLabel.DONE}
                         </div>
                       </div>
                     </Dropdown>
@@ -832,8 +851,10 @@ const TaskManagement = ({ projectId }: Props) => {
         console.log(taskList[selectedTaskIndex]),
         <Modal isOpen={taskDetailModalIsOpen} onClose={() => setTaskDetailModalIsOpen(false)}>
           <TaskDetailModal
+            taskId={taskList[selectedTaskIndex]?.id ?? ''}
+            assigneeIds={Array.isArray(taskList[selectedTaskIndex]?.assigneeIds) ? taskList[selectedTaskIndex]?.assigneeIds : []}
             title={taskList[selectedTaskIndex]?.title ?? ''}
-            status={taskList[selectedTaskIndex]?.status ?? ''}
+            status={taskList[selectedTaskIndex]?.status ?? 'NOT_STARTED'}
             assignees={taskList[selectedTaskIndex]?.assignees ?? ''}
             content={taskList[selectedTaskIndex]?.description ?? ''}
             startDate={taskList[selectedTaskIndex]?.startDate ?? ''}
@@ -900,9 +921,9 @@ const TaskManagement = ({ projectId }: Props) => {
 
       <MobileStatusBottomSheet
         isOpen={Boolean(statusSheet)}
-        currentStatus={statusSheet?.draftStatus ?? statusSheetTask?.status ?? '시작 전'}
+        currentStatus={statusApiToLabel(statusSheet?.draftStatus ?? statusSheetTask?.status ?? 'NOT_STARTED')}
         onClose={closeMobileStatusSheet}
-        onSave={handleSaveStatusSheet}
+        onSave={(label) => handleSaveStatusSheet(statusLabelToApi(label))}
       />
 
       <MobileAssigneeBottomSheet
