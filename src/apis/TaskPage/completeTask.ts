@@ -1,10 +1,10 @@
-import type { ResponseCompleteTasksDTO } from '@/types/TaskManagement/taskComplete';
 
+import type { CompletedTasksResponse } from '@/types/TaskManagement/completedTasks';
 import { instance } from '../axios';
 
 export const getCompletedTasks = async (
   projectId: number,
-): Promise<ResponseCompleteTasksDTO['tasks']> => {
+): Promise<CompletedTasksResponse> => {
   const { data } = await instance.get(`/projects/${projectId}/tasks/completed`);
-  return data?.data?.tasks ?? [];
+  return data as CompletedTasksResponse;
 };

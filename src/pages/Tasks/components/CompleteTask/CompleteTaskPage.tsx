@@ -1,7 +1,10 @@
 
-import { useMemo, useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import usePatchTaskStatus from '@/hooks/TaskPage/Mutate/usePatchTaskStatus';
 import useGetCompletedTasks from '@/hooks/TaskPage/Query/useGetCompletedTasks';
 import type { TaskStatusApi, TaskStatusLabel } from '@/types/TaskManagement/task';
+import paper from '@assets/icon-search-paper.svg'
 
 const statusStyle: Record<TaskStatusLabel, string> = {
   '시작 전': 'bg-zinc-200 text-neutral-600',
@@ -43,27 +46,42 @@ type TaskRow = {
 
 
 const CompleteTaskPage = ({ projectId }: Props) => {
-  const { data: completedTasks = [] } = useGetCompletedTasks(projectId);
+  const { data: completedTasks } = useGetCompletedTasks(projectId);
   const [taskList, setTaskList] = useState<TaskRow[]>([]);
+  const navigate = useNavigate();
+  const { mutate: patchStatus } = usePatchTaskStatus(projectId);
+  const [statusDropdownOpenId, setStatusDropdownOpenId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!completedTasks) return;
-    const mapped: TaskRow[] = completedTasks.map((task: any) => ({
-      id: task.taskId ?? crypto.randomUUID(),
-      title: task.name ?? '제목 없음',
-      description: task.content ?? '',
+    if (!completedTasks?.data?.tasks) return;
+    const mapped: TaskRow[] = completedTasks.data.tasks.map((task: any) => ({
+      id: String(task.taskId ?? crypto.randomUUID()),
+      title: task.title ?? '제목 없음',
+      description: task.contents ?? '',
       status: statusLabelByApi[task.status as TaskStatusApi] ?? '완료',
       startDate: normalizeDateInput(task.startDate),
-      endDate: normalizeDateInput(task.dueDate),
+      endDate: normalizeDateInput(task.endDate),
       assignees: Array.isArray(task.assignees)
-        ? task.assignees.map((a: any) => a.memberName).filter(Boolean).join(', ')
+        ? task.assignees.map((a: any) => a.nickname).filter(Boolean).join(', ')
         : '',
       assigneeIds: Array.isArray(task.assignees)
-        ? task.assignees.map((a: any) => a.projectMemberId).filter((id: number) => typeof id === 'number' && Number.isFinite(id))
+        ? task.assignees.map((a: any) => a.id).filter((id: number) => typeof id === 'number' && Number.isFinite(id))
         : [],
     }));
     setTaskList(mapped);
   }, [completedTasks]);
+
+  const goToTaskDetail = (taskId: string) => {
+    navigate(`/team/${projectId}/task/${taskId}`);
+  };
+
+  const handleStatusChange = (taskId: string, nextStatus: TaskStatusApi) => {
+    setTaskList((prev) => prev.map((task) =>
+      task.id === taskId ? { ...task, status: statusLabelByApi[nextStatus] } : task
+    ));
+    patchStatus({ taskId, status: nextStatus });
+    setStatusDropdownOpenId(null);
+  };
 
   if (!taskList.length) {
     return (
@@ -71,7 +89,7 @@ const CompleteTaskPage = ({ projectId }: Props) => {
         <div className="inline-flex w-48 flex-col items-center justify-start gap-4 max-[767px]:hidden">
           <div className="inline-flex h-48 items-center justify-center gap-2.5 self-stretch rounded-[100px] bg-orange-100 p-8">
             <div className="relative h-32 w-32 overflow-hidden">
-              <img src="/assets/search-paper.svg" alt="search paper" />
+              <img src={paper} alt="search paper" />
             </div>
           </div>
           <div className="flex w-80 flex-col items-center gap-3 justify-start">
@@ -132,12 +150,35 @@ const CompleteTaskPage = ({ projectId }: Props) => {
           >
             <div className="body-xl inline-flex items-center justify-start gap-4 max-[767px]:flex-col max-[767px]:items-start max-[767px]:gap-3">
               <div className="flex items-start justify-start gap-0 max-[767px]:w-full max-[767px]:flex-col">
-                <div className="w-40 text-xs text-neutral-600">{task.title}</div>
+                <div
+                  className="w-40 text-xs text-neutral-600 cursor-pointer hover:underline"
+                  onClick={() => goToTaskDetail(task.id)}
+                >
+                  {task.title}
+                </div>
                 <div className="hidden w-64 text-xs leading-5 text-neutral-600 min-[1440px]:block">{task.description}</div>
               </div>
               <div className="relative flex items-center justify-start gap-11 max-[767px]:w-full max-[767px]:flex-col max-[767px]:items-start max-[767px]:gap-3">
-                <div className={`flex w-24 items-center justify-center rounded-[20px] px-3.5 py-1.5 ${statusStyle[task.status]}`}>
+                <div className="flex w-24 items-center justify-center rounded-[20px] px-3.5 py-1.5 cursor-pointer relative"
+                  onClick={() => setStatusDropdownOpenId(task.id)}
+                >
                   <div className="text-xs">{task.status}</div>
+                  {statusDropdownOpenId === task.id && (
+                    <div className="absolute top-8 left-0 z-10 bg-white border border-gray-200 rounded shadow-md min-w-[80px]">
+                      {(['NOT_STARTED', 'IN_PROGRESS', 'DONE'] as TaskStatusApi[]).map((statusOpt) => (
+                        <div
+                          key={statusOpt}
+                          className={`px-3 py-1 text-xs cursor-pointer hover:bg-orange-100 ${statusLabelByApi[statusOpt] === task.status ? 'font-bold text-orange-500' : ''}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleStatusChange(task.id, statusOpt);
+                          }}
+                        >
+                          {statusLabelByApi[statusOpt]}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <div className="flex items-center justify-start gap-3.5">
                   <div className="flex items-center justify-start gap-5">
