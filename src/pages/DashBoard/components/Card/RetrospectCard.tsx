@@ -1,10 +1,27 @@
+import { useNavigate } from 'react-router-dom';
+
 import Card from '@/pages/DashBoard/components/Card/Card';
 
 import { useRecentRetrospectives } from '../../hooks/useRecentRetrospectives';
 import { formatMMDD } from '../../utils/date';
 
 export default function RetrospectCard() {
+  const navigate = useNavigate();
   const { data = [], isLoading, isError } = useRecentRetrospectives();
+
+  const openRetrospective = (teamId: number | string | undefined, retrospectiveId: number) => {
+    if (teamId === undefined || teamId === null || teamId === '') {
+      alert('연결된 프로젝트(teamId)를 찾지 못했어요.');
+      return;
+    }
+
+    navigate(`/team/${teamId}`, {
+      state: {
+        selectedTask: '6',
+        retrospectiveId,
+      },
+    });
+  };
 
   return (
     <Card title="회고 목록">
@@ -23,7 +40,7 @@ export default function RetrospectCard() {
                     <div className="flex items-center justify-between">
                       <button
                         type="button"
-                        onClick={() => {}}
+                        onClick={() => openRetrospective(item.teamId, item.id)}
                         className="font-['Inter'] text-sm font-medium text-neutral-500 hover:underline focus:outline-none"
                       >
                         {item.title}

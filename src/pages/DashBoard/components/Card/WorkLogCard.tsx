@@ -3,14 +3,13 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   type ContributionDay,
   type ContributionLevel,
-  getContributionCalendar,
+  getAnnualContributionCalendar,
 } from '@/pages/DashBoard/apis/dashboardApi';
 import Card from '@/pages/DashBoard/components/Card/Card';
 
-import WorkLogTooltip from '../WorkLogTooltip';
+import WorkLogTooltip from './WorkLogTooltip';
 
-const YEAR = 2026;
-
+const YEAR = new Date().getFullYear();
 type Level = ContributionLevel;
 type Cell = Level | null;
 
@@ -44,6 +43,23 @@ const levelToBg: Record<Level, string> = {
   3: 'bg-orange-500',
   4: 'bg-orange-600',
 };
+
+function resolveAnyProjectId(): number | null {
+  const candidates = [
+    'projectId',
+    'currentProjectId',
+    'selectedProjectId',
+    'activeProjectId',
+    'lastProjectId',
+  ];
+
+  for (const key of candidates) {
+    const raw = localStorage.getItem(key);
+    const n = raw ? Number(raw) : NaN;
+    if (Number.isFinite(n) && n > 0) return n;
+  }
+  return null;
+}
 
 function getDaysInYear(year: number) {
   const start = new Date(year, 0, 1);
@@ -138,7 +154,6 @@ function MonthLabelsRow({
   return (
     <div className="relative" style={{ height: LABEL_H }}>
       {labels.map((label, i) => {
-        // ✅ 1월/7월만 한 칸 왼쪽으로
         const shiftLeftOneCell = label === '1월' || label === '7월';
         const left = (monthStarts[i] - (shiftLeftOneCell ? 1 : 0)) * (CELL + GAP);
 
@@ -243,7 +258,7 @@ export default function WorkLogCard() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [hover, setHover] = useState<HoverInfo | null>(null);
 
-  // 초기엔 0으로 두고(API 성공하면 채움) – 원하면 mock 유지해도 됨
+  const projectId = useMemo(() => resolveAnyProjectId(), []);
   const [yearLevels, setYearLevels] = useState<Level[]>(() =>
     Array.from({ length: getDaysInYear(YEAR) }, () => 0),
   );
@@ -252,24 +267,29 @@ export default function WorkLogCard() {
   );
 
   useEffect(() => {
+    if (!projectId) {
+      console.warn('[WorkLogCard] projectId not found (required by API).');
+      return;
+    }
+
     let alive = true;
     (async () => {
       try {
-        const data = await getContributionCalendar(YEAR);
+        const data = await getAnnualContributionCalendar({ projectId, year: YEAR });
         if (!alive) return;
 
-        const { levels, counts } = buildLevelAndCountByDoy(YEAR, data.contributions);
+        const { levels, counts } = buildLevelAndCountByDoy(YEAR, data.contributions ?? []);
         setYearLevels(levels);
         setYearCounts(counts);
       } catch (e) {
-        // 실패하면 일단 0으로 유지 (또는 여기서 mock으로 fallback)
         console.error(e);
       }
     })();
+
     return () => {
       alive = false;
     };
-  }, []);
+  }, [projectId]);
 
   const handleHover = (
     info: { date: Date; count: number; clientX: number; clientY: number } | null,
@@ -319,6 +339,7 @@ export default function WorkLogCard() {
             <WorkLogTooltip date={hover.date} count={hover.count} />
           </div>
         )}
+
         {/* 1~6월 */}
         <div className="-mt-[7px] flex">
           <DayLabels />
@@ -332,7 +353,9 @@ export default function WorkLogCard() {
             />
           </div>
         </div>
+
         <div className="h-6" />
+
         {/* 7~12월 */}
         <div className="flex">
           <DayLabels />
@@ -346,6 +369,7 @@ export default function WorkLogCard() {
             />
           </div>
         </div>
+
         {/* 범례 */}
         <div className="mt-3 flex justify-end">
           <div className="inline-flex items-center justify-start gap-1.5">
