@@ -27,6 +27,7 @@ import NotificationModal from './components/NotificationModal';
 import TaskManagement from './components/TaskManagement/TaskManagement';
 import TaskStatistic from './components/TaskStatistic/TaskStatistic';
 import { closeProject } from '@/apis/MakeProject/closeProject';
+import fixProjectModal from './components/TaskManagement/fixProjectModal';
 
 type Member = { id?: number; name: string; roles: string[] };
 
@@ -52,6 +53,7 @@ const TaskPage = () => {
     }
   }, [location.pathname, location.state, navigate]);
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
+  const [fixProjectModalOpen, setFixProjectModalOpen] = useState(false);
   const [roleModalPos, setRoleModalPos] = useState<{ top: number; left: number } | null>(null);
   const [activeMemberIndex, setActiveMemberIndex] = useState<number | null>(null);
   const [isMobileRoleSheetOpen, setIsMobileRoleSheetOpen] = useState(false);
@@ -271,7 +273,12 @@ const TaskPage = () => {
                     >
                       프로젝트 종료
                     </div>
-                    <div className="flex h-7.5 w-full cursor-pointer items-center justify-center rounded-[20px] bg-zinc-200 px-[15px] py-1.5 text-neutral-600">
+                    <div className="flex h-7.5 w-full cursor-pointer items-center justify-center rounded-[20px] bg-zinc-200 px-[15px] py-1.5 text-neutral-600"
+                      onClick={() => { {
+                        setSettingDropdownIsOpen(false);
+                        setFixProjectModalOpen(true);
+                      }}}
+                    >
                       프로젝트 수정
                     </div>
                   </div>
@@ -499,6 +506,11 @@ const TaskPage = () => {
                 </div>
               </div>
             </div>
+          </Modal>
+        )}
+        {fixProjectModalOpen && (
+          <Modal isOpen={fixProjectModalOpen} onClose={() => setFixProjectModalOpen(false)}>
+            <fixProjectModal/>
           </Modal>
         )}
       </div>
