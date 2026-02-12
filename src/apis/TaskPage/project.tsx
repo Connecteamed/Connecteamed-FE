@@ -68,9 +68,8 @@ export const getProjectInviteCode = async (projectId: number) => {
 }
 
 export const postProjectJoin = async (inviteCode: string) => {
-  const { data } = await instance.post<ApiResponse<null>>(
-    `/invite/join`,
-    { inviteCode },
-  );
+  const { data } = await instance.post<ApiResponse<{ projectId: number }>>('/invite/join', {
+    inviteCode,
+  });
   return data;
-}
+};

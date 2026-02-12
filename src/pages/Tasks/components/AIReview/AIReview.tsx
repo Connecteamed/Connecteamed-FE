@@ -60,8 +60,8 @@ const AIReview = ({ projectId }: { projectId: number }) => {
   });
 
   const tasksForReview = useMemo<TaskForReview[]>(() => {
-    if (!completedTasks) return [];
-    return completedTasks.map((task) => ({
+    if (!completedTasks?.data?.tasks) return [];
+    return completedTasks.data.tasks.map((task) => ({
       ...task,
       included: !excludedTaskIds.includes(task.taskId),
     }));

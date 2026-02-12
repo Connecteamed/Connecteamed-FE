@@ -46,15 +46,15 @@ type TaskRow = {
 
 
 const CompleteTaskPage = ({ projectId }: Props) => {
-  const { data: completedTasks = [] } = useGetCompletedTasks(projectId);
+  const { data: completedTasks } = useGetCompletedTasks(projectId);
   const [taskList, setTaskList] = useState<TaskRow[]>([]);
   const navigate = useNavigate();
   const { mutate: patchStatus } = usePatchTaskStatus(projectId);
   const [statusDropdownOpenId, setStatusDropdownOpenId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!completedTasks) return;
-    const mapped: TaskRow[] = completedTasks.map((task: any) => ({
+    if (!completedTasks?.data?.tasks) return;
+    const mapped: TaskRow[] = completedTasks.data.tasks.map((task: any) => ({
       id: String(task.taskId ?? crypto.randomUUID()),
       title: task.title ?? '제목 없음',
       description: task.contents ?? '',

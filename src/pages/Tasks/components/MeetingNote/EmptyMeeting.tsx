@@ -1,3 +1,5 @@
+import meetingNoteIcon from '@/assets/icon-minutes-orange.svg';
+
 interface EmptyMeetingProps {
   onCreate: () => void;
 }
@@ -7,7 +9,7 @@ const EmptyMeeting = ({ onCreate }: EmptyMeetingProps) => {
     <div className="flex flex-col items-center justify-center py-16 md:py-20">
       <div className="mb-6 flex h-25 w-25 items-center justify-center rounded-full bg-orange-100 md:h-50 md:w-50">
         <img
-          src="/src/assets/icon-minutes-orange.svg"
+          src={meetingNoteIcon}
           alt="회의록"
           className="ml-4 h-16 w-16 md:ml-4.5 md:h-25 md:w-33"
         />
