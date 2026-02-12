@@ -40,7 +40,7 @@ const SearchProject = () => {
     joinProject(undefined, {
       onSuccess: (data) => {
         setIsOpen(false);
-        // navigate(`/team/${data.data.projectId}`);
+        navigate(`/team/${data}`);
       },
     });
   };

@@ -153,13 +153,8 @@ const TaskManagement = ({ projectId }: Props) => {
   const [completeTaskModalIsOpen, setCompleteTaskModalIsOpen] = useState(false);
   const [taskToDeleteId, setTaskToDeleteId] = useState<string | null>(null);
   const [showMyTasksOnly, setShowMyTasksOnly] = useState(false);
-  // const [resolvedCurrentMemberId, setResolvedCurrentMemberId] = useState<number | null>(
-  //   Number.isFinite(currentMemberId) ? (currentMemberId as number) : null,
-  // );
   const [mobileAssigneeTaskId, setMobileAssigneeTaskId] = useState<string | null>(null);
   const [mobileAssigneeIds, setMobileAssigneeIds] = useState<number[]>([]);
-
-  // currentMemberId 관련 코드 완전 제거
 
   const memberNameById = useMemo(
     () =>
@@ -179,8 +174,7 @@ const TaskManagement = ({ projectId }: Props) => {
     const parsed = Number(stored);
     return Number.isFinite(parsed) ? parsed : null;
   };
-
-  const currentMemberId = getCurrentMemberId();
+  const currentMemberId = getCurrentMemberId();  
 
   const isMyTask = (task: TaskRow) => {
     if (currentMemberId === null) return false;
@@ -835,6 +829,7 @@ const TaskManagement = ({ projectId }: Props) => {
         />
       </div>
       {taskDetailModalIsOpen && selectedTaskIndex !== null && (
+        console.log(taskList[selectedTaskIndex]),
         <Modal isOpen={taskDetailModalIsOpen} onClose={() => setTaskDetailModalIsOpen(false)}>
           <TaskDetailModal
             title={taskList[selectedTaskIndex]?.title ?? ''}
