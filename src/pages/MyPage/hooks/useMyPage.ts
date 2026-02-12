@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 
+import type { AxiosError } from 'axios';
 import { useNavigate } from 'react-router-dom';
 
 import { postLogout } from '@/apis/auth';
@@ -14,6 +15,35 @@ import type { Project, Retrospective } from '@/types/mypage';
 export type DeleteTarget =
   | { type: 'project'; id: number; label: string }
   | { type: 'retrospective'; id: number; label: string };
+
+type DeleteProjectErrorData = {
+  code?: string;
+};
+
+const DELETED_PROJECT_IDS_KEY = 'mypage_deleted_project_ids';
+
+const getDeletedProjectIds = (): number[] => {
+  if (typeof window === 'undefined') return [];
+
+  try {
+    const raw = localStorage.getItem(DELETED_PROJECT_IDS_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((id): id is number => typeof id === 'number');
+  } catch {
+    return [];
+  }
+};
+
+const addDeletedProjectId = (projectId: number) => {
+  if (typeof window === 'undefined') return;
+
+  const prev = getDeletedProjectIds();
+  if (prev.includes(projectId)) return;
+
+  localStorage.setItem(DELETED_PROJECT_IDS_KEY, JSON.stringify([...prev, projectId]));
+};
 
 export const useMyPage = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -57,7 +87,8 @@ export const useMyPage = () => {
       ]);
 
       if (projectResponse.status === 'success' && projectResponse.data) {
-        setProjects(projectResponse.data.projects);
+        const deletedProjectIds = new Set(getDeletedProjectIds());
+        setProjects(projectResponse.data.projects.filter((project) => !deletedProjectIds.has(project.id)));
       } else {
         setProjects([]);
       }
@@ -92,11 +123,25 @@ export const useMyPage = () => {
       }
 
       if (target.type === 'project') {
-        const response = await deleteProject(target.id);
-        if (response.status === 'success') {
-          setProjects((prev) => prev.filter((item) => item.id !== target.id));
-        } else {
-          console.log(response.message);
+        try {
+          const response = await deleteProject(target.id);
+          if (response.status === 'success') {
+            addDeletedProjectId(target.id);
+            setProjects((prev) => prev.filter((item) => item.id !== target.id));
+          } else {
+            console.log(response.message);
+          }
+        } catch (error) {
+          const axiosError = error as AxiosError<DeleteProjectErrorData>;
+          const errorCode = axiosError.response?.data?.code;
+          const errorStatus = axiosError.response?.status;
+
+          if (errorCode === 'PROJECT_ALREADY_DELETED' || errorStatus === 404) {
+            addDeletedProjectId(target.id);
+            setProjects((prev) => prev.filter((item) => item.id !== target.id));
+          } else {
+            throw error;
+          }
         }
       }
     } catch {
