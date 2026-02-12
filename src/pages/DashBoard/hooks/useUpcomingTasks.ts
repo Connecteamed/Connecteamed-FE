@@ -1,10 +1,11 @@
-import { useQuery } from "@tanstack/react-query";
-import { getUpcomingTasks } from "../apis/dashboardApi";
+import { useQuery } from '@tanstack/react-query';
 
-export function useUpcomingTasks() {
+import { getUpcomingTasks } from '../apis/dashboardApi';
+
+export function useUpcomingTasks(username?: string) {
   return useQuery({
-    queryKey: ["dashboard", "upcomingTasks"],
-    queryFn: getUpcomingTasks,
+    queryKey: ['dashboard', 'upcomingTasks', username ?? 'me'],
+    queryFn: () => getUpcomingTasks(username),
     staleTime: 30_000,
   });
 }
