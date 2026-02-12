@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
 
+import { getMyProjects } from '@/apis/mypage';
 import { QUERY_KEY } from '@/constants/key';
 import type { CompleteTask } from '@/types/TaskManagement/taskComplete';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 import DeleteModal from '@/components/DeleteModal';
 
@@ -98,12 +99,30 @@ const AIReview = ({ projectId }: { projectId: number }) => {
     setIsCreateModalOpen(false);
   };
 
-  if (isLoadingTasks || isLoadingReviews) {
+  const { data: myProjectsRes, isLoading: isLoadingProjects } = useQuery({
+    queryKey: [QUERY_KEY.myCompletedProjects],
+    queryFn: getMyProjects,
+  });
+
+  const isProjectCompleted = useMemo(() => {
+    const projects = myProjectsRes?.data?.projects ?? [];
+    return projects.some((p) => p.id === projectId);
+  }, [myProjectsRes, projectId]);
+
+  if (isLoadingTasks || isLoadingReviews || isLoadingProjects) {
     return <div className="py-10 text-center">로딩 중...</div>;
   }
 
   if (isErrorTasks || isErrorReviews) {
     return <div className="py-10 text-center text-red-500">에러가 발생했습니다.</div>;
+  }
+
+  if (!isProjectCompleted) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center px-4 text-center text-2xl font-medium">
+        AI 회고는 프로젝트 종료 후 가능해요
+      </div>
+    );
   }
 
   if (tasksForReview.length === 0 && (!reviews || reviews.length === 0)) {
