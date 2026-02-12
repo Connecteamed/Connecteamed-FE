@@ -1,3 +1,8 @@
+// 프로젝트 상세 정보 조회 (팀 이름 등)
+export const getProject = async (projectId: number) => {
+  const { data } = await instance.get(`/projects/${projectId}`);
+  return data.data;
+};
 import type { ApiResponse } from '@/types';
 import type {
   ProjectCreateResponse,
