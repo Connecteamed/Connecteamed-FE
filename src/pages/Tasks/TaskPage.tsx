@@ -27,7 +27,6 @@ import NotificationModal from './components/NotificationModal';
 import TaskManagement from './components/TaskManagement/TaskManagement';
 import TaskStatistic from './components/TaskStatistic/TaskStatistic';
 import { closeProject } from '@/apis/MakeProject/closeProject';
-import fixProjectModal from './components/TaskManagement/fixProjectModal';
 
 type Member = { id?: number; name: string; roles: string[] };
 
@@ -510,7 +509,8 @@ const TaskPage = () => {
         )}
         {fixProjectModalOpen && (
           <Modal isOpen={fixProjectModalOpen} onClose={() => setFixProjectModalOpen(false)}>
-            <fixProjectModal/>
+            {/* <FixProjectModal/> */}
+            <div></div>
           </Modal>
         )}
       </div>

@@ -1,7 +1,7 @@
 
 import { useMemo, useState, useEffect } from 'react';
 import useGetCompletedTasks from '@/hooks/TaskPage/Query/useGetCompletedTasks';
-import type { TaskStatusApi, TaskStatusLabel } from '@/types/TaskManagement/taskList';
+import type { TaskStatusApi, TaskStatusLabel } from '@/types/TaskManagement/task';
 
 const statusStyle: Record<TaskStatusLabel, string> = {
   '시작 전': 'bg-zinc-200 text-neutral-600',
@@ -52,7 +52,7 @@ const CompleteTaskPage = ({ projectId }: Props) => {
       id: task.taskId ?? crypto.randomUUID(),
       title: task.name ?? '제목 없음',
       description: task.content ?? '',
-      status: statusLabelByApi[task.status] ?? '완료',
+      status: statusLabelByApi[task.status as TaskStatusApi] ?? '완료',
       startDate: normalizeDateInput(task.startDate),
       endDate: normalizeDateInput(task.dueDate),
       assignees: Array.isArray(task.assignees)
