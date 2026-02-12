@@ -127,8 +127,6 @@ const TaskPage = () => {
 
   const [isProjectEndModalOpen, setIsProjectEndModalOpen] = useState<boolean>(false);
 
-  const { data: projectName } = useGetProject
-
   const tasks = [
     { id: '1', title: '업무 목록' },
     { id: '2', title: '문서' },
