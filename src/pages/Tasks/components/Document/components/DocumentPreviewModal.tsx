@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 
 import closeIcon from '@assets/icon-close.svg';
 import mammoth from 'mammoth';
-import workerSrc from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
@@ -11,7 +10,10 @@ import Modal from '@/components/Modal';
 
 import { type DocumentDetailRes, downloadDocumentBlob, getDocumentDetail } from '../apis/document';
 
-pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.min.mjs',
+  import.meta.url,
+).toString();
 
 type Props = {
   isOpen: boolean;

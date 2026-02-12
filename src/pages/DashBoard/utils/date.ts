@@ -1,20 +1,30 @@
-import { format, isValid } from 'date-fns';
-
-/*
-ISO 날짜 → MM.dd 포맷
-*/
-export function formatMMDD(iso: string | Date) {
-  const d = typeof iso === 'string' ? new Date(iso) : iso;
-  if (!isValid(d)) return '';
-  return format(d, 'MM.dd');
+function pad2(n: number) {
+  return String(n).padStart(2, '0');
 }
 
-/*
-업무 상태 계산
-*/
-export function calcTaskStatus(writtenDate: string): '시작 전' | '진행 중' {
-  const d = new Date(writtenDate);
-  if (!isValid(d)) return '진행 중';
+export function formatMMDD(dateLike?: string | Date | null) {
+  if (!dateLike) return '';
+  const d = typeof dateLike === 'string' ? new Date(dateLike) : dateLike;
+  if (Number.isNaN(d.getTime())) return '';
+  return `${pad2(d.getMonth() + 1)}.${pad2(d.getDate())}`;
+}
 
-  return d.getTime() > Date.now() ? '시작 전' : '진행 중';
+export function calcTaskStatus(input: { status?: string; startDate?: string } | string) {
+  if (typeof input === 'string') {
+    return '시작 전' as const;
+  }
+
+  const raw = (input.status ?? '').toUpperCase();
+
+  if (raw === 'TODO') return '시작 전' as const;
+  if (raw === 'IN_PROGRESS') return '진행 중' as const;
+
+  if (input.startDate) {
+    const sd = new Date(input.startDate);
+    if (!Number.isNaN(sd.getTime())) {
+      return Date.now() < sd.getTime() ? ('시작 전' as const) : ('진행 중' as const);
+    }
+  }
+
+  return '시작 전' as const;
 }

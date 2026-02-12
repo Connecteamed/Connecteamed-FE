@@ -1,124 +1,197 @@
-import axios, { AxiosError } from 'axios';
+import axios from 'axios';
+
+export type ApiResponse<T> = {
+  status: string;
+  data: T;
+  message?: string;
+  code?: string | null;
+};
+
+type JwtPayload = {
+  username?: string;
+  userName?: string;
+  name?: string;
+  memberName?: string;
+  nickname?: string;
+  [k: string]: unknown;
+};
+
+function parseJwtPayload(token: string): JwtPayload | null {
+  try {
+    const payload = token.split('.')[1];
+    if (!payload) return null;
+
+    const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const json = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => `%${c.charCodeAt(0).toString(16).padStart(2, '0')}`)
+        .join(''),
+    );
+
+    return JSON.parse(json) as JwtPayload;
+  } catch {
+    return null;
+  }
+}
+
+function getUsernameFromToken(): string | undefined {
+  const token = localStorage.getItem('accessToken');
+  if (!token) return undefined;
+
+  const payload = parseJwtPayload(token);
+  if (!payload) return undefined;
+
+  return (
+    payload.username ??
+    payload.userName ??
+    payload.name ??
+    payload.memberName ??
+    payload.nickname ??
+    undefined
+  );
+}
+
+export const dashboardClient = axios.create({
+  baseURL: import.meta.env.VITE_SERVER_API_URL,
+  withCredentials: false,
+});
+
+dashboardClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem('accessToken');
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
+
+function isRecord(v: unknown): v is Record<string, unknown> {
+  return typeof v === 'object' && v !== null;
+}
+
+function asString(v: unknown, fallback = ''): string {
+  return typeof v === 'string' ? v : fallback;
+}
+
+function asNumber(v: unknown, fallback = 0): number {
+  if (typeof v === 'number' && Number.isFinite(v)) return v;
+  if (typeof v === 'string') {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : fallback;
+  }
+  return fallback;
+}
+
+// GET /api/tasks/upcoming
+export type UpcomingTaskStatus = 'TODO' | 'IN_PROGRESS' | 'DONE';
 
 export type UpcomingTaskApi = {
   id: number;
   title: string;
+  status: UpcomingTaskStatus;
   teamName: string;
-  writtenDate: string;
-  teamId?: number | string;
+  endDate: string;
+  teamId?: number | string; // 백엔드에서 추가되면 자동 대응
 };
 
-export type RecentRetrospectiveApi = {
-  id: number;
-  title: string;
-  teamName: string;
-  writtenDate: string;
-  teamId?: number | string;
+type UpcomingTasksResponse = {
+  tasks?: UpcomingTaskApi[];
 };
 
-export type RecentNotification = {
+export async function getUpcomingTasks(username?: string): Promise<UpcomingTaskApi[]> {
+  const u = username ?? getUsernameFromToken();
+
+  const { data } = await dashboardClient.get<ApiResponse<UpcomingTasksResponse>>(
+    '/api/tasks/upcoming',
+    { params: u ? { username: u } : undefined },
+  );
+
+  const tasks = data.data.tasks;
+  return Array.isArray(tasks) ? tasks : [];
+}
+
+// GET /api/notifications/recent
+export type DashboardNotification = {
   id: number;
   message: string;
   teamName: string;
   isRead: boolean;
   createdAt: string;
+  notificationType?: string;
+  targetUrl?: string; // 백엔드가 이동용으로 내려주는 값
 };
 
-type ApiResponse<T> = {
-  status: string;
-  data: T;
-  message: string;
-  code: string | null;
+type RecentNotificationsResponse = {
+  unreadCount?: number;
+  notifications: DashboardNotification[];
 };
 
-type UpcomingTaskListRes = {
-  tasks: UpcomingTaskApi[];
-};
+export async function getRecentNotifications(username?: string): Promise<DashboardNotification[]> {
+  const u = username ?? getUsernameFromToken();
 
-type RecentRetrospectiveListRes = {
-  retrospectives: RecentRetrospectiveApi[];
-};
+  const { data } = await dashboardClient.get<ApiResponse<RecentNotificationsResponse>>(
+    '/api/notifications/recent',
+    { params: u ? { username: u } : undefined },
+  );
 
-type RecentNotificationListRes = {
-  notifications: RecentNotification[];
-};
-
-const BASE_URL = 'https://api.connecteamed.shop';
-
-function getAccessToken() {
-  return localStorage.getItem('accessToken');
+  return Array.isArray(data.data.notifications) ? data.data.notifications : [];
 }
 
-const dashboardClient = axios.create({
-  baseURL: BASE_URL,
-  headers: {
-    Accept: '*/*',
-  },
-});
+// GET /api/retrospectives/recent
+export type DashboardRetrospective = {
+  id: number;
+  title: string;
+  teamName: string;
+  writtenDate: string;
+  teamId?: number | string;
+};
 
-dashboardClient.interceptors.request.use((config) => {
-  const token = getAccessToken();
-  if (!token) {
-    // 토큰 없으면 여기서 막아 일관된 에러 처리
-    throw new Error('Access token not found. Please login first.');
-  }
+type RecentRetrospectivesRes = {
+  retrospectives?: unknown[];
+};
 
-  config.headers = config.headers ?? {};
-  config.headers.Authorization = `Bearer ${token}`;
-  return config;
-});
-
-function toErrorMessage(err: unknown, fallback: string) {
-  if (err instanceof Error) return err.message;
-
-  const ax = err as AxiosError<any>;
-  const serverMsg =
-    ax?.response?.data?.message || ax?.response?.data?.error || ax?.response?.data?.msg;
-
-  if (typeof serverMsg === 'string' && serverMsg.trim().length > 0) return serverMsg;
-  if (typeof ax?.message === 'string' && ax.message.trim().length > 0) return ax.message;
-
-  return fallback;
-}
-
-export async function getUpcomingTasks(): Promise<UpcomingTaskApi[]> {
+export async function getRecentRetrospectives(): Promise<DashboardRetrospective[]> {
   try {
-    const res = await dashboardClient.get<ApiResponse<UpcomingTaskListRes>>('/api/tasks/upcoming');
-    return res.data?.data?.tasks ?? [];
-  } catch (err) {
-    throw new Error(toErrorMessage(err, 'Failed to fetch upcoming tasks.'));
-  }
-}
-
-export async function getRecentRetrospectives(): Promise<RecentRetrospectiveApi[]> {
-  try {
-    const res = await dashboardClient.get<ApiResponse<RecentRetrospectiveListRes>>(
+    const { data } = await dashboardClient.get<ApiResponse<RecentRetrospectivesRes>>(
       '/api/retrospectives/recent',
     );
-    return res.data?.data?.retrospectives ?? [];
-  } catch (err) {
-    throw new Error(toErrorMessage(err, 'Failed to fetch retrospectives.'));
+
+    const raw = data.data.retrospectives;
+    if (!Array.isArray(raw)) return [];
+
+    return raw
+      .filter(isRecord)
+      .map((r) => ({
+        id: asNumber(r.id, 0),
+        title: asString(r.title, ''),
+        teamName: asString(r.teamName, ''),
+        writtenDate: asString(r.writtenDate ?? r.createdAt, ''),
+        teamId: (r.teamId as number | string | undefined) ?? undefined,
+      }))
+      .filter((r) => r.id !== 0);
+  } catch {
+    return [];
   }
 }
 
-export async function getRecentNotifications(): Promise<RecentNotification[]> {
-  try {
-    const res = await dashboardClient.get<ApiResponse<RecentNotificationListRes>>(
-      '/api/notifications/recent',
-    );
-    return res.data?.data?.notifications ?? [];
-  } catch (err) {
-    throw new Error(toErrorMessage(err, 'Failed to fetch notifications.'));
-  }
-}
+// GET /api/contributions/calendar
+export type ContributionLevel = 0 | 1 | 2 | 3 | 4;
 
-// === Daily schedules (stubbed until backend ready) ===
-export function toUTCDateStartISO(date: Date): string {
-  const utc = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
-  return utc.toISOString();
-}
+export type ContributionDay = {
+  date: string;
+  count: number;
+  level: ContributionLevel;
+};
 
-export async function getDailySchedules(_date: Date): Promise<never[]> {
-  // API not implemented yet; keep contract satisfied to unblock build
-  return [];
+export type ContributionCalendar = {
+  year: number;
+  totalActivityCount: number;
+  userId: number | null;
+  contributions: ContributionDay[];
+};
+
+export async function getContributionCalendar(year: number): Promise<ContributionCalendar> {
+  const { data } = await dashboardClient.get<ApiResponse<ContributionCalendar>>(
+    '/api/contributions/calendar',
+    { params: { year } },
+  );
+  return data.data;
 }

@@ -1,15 +1,13 @@
-import RetrospectCard from '../components/Card/RetrospectCard';
-import ComingtaskCard from '../components/Card/ComingtaskCard';
 import AlarmCard from '../components/Card/AlarmCard';
+import RetrospectCard from '../components/Card/RetrospectCard';
+import ComingtaskCard from '../components/Card/UpcomingtaskCard';
 import WorkLogCard from '../components/Card/WorkLogCard';
-import useGoToTeam from '../hooks/useGoToTeam';
 
 export default function CardLayout() {
-  const goToTeam = useGoToTeam();
   return (
-    <div className="h-full grid gap-[24px] [grid-template-columns:600px_1fr] [grid-template-rows:250px_1fr]">
-      <RetrospectCard onGoToTeam={goToTeam} />
-      <ComingtaskCard onGoToTeam={goToTeam} />
+    <div className="grid min-h-0 grid-cols-1 gap-6 xl:[grid-template-columns:388px_622px] xl:[grid-template-rows:310px_439px] xl:items-stretch">
+      <RetrospectCard />
+      <ComingtaskCard />
       <AlarmCard />
       <WorkLogCard />
     </div>
