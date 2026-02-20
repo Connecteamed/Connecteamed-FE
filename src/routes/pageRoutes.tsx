@@ -27,7 +27,7 @@ const SplashLayout = () => {
     // 실제 랜딩(로딩) 페이지를 보여줌
     const LandingPage = lazyRoutes.LandingPage;
     return (
-      <Suspense fallback={<div />}> 
+      <Suspense fallback={<div />}>
         <LandingPage />
       </Suspense>
     );
@@ -97,7 +97,7 @@ export const router = createBrowserRouter([
             element: <SideBarLayout />,
             children: [
               {
-                path: '/', // 메인 대시보드
+                index: true,
                 element: (
                   <Suspense fallback={null}>
                     <lazyRoutes.Dashboard />
@@ -113,6 +113,14 @@ export const router = createBrowserRouter([
                 ),
               },
               {
+                path: 'project/search',
+                element: (
+                  <Suspense fallback={null}>
+                    <lazyRoutes.SearchProject />
+                  </Suspense>
+                ),
+              },
+              {
                 path: 'team/:teamId',
                 element: (
                   <Suspense fallback={null}>
@@ -121,19 +129,40 @@ export const router = createBrowserRouter([
                 ),
               },
               {
-                path: 'mypage',
+                path: 'team/:teamId/task/new',
                 element: (
                   <Suspense fallback={null}>
-                    <lazyRoutes.MyPage />
+                    <lazyRoutes.MobileAddTask />
                   </Suspense>
                 ),
               },
-              // ... 기타 사이드바가 필요한 업무 페이지들
+              {
+                path: 'team/:teamId/task/:taskId',
+                element: (
+                  <Suspense fallback={null}>
+                    <lazyRoutes.TaskDetail />
+                  </Suspense>
+                ),
+              },
+              {
+                path: 'team/:teamId/minutes',
+                element: (
+                  <Suspense fallback={null}>
+                    <lazyRoutes.Minutes />
+                  </Suspense>
+                ),
+              },
+              {
+                path: '*',
+                element: (
+                  <Suspense fallback={null}>
+                    <lazyRoutes.NotFoundPage />
+                  </Suspense>
+                ),
+              },
             ],
           },
 
-          // B. 로그인은 했지만 사이드바가 없어야 하는 페이지가 있다면 여기에 추가
-          // (예: 전체화면 지도, 모바일 전용 작성 뷰 등)
           {
             path: 'team/:teamId/task/new',
             element: (
