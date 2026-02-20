@@ -160,6 +160,14 @@ export const router = createBrowserRouter([
                   </Suspense>
                 ),
               },
+              {
+                path: '*',
+                element: (
+                  <Suspense fallback={null}>
+                    <lazyRoutes.MyPage />
+                  </Suspense>
+                ),
+              }
             ],
           },
 
